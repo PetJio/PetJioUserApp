@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color -->
+    <item android:drawable="@color/launch_background" />
+
+    <!-- Use a scale drawable to make the launcher icon larger and centered -->
+    <item android:drawable="@drawable/splash_launcher_scaled" />
+
+</layer-list>

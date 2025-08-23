@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- For API 31+ avoid referencing AndroidX splash attributes directly to prevent resource linking errors.
+		 Use the launch drawable as the window background so the system shows our intended splash look. -->
+	<style name="LaunchTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+		<item name="android:windowBackground">@drawable/launch_background</item>
+		<item name="android:windowNoTitle">true</item>
+	</style>
+
+	<!-- Keep the packaged splash theme minimal and point to our launch background. -->
+	<style name="Theme.Petjiouser.Splash" parent="@style/AppTheme">
+		<item name="android:windowBackground">@drawable/launch_background</item>
+	</style>
+</resources>
