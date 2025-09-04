@@ -59,9 +59,7 @@ const VeterinaryReviewModal: React.FC<Omit<ModalComponentProps, 'navigation'>> =
 
                          <View style={{gap:responsiveHeight(1.5)}}>
                                <Text style={{fontSize:16,fontWeight:'500',lineHeight:18,}}>Write a review</Text>
-                               <View style={{width:responsiveWidth(88.5),height:responsiveHeight(16),borderRadius:responsiveWidth(1),borderWidth:responsiveWidth(0.30),borderColor:'#D7D7D7'}}>
-
-                               </View>
+                               <View style={{width:responsiveWidth(88.5),height:responsiveHeight(16),borderRadius:responsiveWidth(1),borderWidth:responsiveWidth(0.30),borderColor:'#D7D7D7'}} />
                                <View style={{justifyContent:'center', alignItems:'center',width:responsiveWidth(24),height:responsiveHeight(12),borderRadius:responsiveWidth(1),borderWidth:responsiveWidth(0.30),borderColor:"#D7D7D7"}}>
                                     <View style={{justifyContent:'center', alignItems:'center',width:responsiveWidth(11),height:responsiveHeight(6),borderRadius:responsiveWidth(12),backgroundColor:"#58B9D0"}}>
                                            <Image source={Icons.BiSolidCamera}/>

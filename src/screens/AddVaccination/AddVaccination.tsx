@@ -1,5 +1,5 @@
 import {useState}from 'react';
-import { View, Text,TouchableOpacity,Image,TextInput,Platform  } from 'react-native';
+import { View, Text,TouchableOpacity,Image,Platform  } from 'react-native';
 import { SelectCountry } from 'react-native-element-dropdown';
 import addvaccinationstyles from './addvaccination.styles';
 import Icons from '../../../assets/icons';

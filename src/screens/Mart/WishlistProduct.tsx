@@ -92,8 +92,7 @@ const WishlistProduct: React.FC <AllCategoryProps> = ({navigation}) => {
 
             <TouchableOpacity 
               onPress={()=>navigation.navigate("PetProductDescription")}
-             >
-            </TouchableOpacity>
+              />
 
   
             {/* <View style={wishlistproductstyles.dogCollorView}>

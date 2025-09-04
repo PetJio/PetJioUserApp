@@ -137,8 +137,7 @@ const GroomingAbout: React.FC = () => {
             contentContainerStyle={{paddingBottom:90}}>
 
              <View style={groomingaboutstyles.container}>
-                 <View style={groomingaboutstyles.containerthirdsubchild}>
-                </View>
+                 <View style={groomingaboutstyles.containerthirdsubchild} />
                 <View>
                        <Text style={groomingaboutstyles.bioText}>Bio</Text>
                        <Text style={groomingaboutstyles.paragraphText}>

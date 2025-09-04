@@ -2,7 +2,6 @@ import React from 'react';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
-import { SCREEN_NAMES } from '../../constants/navigation';
 import {
   Grooming,
   CalendarSheet,
@@ -38,6 +37,7 @@ import {
   BoardingRegistrationform,
   SignUp,
   SignIn,
+  Location,
   PetParentform,
   PetWarriorform,
   DeliveryPartnerform,
@@ -80,7 +80,6 @@ import {
   ParaVetPaymentconfirmmethod,
   Veterinary,
   VeterinaryLocal,
-  VeterinariansDetails,
   VeterinaryDetails,
   VeterinaryCalendar,
   VoiceCallWithVeterinary,
@@ -90,109 +89,12 @@ import {
   VeterinaryPaymentMethod,
   PharmacyOrderOnTheWay,
   VeterinaryHomeVisiteDetails,
+  AddPet,
 } from '../../screens';
 import TabNavigator from '../TabNavigator';
 import ServiceStackNavigator from '../ServiceStackNavigator';
 
 
-
-
-
-
-type StackParamList = {
-     Home: undefined;
-     Mart: undefined;
-     Visits: undefined;
-     Service: undefined;
-     Profile: undefined;
-     Grooming:undefined;
-     CalendarSheet:undefined;
-     Locality:undefined;
-     HomeService:undefined;
-     UserDetails:undefined;
-     UserService:undefined;
-     UserAbout:undefined;
-     ServicePrice:undefined;
-     Paymentmethod:undefined;
-     Paymentconfirmmethod:undefined;
-     InvoiceDetails:undefined;
-     Walking:undefined;
-     WalkingUser:undefined;
-     WalkingDetails:undefined;
-     Packages:undefined;
-     ConfirmDetails:undefined;
-     Training:undefined;
-     TrainingLocalAddress:undefined;
-     TrainingUser:undefined;
-     TrainerAbout:undefined;
-     TrainingDetails:undefined;
-     TrainingConfirmDetails:undefined;
-     TrainingPaymentmethod:undefined;
-     TrainingPaymentconfirmmethod:undefined;
-     ParaVet:undefined;
-     ParaVetLocatlity:undefined;
-     ParaVetUser:undefined;
-     ParavetDetails:undefined;
-     Boarding:undefined;
-     BoardingUser:undefined;
-     BoardingDetails:undefined;
-     BoardingRegistrationform:undefined;
-     SignUp:undefined;
-     SignIn:undefined;
-     PetParentform:undefined;
-     PetWarriorform:undefined;
-     DeliveryPartnerform:undefined;
-     ServiceProviderform:undefined;
-     LogIn:undefined;
-     AddVaccination:undefined;
-     BookBoarder:undefined;
-     BoardingPaymentmethod:undefined;
-     NGO:undefined;
-     NGOUser:undefined;
-     NGODetails:undefined;
-     Veterinaryform:undefined;
-     BoardingBooking:undefined;
-     NGOAbout:undefined;
-     NGOReview:undefined;
-     VirtualAdoption:undefined;
-     Donation:undefined;
-     DonateDetails:undefined;
-     DonateAmount:undefined;
-     DonatePaymentMethod:undefined;
-     DonatePaymentconfirmmethod:undefined;
-     DogAdoptionScreeningForm:undefined;
-     VirtualAdoptionDetails:undefined;
-     ParavetServices:undefined;
-     ParaVetCheckout:undefined;
-     ParaVetPaymentmethod:undefined;
-     ParaVetGoogleMap:undefined;
-     GroomingDetails:undefined;
-     GroomingPaymentmethod:undefined;
-     MartLocalityAddress:undefined;
-     PetjioMartStore:undefined;
-     AllCategories:undefined;
-     PetProductDescription:undefined;
-     WishlistProduct:undefined;
-     MyCart:undefined;
-     CheckOut:undefined;
-     PetMartPaymentMethod:undefined; 
-     PetMartPaymentconfirmmethod:undefined; 
-     GroomingPaymentconfirmmethod:undefined; 
-     ParaVetPaymentconfirmmethod:undefined;
-     Veterinary:undefined;
-     VeterinaryLocal:undefined;
-     VeterinariansDetails:undefined;
-     VeterinaryDetails:undefined;
-     VeterinaryCalendar:undefined;
-     VoiceCallWithVeterinary:undefined;
-     OnlineChatWithVeterinary:undefined;
-     LiveTalkToVeterinary:undefined;
-     PharmacyOrderOverview:undefined;
-     VeterinaryPaymentMethod:undefined;
-     PharmacyOrderOnTheWay:undefined;
-     VeterinaryHomeVisiteDetails:undefined;
-
-};
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export type StackNavigationProps<T extends keyof RootStackParamList> = {
@@ -200,11 +102,20 @@ export type StackNavigationProps<T extends keyof RootStackParamList> = {
     route: RouteProp<RootStackParamList,T>;
 };
 
-const StackNavigator: React.FC = () => {
+interface StackNavigatorProps {
+  initialRouteName?: string;
+}
+
+const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => {
     return (
-        <Stack.Navigator screenOptions={{headerShown:false}}>
+        // @ts-ignore
+        <Stack.Navigator 
+          initialRouteName={initialRouteName}
+          screenOptions={{headerShown:false}}
+        >
             <Stack.Screen name="SignIn" component={SignIn}/>
             <Stack.Screen name="SignUp" component={SignUp}/>
+            <Stack.Screen name="Location" component={Location}/>
             <Stack.Screen name="LogIn" component={LogIn}/>
             <Stack.Screen name="Main" component={TabNavigator} />
             <Stack.Screen name="ServiceStackNavigator" component={ServiceStackNavigator} />
@@ -275,17 +186,17 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen name="ParaVetPaymentmethod" component={ParaVetPaymentmethod}/>
             <Stack.Screen name="ParaVetGoogleMap" component={ParaVetGoogleMap}/>
             <Stack.Screen name="GroomingDetails" component={GroomingDetails}/>
-            <Stack.Screen name="GroomingPaymentmethod"component={GroomingPaymentmethod}/>
+            <Stack.Screen name="GroomingPaymentmethod" component={GroomingPaymentmethod}/>
             {/* @ts-ignore - Legacy component with custom props interface */}
-            <Stack.Screen name="MartLocalityAddress"component={MartLocalityAddress}/>
-            <Stack.Screen name="PetjioMartStore"component={PetjioMartStore}/>
-            <Stack.Screen name="AllCategories"component={AllCategories}/>
-            <Stack.Screen name="PetProductDescription"component={PetProductDescription}/>
-            <Stack.Screen name="WishlistProduct"component={WishlistProduct}/>
+            <Stack.Screen name="MartLocalityAddress" component={MartLocalityAddress}/>
+            <Stack.Screen name="PetjioMartStore" component={PetjioMartStore}/>
+            <Stack.Screen name="AllCategories" component={AllCategories}/>
+            <Stack.Screen name="PetProductDescription" component={PetProductDescription}/>
+            <Stack.Screen name="WishlistProduct" component={WishlistProduct}/>
             {/* @ts-ignore - Legacy component with custom props interface */}
-            <Stack.Screen name="MyCart"component={MyCart}/>
-            <Stack.Screen name="CheckOut"component={CheckOut}/>
-            <Stack.Screen name="PetMartPaymentMethod"component={PetMartPaymentMethod}/>
+            <Stack.Screen name="MyCart" component={MyCart}/>
+            <Stack.Screen name="CheckOut" component={CheckOut}/>
+            <Stack.Screen name="PetMartPaymentMethod" component={PetMartPaymentMethod}/>
             <Stack.Screen name="PetMartPaymentconfirmmethod" component={PetMartPaymentconfirmmethod}/>
             <Stack.Screen name="GroomingPaymentconfirmmethod" component={GroomingPaymentconfirmmethod}/>
             <Stack.Screen name="ParaVetPaymentconfirmmethod" component={ParaVetPaymentconfirmmethod}/>
@@ -303,6 +214,7 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen name="PharmacyOrderOnTheWay" component={PharmacyOrderOnTheWay}/>
             {/* @ts-ignore - Legacy component with custom props interface */}
             <Stack.Screen name="VeterinaryHomeVisiteDetails" component={VeterinaryHomeVisiteDetails}/>
+            <Stack.Screen name="AddPet" component={AddPet}/>
            
         </Stack.Navigator>
     );

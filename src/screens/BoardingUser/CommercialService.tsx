@@ -83,7 +83,7 @@ type InSiteServiceProps = {
 
 
 
-const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
+const CommercialService: React.FC<InSiteServiceProps> = ({ navigation }) => {
     return (
         <View style={commercialservicestyles.container}>
              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={commercialservicestyles.contentContainerStyle}>
@@ -512,4 +512,4 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
     );
 };
 
-export default BoardingHomeService;
+export default CommercialService;

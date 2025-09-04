@@ -4,9 +4,41 @@
       "Bash(npx react-native-asset:*)",
       "Bash(npm run android:*)",
       "Bash(./gradlew:*)",
-      "Bash(npx react-native run-android:*)"
+      "Bash(npx react-native run-android:*)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx react-native start:*)",
+      "Bash(npm run lint)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)",
+      "Bash(gradlew:*)",
+      "Bash(.gradlew.bat clean)",
+      "Bash(npx react-native:*)",
+      "Bash(sdkmanager:*)",
+      "Bash(grep:*)",
+      "Bash(adb logcat:*)",
+      "Bash(adb shell am start:*)",
+      "Bash(adb shell:*)",
+      "Bash(timeout 5 adb logcat:*)",
+      "Bash(pkill:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm android:*)",
+      "Bash(npm start:*)",
+      "Bash(cmd.exe /c \"taskkill /PID 24468 /F\")",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(rd:*)",
+      "Bash(npm run lint:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(pnpm run:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\"
+    ]
   }
 }

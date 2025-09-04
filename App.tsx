@@ -1,15 +1,30 @@
-import { useEffect, useState } from 'react';
-import { StatusBar, useColorScheme, Platform } from 'react-native';
+// Initialize Firebase FIRST before any other imports that might use Firebase
+import { initializeApp, getApps } from '@react-native-firebase/app';
+
+// Initialize Firebase if not already initialized
+if (getApps().length === 0) {
+  initializeApp();
+  console.log('Firebase app initialized successfully');
+}
+
+import React, { useState, useEffect } from 'react';
+import { StatusBar, useColorScheme, Platform, ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import StackNavigator from './src/navigation/StackNavigator';
-import Splash from './src/screens/Splash/Splash';
-import colors from './src/styles/colors';
+import colors from './src/styles/colors/index';
+import { storageService } from './src/utils/storage';
+import { navigationRef } from './src/utils/navigationService';
+import { useFirebaseMessaging } from './src/hooks/useFirebaseMessaging';
 
 const App = () => {
-  // const [showSplash, setShowSplash] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  
+  // Initialize Firebase messaging
+  useFirebaseMessaging();
   
   // Status bar configuration
   const statusBarConfig = {
@@ -18,26 +33,37 @@ const App = () => {
     translucent: Platform.OS === 'android'
   };
 
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setShowSplash(false);
-  //   }, 3000);
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        console.log('App starting - checking login status...');
+        const loginStatus = await storageService.isLoggedIn();
+        console.log('App login status result:', loginStatus);
+        
+        setIsLoggedIn(loginStatus);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking login status:', error);
+        setIsLoggedIn(false);
+        setIsLoading(false);
+      }
+    };
 
-  //   return () => clearTimeout(timer);
-  // }, []);
+    // Add a small delay to ensure storage is ready
+    const timer = setTimeout(checkLoginStatus, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // if (showSplash) {
-  //   return (
-  //     <SafeAreaProvider>
-  //       <StatusBar
-  //         backgroundColor={statusBarConfig.backgroundColor}
-  //         barStyle={statusBarConfig.barStyle}
-  //         translucent={statusBarConfig.translucent}
-  //       />
-  //       <Splash />
-  //     </SafeAreaProvider>
-  //   );
-  // }
+  // Show loading spinner while checking login status
+  if (isLoading) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white || '#FFFFFF' }}>
+          <ActivityIndicator size="large" color={colors.primary || '#58B9D0'} />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -46,8 +72,8 @@ const App = () => {
         barStyle={statusBarConfig.barStyle}
         translucent={statusBarConfig.translucent}
       />
-      <NavigationContainer>
-        <StackNavigator />
+      <NavigationContainer ref={navigationRef}>
+        <StackNavigator initialRouteName={isLoggedIn ? 'Main' : 'SignIn'} />
       </NavigationContainer>
     </SafeAreaProvider>
   );

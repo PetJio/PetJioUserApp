@@ -43,6 +43,7 @@ export { default as DeliveryPartnerform } from './DeliveryPartnerform/DeliveryPa
 export { default as ServiceProviderform } from './ServiceProviderform/ServiceProviderform';
 export { default as SignIn } from './SignIn/SignIn';
 export { default as LogIn } from './LogIn/LogIn';
+export { default as Location } from './Location/Location';
 export { default as AddVaccination } from './AddVaccination/AddVaccination';
 export { default as BookBoarder } from './BookBoarder/BookBoarder';
 export { default as BoardingPaymentmethod } from './BoardingPaymentmethod/BoardingPaymentmethod';
@@ -91,32 +92,9 @@ export { default as PharmacyOrderOverview} from './PharmacyOrderOverview/Pharmac
 export { default as VeterinaryPaymentMethod} from './VeterinaryPaymentMethod/VeterinaryPaymentMethod';
 export { default as PharmacyOrderOnTheWay} from './PharmacyOrderOnTheWay/PharmacyOrderOnTheWay';
 export { default as VeterinaryHomeVisiteDetails} from './VeterinaryHomeVisiteDetails/VeterinaryHomeVisiteDetails';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
+export { default as AddPet} from './AddPet/AddPet';
+export { default as ChatList} from './Chat/ChatList';
+export { default as Chat} from './Chat/Chat';
 
 
 

@@ -79,7 +79,7 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
             {show ? (
                 <BoardingHomeService navigation={navigation} />
             ) : (
-                <CommercialService />
+                <CommercialService navigation={navigation} />
             )}
         </View>
     );

@@ -1,15 +1,50 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import {
     responsiveHeight,
     responsiveWidth,
 } from 'react-native-responsive-dimensions';
+import { FONT_SIZES } from '../../constants/dimensions';
+import { typography } from '../../styles/typography';
 
 const styles = StyleSheet.create({
+    // Sticky Header Styles
+    stickyHeader: {
+        backgroundColor: '#F8F9FB',
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E8EBF0',
+    },
+    
+    headerTitleContainer: {
+        flex: 1,
+    },
+    
+    stickyHeaderTitle: {
+        fontSize: FONT_SIZES.xxl,
+        fontWeight: typography.fontWeight.bold,
+        color: '#1A1D29',
+        marginBottom: 2,
+    },
+    
+    stickyHeaderSubtitle: {
+        fontSize: FONT_SIZES.sm,
+        color: '#666',
+        fontWeight: typography.fontWeight.medium,
+    },
+    
+    headerIcons: {
+        flexDirection: 'row',
+        gap: responsiveWidth(2.5),
+    },
+    
     container: {
-        top: responsiveHeight(4),
-        width: responsiveWidth(100),
-        height: responsiveHeight(100),
-        backgroundColor: '#FFFFFF',
+        flex: 1,
+        backgroundColor: '#F8F9FB',
     },
     subcontainer: { top: responsiveHeight(2), gap: responsiveWidth(2.8) },
     subcontainertextwithIcon: {
@@ -19,11 +54,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: responsiveWidth(4),
     },
     IconGap: { flexDirection: 'row', gap: responsiveWidth(2.5) },
+    iconButton: {
+        padding: responsiveWidth(1),
+        borderRadius: responsiveWidth(2),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     relative: { position: 'relative' },
     positionofAlertIcon: {
         position: 'absolute',
-        bottom: responsiveHeight(2.6),
-        left: responsiveWidth(3),
+        top: -2,
+        right: -2,
+    },
+    alertDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#FF3B30',
+        borderWidth: 1,
+        borderColor: '#FFFFFF',
     },
     doctoranddogimagecontainer: {
         flexDirection: 'row',

@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import colors from '../../styles/colors';
+import colors from '../../styles/colors/index';
 import CustomButton from './CustomButton';
 
 interface Props {

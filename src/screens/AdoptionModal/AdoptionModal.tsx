@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { View,Text,Image, FlatList,TouchableOpacity,Modal} from 'react-native';
-import { responsiveWidth,responsiveHeight} from 'react-native-responsive-dimensions';
+import { View,Text,Image,TouchableOpacity,Modal} from 'react-native';
 import adoptionmodalstyles from './adoptionmodal.styles';
 import images from '../../../assets/images';
-import Icons from '../../../assets/icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -30,9 +28,9 @@ type ModalComponentProps = {
 
 const AdoptionModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modalVisible,setModalVisible}) => {
     const navigation = useNavigation<TrainingModalScreenNavigationProp>();
-    const [activeTab, setActiveTab] = useState<string>('NormalWalking');
+    const [_activeTab, setActiveTab] = useState<string>('NormalWalking');
 
-    const handleTabPress = (tab: string) => {
+    const _handleTabPress = (tab: string) => {
         setActiveTab(tab);
     };
 

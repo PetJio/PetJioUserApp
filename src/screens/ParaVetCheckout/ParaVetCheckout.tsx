@@ -244,8 +244,7 @@ const ParaVetCheckout: React.FC<UserDetailsProps> = ({navigation}) => {
                                     style={{
                                         flexDirection: 'row',
                                         gap: responsiveWidth(2),
-                                    }}>
-                                </View>
+                                    }} />
                             </View>
                         </View>
 

@@ -200,8 +200,7 @@ const PetProductDescription: React.FC<PetProductDescriptionProps> = ({navigation
                     </View>
                     ))}
                 </View>
-              <View>
-             </View>
+              <View />
 
              <View>
                 

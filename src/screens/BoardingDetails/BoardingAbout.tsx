@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text ,FlatList,Dimensions,Image ,TouchableOpacity } from 'react-native';
-import images from '../../../assets/images';
+import React, { useState } from 'react';
+import { View, Text ,Image ,TouchableOpacity } from 'react-native';
 import Icons from '../../../assets/icons';
 import boardingaboutstyles from './boardingabout.styles';
 import BoardingModal from '../BoardingModal/BoardingModal';

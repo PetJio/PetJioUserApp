@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "204778693525",
+    "project_id": "petjio-main",
+    "storage_bucket": "petjio-main.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:204778693525:android:8205ba6f28a1192eb38c9c",
+        "android_client_info": {
+          "package_name": "com.petjiouser"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeDOip7ymdZIDXP-ZbjIuXRo-NUFhiDGs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:204778693525:android:fa5d981516326d39b38c9c",
+        "android_client_info": {
+          "package_name": "com.petjiovendorapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeDOip7ymdZIDXP-ZbjIuXRo-NUFhiDGs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

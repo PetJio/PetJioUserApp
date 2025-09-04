@@ -3,7 +3,6 @@ import { View, Text, Image, FlatList, Dimensions, TouchableOpacity } from 'react
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import {
-  responsiveWidth,
   responsiveHeight,
 } from 'react-native-responsive-dimensions';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -57,7 +56,7 @@ const Grooming: React.FC<GroomingProps> = ({ navigation }) => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [activeIndex, scrollToIndex]);
+  }, [activeIndex, scrollToIndex, Carousel.length]);
 
   const onScrollFailed = (error: any) => {
     const offset = error.index * screenWidth;

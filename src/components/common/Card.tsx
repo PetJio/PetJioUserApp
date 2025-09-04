@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { BORDER_RADIUS, SPACING } from '../../constants/dimensions';
-import colors from '../../styles/colors';
+import colors from '../../styles/colors/index';
 import { shadows } from '../../styles/shadows';
 
 interface CardProps {

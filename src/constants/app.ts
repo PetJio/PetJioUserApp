@@ -9,6 +9,7 @@ export const API_TIMEOUT = 30000;
 export const STORAGE_KEYS = {
   USER_TOKEN: 'user_token',
   USER_DATA: 'user_data',
+  IS_LOGGED_IN: 'is_logged_in',
   APP_PREFERENCES: 'app_preferences',
   BIOMETRIC_ENABLED: 'biometric_enabled',
 } as const;

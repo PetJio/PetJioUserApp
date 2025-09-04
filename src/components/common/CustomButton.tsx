@@ -8,7 +8,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { SPACING, FONT_SIZES, BORDER_RADIUS } from '../../constants/dimensions';
-import colors from '../../styles/colors';
+import colors from '../../styles/colors/index';
 
 interface CustomButtonProps {
   title: string;

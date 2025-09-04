@@ -19,8 +19,7 @@ const VeterinaryAbout: React.FC = () => {
             contentContainerStyle={{paddingBottom:90}}>
 
              <View style={veterinaryaboutstyles.container}>
-                 <View style={veterinaryaboutstyles.containerthirdsubchild}>
-                </View>
+                 <View style={veterinaryaboutstyles.containerthirdsubchild} />
                 <View style={veterinaryaboutstyles.expertiseText}>
                        <Text style={veterinaryaboutstyles.bioText}>Education</Text>
                        <Text style={veterinaryaboutstyles.paragraphText}>

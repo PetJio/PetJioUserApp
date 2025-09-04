@@ -1,0 +1,42 @@
+<!-- This is a backup - You need to manually add Firebase messaging permissions to your AndroidManifest.xml -->
+
+<!-- Add these permissions to your AndroidManifest.xml: -->
+
+<!-- Firebase Cloud Messaging permissions -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+<uses-permission android:name="android.permission.VIBRATE" />
+
+<!-- Add these inside the <application> tag: -->
+
+<!-- Firebase Cloud Messaging service -->
+<service
+    android:name="io.invertase.firebase.messaging.ReactNativeFirebaseMessagingService"
+    android:exported="false">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>
+
+<!-- Firebase Cloud Messaging receiver -->
+<receiver
+    android:name="io.invertase.firebase.messaging.ReactNativeFirebaseMessagingReceiver"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="com.google.firebase.messaging.FirebaseMessagingReceiver" />
+    </intent-filter>
+</receiver>
+
+<!-- Default notification channel for Firebase Cloud Messaging -->
+<meta-data
+    android:name="com.google.firebase.messaging.default_notification_channel_id"
+    android:value="default_notification_channel_id" />
+
+<!-- Default notification icon and color for Firebase Cloud Messaging -->
+<meta-data
+    android:name="com.google.firebase.messaging.default_notification_icon"
+    android:resource="@mipmap/ic_launcher" />
+
+<meta-data
+    android:name="com.google.firebase.messaging.default_notification_color"
+    android:resource="@color/accent_color" />

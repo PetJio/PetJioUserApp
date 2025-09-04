@@ -17,8 +17,7 @@ const VeterinaryHomeVisiteAbout: React.FC = () => {
             contentContainerStyle={veterinaryhomevisiteaboutstyles.paddingBottom}>
 
              <View style={veterinaryhomevisiteaboutstyles.container}>
-                 <View style={veterinaryhomevisiteaboutstyles.containerthirdsubchild}>
-                </View>
+                 <View style={veterinaryhomevisiteaboutstyles.containerthirdsubchild} />
                 <View style={veterinaryhomevisiteaboutstyles.expertiseText}>
                        <Text style={veterinaryhomevisiteaboutstyles.bioText}>Education</Text>
                        <Text style={veterinaryhomevisiteaboutstyles.paragraphText}>
