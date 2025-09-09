@@ -33,7 +33,11 @@
       "Bash(npm run lint:*)",
       "mcp__ide__getDiagnostics",
       "Bash(pnpm run:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(del test-boarding.js)"
     ],
     "deny": [],
     "ask": [],

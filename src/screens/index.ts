@@ -35,7 +35,7 @@ export { default as ParavetDetails } from './ParavetDetails/ParavetDetails';
 export { default as Boarding } from './Boarding/Boarding';
 export { default as BoardingUser } from './BoardingUser/BoardingUser';
 export { default as BoardingDetails } from './BoardingDetails/BoardingDetails';
-export { default as BoardingRegistrationform } from './BoardingRegistrationform/BoardingRegistrationform';
+export { default as BoardingRegistrationform } from './BoardingRegistrationform/FinalBoardingRegistrationform';
 export { default as SignUp } from './SignUp/SignUp';
 export { default as PetParentform } from './PetParentform/PetParentform';
 export { default as PetWarriorform } from './PetWarriorform/PetWarriorform';

@@ -6,176 +6,282 @@ import {
 const addvaccinationstyles = StyleSheet.create({
     container: {
         flex: 1,
-        // justifyContent: 'center',
-        // alignItems: 'center',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F8F9FB',
     },
-     relative: {
-          position: 'relative',
-      },
-      positionDateTimeIcon: {
-          width: responsiveWidth(100),
-          padding: responsiveWidth(4),
-        //   flexDirection: 'row',
-        //   justifyContent: 'space-between',
-          position: 'absolute',
-          top: responsiveHeight(5),
-      },
-      flexGap: {
-          flexDirection: 'row',
-          gap: responsiveWidth(1),
-      },
-      iconColor: {
-          tintColor: "#000000",
-          top: responsiveHeight(0.30),
-      },
-      textDateTime: {
-          color: "#000000",
-          fontSize:18,
-          fontWeight: '500',
-      },
-      addvaccinText:{
-        left:responsiveWidth(2.8),
-        color: "#000000",
-        fontSize:18,
+    
+    // Standardized Boarding Header
+    boardingStandardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: responsiveWidth(4),
+        paddingTop: responsiveHeight(2),
+        paddingBottom: responsiveHeight(1.5),
+        backgroundColor: '#F8F9FB',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E8E8E8',
+    },
+    boardingBackButton: {
+        width: responsiveWidth(10),
+        height: responsiveHeight(5),
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: responsiveWidth(2),
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    boardingHeaderTitleContainer: {
+        flex: 1,
+        marginLeft: responsiveWidth(3),
+    },
+    boardingHeaderTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        lineHeight: 24,
+    },
+    boardingHeaderSubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: responsiveHeight(0.3),
+        lineHeight: 18,
+    },
+    boardingHeaderActions: {
+        width: responsiveWidth(10),
+    },
+    
+    // Scroll View
+    scrollView: {
+        flex: 1,
+        backgroundColor: '#F8F9FB',
+    },
+    scrollContent: {
+        paddingBottom: responsiveHeight(12),
+    },
+    
+    // Hero Section
+    heroSection: {
+        alignItems: 'center',
+        paddingHorizontal: responsiveWidth(4),
+        paddingVertical: responsiveHeight(3),
+        backgroundColor: '#FFFFFF',
+        marginBottom: responsiveHeight(2),
+    },
+    heroImageContainer: {
+        width: responsiveWidth(25),
+        height: responsiveWidth(25),
+        borderRadius: responsiveWidth(12.5),
+        backgroundColor: '#E8F4FD',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: responsiveHeight(2),
+    },
+    heroImage: {
+        width: responsiveWidth(20),
+        height: responsiveWidth(20),
+        borderRadius: responsiveWidth(10),
+    },
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.5),
+    },
+    heroSubtitle: {
+        fontSize: 16,
+        color: '#6B7280',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    
+    // Form Section
+    formSection: {
+        paddingHorizontal: responsiveWidth(4),
+    },
+    sectionCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(4),
+        padding: responsiveWidth(5),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: responsiveHeight(3),
+        paddingBottom: responsiveHeight(1.5),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    sectionHeaderTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginLeft: responsiveWidth(2),
+    },
+    
+    // Input Groups
+    inputGroup: {
+        marginBottom: responsiveHeight(2.5),
+    },
+    inputLabel: {
+        fontSize: 16,
         fontWeight: '500',
-      },
-      trackingPositionIcon: {
-          flexDirection: 'row',
-          gap: responsiveWidth(1),
-          top: responsiveHeight(0.50),
-      },
-      trackTextColor: {
-          color: "#000000",
-      },
-     
-      GapTextorlabel:{
-        gap:responsiveHeight(1.5),
-        
+        color: '#374151',
+        marginBottom: responsiveHeight(0.8),
     },
-    petText:{
-        left:responsiveWidth(1),
-        color:"#787878",
-        top:responsiveHeight(1),
-        fontSize:12,
-        fontWeight:'500',
-        lineHeight:14
+    textInput: {
+        backgroundColor: '#FFFFFF',
     },
-    dividedropdown: {
-        // margin:8,
-        height:responsiveHeight(4.8),
-        width:responsiveWidth(90),
-        // backgroundColor: '#EEEEEE',
-        borderRadius:responsiveWidth(1),
-        borderWidth:1,
-        paddingHorizontal:responsiveWidth(2),
-        borderColor:'#CACACA'
-      },
-      selectedTextStyle: {
-        fontSize: 16,
-        marginLeft: 8,
-      },
-      placeholderStyle: {
-        fontSize: 16,
-      },
-      imageStyle: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-      },
-      iconStyle: {
-        width: 20,
-        height: 20,
-      },
-      bouncyCheckboxWidth:{ 
-        width: responsiveWidth(90) 
+    inputContent: {
+        backgroundColor: '#F8F9FB',
+        paddingVertical: responsiveHeight(1.5),
     },
-    borderColorandWidth:{ 
-        borderColor: "#299F4D", 
-        borderWidth: 2 
-    },
-    innerIconStyle:{ 
-        borderWidth: 1 
-    },
-    dateBox: {
+    inputOutline: {
         borderWidth: 1,
-        padding: 10,
-        borderRadius: 5,
-        borderColor: '#ccc',
-      },
-      DateTimePickerStyle:{
-                width:responsiveWidth(90),
-                borderWidth: 1,
-                padding: 10,
-                borderRadius: 5,
-                borderColor: '#ccc',
-              },
-
-
-              ImageSize:{
-                
-                  width:responsiveWidth(90),
-                  height:responsiveHeight(12),
-                  borderRadius:responsiveWidth(2)
-              },
-              imagesetCenter:{
-                marginTop: responsiveHeight(10.8),
-                 justifyContent:'center',
-                 alignItems:'center',
-              },
-
-                 // Fixed Button
-  fixedButtonContainer: {
-    position: 'absolute',
-    bottom: responsiveHeight(2),
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: '#fff', // Ensure background color to show shadow correctly
-    padding: 10,
-  
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 }, // Negative height to make shadow appear on top
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  
-    // Shadow for Android
-    elevation: 8, // Slight elevation to cast shadow (will show below on Android, so use background trick if needed)
-    zIndex: 10, // In case it's under other views
-},
-nextBtnContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: responsiveWidth(92),
-    height: responsiveHeight(5),
-    borderRadius: responsiveHeight(0.80),
-    backgroundColor: '#58B9D0',
-},
-nextBtnText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#FFFFFF',
-},
-
-textStyle:{
-            fontSize: 8,
-            fontWeight: '500',
-            lineHeight: 10,
-            letterSpacing: 0,
-            color: '#7E7E7E',
-            // right:5
-        },
-
-Gap:{
-  gap:responsiveHeight(2)
-},
-showCenterDropdown:{
-  justifyContent:'center',
-  alignItems:'center',
-  gap:responsiveHeight(2),
-  top:responsiveHeight(1)
-}
+        borderColor: '#E8E8E8',
+    },
+    
+    // Bottom Sheet Trigger
+    bottomSheetTrigger: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#F8F9FB',
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+        borderRadius: responsiveWidth(4),
+        paddingHorizontal: responsiveWidth(4),
+        paddingVertical: responsiveHeight(1.8),
+        minHeight: responsiveHeight(6),
+    },
+    bottomSheetTriggerText: {
+        fontSize: 16,
+        color: '#1A1A1A',
+        flex: 1,
+    },
+    bottomSheetPlaceholder: {
+        color: '#9CA3AF',
+    },
+    
+    // Date Row
+    dateRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: responsiveWidth(3),
+    },
+    dateColumn: {
+        flex: 1,
+    },
+    dateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FB',
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+        borderRadius: responsiveWidth(4),
+        paddingHorizontal: responsiveWidth(4),
+        paddingVertical: responsiveHeight(1.8),
+        minHeight: responsiveHeight(6),
+        gap: responsiveWidth(2),
+    },
+    dateText: {
+        fontSize: 16,
+        color: '#1A1A1A',
+        flex: 1,
+    },
+    
+    // Checkbox
+    checkboxContainer: {
+        marginTop: responsiveHeight(1),
+    },
+    checkboxText: {
+        fontSize: 16,
+        color: '#374151',
+        fontWeight: '500',
+        textDecorationLine: 'none',
+    },
+    
+    // Bottom Sheet Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    bottomSheetContainer: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: responsiveWidth(6),
+        borderTopRightRadius: responsiveWidth(6),
+        paddingBottom: responsiveHeight(4),
+        maxHeight: responsiveHeight(70),
+    },
+    bottomSheetHandle: {
+        width: responsiveWidth(12),
+        height: responsiveHeight(0.6),
+        backgroundColor: '#E5E7EB',
+        borderRadius: responsiveWidth(1),
+        alignSelf: 'center',
+        marginTop: responsiveHeight(1.5),
+        marginBottom: responsiveHeight(2),
+    },
+    bottomSheetHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: responsiveWidth(5),
+        paddingBottom: responsiveHeight(2),
+        borderBottomWidth: 1,
+        borderBottomColor: '#E8E8E8',
+    },
+    bottomSheetTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#1A1A1A',
+    },
+    bottomSheetList: {
+        paddingTop: responsiveHeight(1),
+    },
+    bottomSheetItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: responsiveWidth(5),
+        paddingVertical: responsiveHeight(2),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    bottomSheetItemText: {
+        fontSize: 16,
+        color: '#1A1A1A',
+        flex: 1,
+        lineHeight: 22,
+    },
+    
+    // Bottom Button Container
+    bottomButtonContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: responsiveWidth(4),
+        paddingTop: responsiveHeight(2),
+        paddingBottom: responsiveHeight(3),
+        borderTopWidth: 1,
+        borderTopColor: '#E8E8E8',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 8,
+    },
 
 
 

@@ -1,12 +1,27 @@
-import {useState}from 'react';
-import { View, Text,TouchableOpacity,Image,Platform  } from 'react-native';
-import { SelectCountry } from 'react-native-element-dropdown';
+import React, { useState } from 'react';
+import { 
+    View, 
+    Text, 
+    TouchableOpacity, 
+    Image, 
+    Platform, 
+    ScrollView, 
+    StatusBar,
+    Modal,
+    FlatList,
+    Alert 
+} from 'react-native';
+import { TextInput } from 'react-native-paper';
 import addvaccinationstyles from './addvaccination.styles';
 import Icons from '../../../assets/icons';
 import images from '../../../assets/images';
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { StackNavigationProp } from '@react-navigation/stack';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import LinearGradient from 'react-native-linear-gradient';
+import profileStyles from '../Profile/profileStyles';
+import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 
 
 
@@ -34,50 +49,30 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 
 
-const city_data = [
-    {
-      value: '1',
-      lable: 'kolkata1',
-    //   image: {
-    //     uri: 'https://www.vigcenter.com/public/all/images/default-image.jpg',
-    //   },
-    },
-    {
-      value: '2',
-      lable: 'kolkata2',
-    //   image: {
-    //     uri: 'https://www.vigcenter.com/public/all/images/default-image.jpg',
-    //   },
-    },
-    {
-      value: '3',
-      lable: 'state3',
-    //   image: {
-    //     uri: 'https://www.vigcenter.com/public/all/images/default-image.jpg',
-    //   },
-    },
-    {
-      value: '4',
-      lable: 'kolkata3',
-    //   image: {
-    //     uri: 'https://www.vigcenter.com/public/all/images/default-image.jpg',
-    //   },
-    },
-    {
-      value: '5',
-      lable: 'kolkata4',
-    //   image: {
-    //     uri: 'https://www.vigcenter.com/public/all/images/default-image.jpg',
-    //   },
-    },
-  ];
+const vaccine_data = [
+    { value: 'dhpp', label: 'DHPP (Distemper, Hepatitis, Parvovirus, Parainfluenza)' },
+    { value: 'rabies', label: 'Rabies' },
+    { value: 'leptospirosis', label: 'Leptospirosis' },
+    { value: 'bordetella', label: 'Bordetella (Kennel Cough)' },
+    { value: 'lyme', label: 'Lyme Disease' },
+    { value: 'canine_influenza', label: 'Canine Influenza' },
+    { value: 'coronavirus', label: 'Canine Coronavirus' },
+    { value: 'giardia', label: 'Giardia' },
+    { value: 'fvrcp', label: 'FVRCP (Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia)' },
+    { value: 'felv', label: 'FeLV (Feline Leukemia)' },
+    { value: 'fiv', label: 'FIV (Feline Immunodeficiency Virus)' },
+];
 
 const AddVaccination: React.FC<AddVaccinationProps> = ({navigation}) => {
-    const [country, setCountry] = useState<string>('1');
+    const [selectedVaccine, setSelectedVaccine] = useState<string>('');
+    const [vaccineName, setVaccineName] = useState<string>('');
     const [startdate, setStartdate] = useState(new Date());
-    const [enddate,setEnddate] = useState(new Date());
-    const [showstartdate,setShowstartdate] = useState<boolean>(false);
-    const [showenddate,setShowenddate] = useState<boolean>(false);
+    const [enddate, setEnddate] = useState(new Date());
+    const [showstartdate, setShowstartdate] = useState<boolean>(false);
+    const [showenddate, setShowenddate] = useState<boolean>(false);
+    const [showVaccineModal, setShowVaccineModal] = useState<boolean>(false);
+    const [notes, setNotes] = useState<string>('');
+    const [isRequired, setIsRequired] = useState<boolean>(false);
   
     const onChangestartdate = (event:any, selectedDate?: Date) => {
         setShowstartdate(Platform.OS === 'ios');
@@ -87,127 +82,295 @@ const AddVaccination: React.FC<AddVaccinationProps> = ({navigation}) => {
         }
      };
 
-     const onChangeendtdate = (event:any, selectedDate?: Date) => {
-        console.log("End Date",selectedDate)
-        setShowenddate(Platform.OS === 'ios')
-         if (selectedDate) {
+    const onChangeendtdate = (event: any, selectedDate?: Date) => {
+        console.log("End Date", selectedDate);
+        setShowenddate(Platform.OS === 'ios');
+        if (selectedDate) {
             setEnddate(selectedDate);
-         
         }
-     };
+    };
+
+    const handleAddVaccination = () => {
+        if (!selectedVaccine && !vaccineName) {
+            Alert.alert('Error', 'Please select or enter a vaccine name');
+            return;
+        }
+
+        // Here you would typically save to API
+        console.log('Adding vaccination:', {
+            vaccine: selectedVaccine || vaccineName,
+            startDate: startdate,
+            endDate: enddate,
+            notes,
+            isRequired
+        });
+
+        Alert.alert(
+            'Success',
+            'Vaccination added successfully!',
+            [
+                {
+                    text: 'OK',
+                    onPress: () => navigation.goBack(),
+                }
+            ]
+        );
+    };
+
+    const getSelectedVaccineName = () => {
+        if (selectedVaccine) {
+            const vaccine = vaccine_data.find(v => v.value === selectedVaccine);
+            return vaccine ? vaccine.label : '';
+        }
+        return '';
+    };
+
     return (
         <View style={addvaccinationstyles.container}>
-          <View style={addvaccinationstyles.positionDateTimeIcon}>
-                        <TouchableOpacity
-                            // onPress={() => navigation.navigate('Grooming')}
-                         >
-                            <View style={addvaccinationstyles.flexGap}>
-                                <Image
-                                    source={Icons.LeftArrow}
-                                    style={addvaccinationstyles.iconColor}
-                                />
-                                <Text style={addvaccinationstyles.textDateTime}>
-                                 Add Vaccine
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-              
-                  <View style={addvaccinationstyles.Gap}>
-
-                    <View style={addvaccinationstyles.imagesetCenter}>
-                       <Image source={images.veterinariTakingImage} style={addvaccinationstyles.ImageSize}/>
-                     </View>
-                      <Text style={addvaccinationstyles.addvaccinText}>Add Vaccine</Text>  
-                 </View>
-                      
-             <View style={addvaccinationstyles.showCenterDropdown}>
-               <View style={addvaccinationstyles.GapTextorlabel}>
-                 <Text style={addvaccinationstyles.petText}>Name of the vaccine*</Text>
-                   <View style={addvaccinationstyles.GapTextorlabel} >
-                   <SelectCountry
-                    style={addvaccinationstyles.dividedropdown}
-                    selectedTextStyle={addvaccinationstyles.selectedTextStyle}
-                    placeholderStyle={addvaccinationstyles.placeholderStyle}
-                    imageStyle={addvaccinationstyles.imageStyle}
-                    iconStyle={addvaccinationstyles.iconStyle}
-                    maxHeight={200}
-                    value={country}
-                    data={city_data}
-                    valueField="value"
-                    labelField="lable"
-                    imageField="image"
-                    placeholder="Select country"
-                    searchPlaceholder="Search..."
-                    onChange={e => {
-                    setCountry(e.value);
-                    }}
-                 />
-                 <BouncyCheckbox
-                          style={addvaccinationstyles.bouncyCheckboxWidth}
-                          size={15}
-                          fillColor="#299F4D" 
-                          unFillColor="#299F4D" 
-                          text="Gegen: Lepto, Parvo, Distemper, Rabies"
-                          iconStyle={addvaccinationstyles.borderColorandWidth}
-                          innerIconStyle={addvaccinationstyles.innerIconStyle}
-                          textStyle={addvaccinationstyles.textStyle}
-                          
-                          isChecked={false}
-                          onPress={(isChecked: boolean) => {
-                            console.log(isChecked);
-                          }}
-                        />
-                   </View>
-                 </View>
-
-                 <View style={addvaccinationstyles.GapTextorlabel}>
-                 <Text style={addvaccinationstyles.petText}>Good from*</Text>
-                 <TouchableOpacity
-                        onPress={() => setShowstartdate(true)}
-                        style={addvaccinationstyles.DateTimePickerStyle}
-                    >
-                    <Text>{startdate.toLocaleDateString('en-GB')}</Text>
-                </TouchableOpacity>
-                    {showstartdate && (
-                        <DateTimePicker
-                        testID="dateTimePicker"
-                        value={startdate}
-                        mode="date"
-                        display="default"
-                        onChange={onChangestartdate}
-                        />
-                    )}
-                 </View>
-
-                 <View style={addvaccinationstyles.GapTextorlabel}>
-                 <Text style={addvaccinationstyles.petText}>Good until*</Text>
-                 <TouchableOpacity
-                        onPress={() => setShowenddate(true)}
-                        style={addvaccinationstyles.DateTimePickerStyle}
-                    >
-                    <Text>{enddate.toLocaleDateString('en-GB')}</Text>
-                </TouchableOpacity>
-                    {showenddate && (
-                        <DateTimePicker
-                        testID="dateTimePicker"
-                        value={enddate}
-                        mode="date"
-                        display="default"
-                        onChange={onChangeendtdate}
-                        />
-                    )}
-                 </View>
-                   </View>
-                  
+            <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
             
-                <View style={addvaccinationstyles.fixedButtonContainer}>
-                      <TouchableOpacity
-                           onPress={() =>navigation.navigate("BoardingRegistrationform")}
-                          style={addvaccinationstyles.nextBtnContainer}>
-                          <Text style={addvaccinationstyles.nextBtnText}>Add Vaccination</Text>
-                      </TouchableOpacity>
-              </View>
+            {/* Standardized Boarding Header */}
+            <View style={addvaccinationstyles.boardingStandardHeader}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    style={addvaccinationstyles.boardingBackButton}
+                >
+                    <MaterialIcons name="arrow-back" size={22} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={addvaccinationstyles.boardingHeaderTitleContainer}>
+                    <Text style={addvaccinationstyles.boardingHeaderTitle}>Add Vaccination</Text>
+                    <Text style={addvaccinationstyles.boardingHeaderSubtitle}>Add vaccination record for your pet</Text>
+                </View>
+                <View style={addvaccinationstyles.boardingHeaderActions}>
+                    {/* Placeholder for future actions */}
+                </View>
+            </View>
+
+            <ScrollView 
+                style={addvaccinationstyles.scrollView}
+                contentContainerStyle={addvaccinationstyles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Hero Image Section */}
+                <View style={addvaccinationstyles.heroSection}>
+                    <View style={addvaccinationstyles.heroImageContainer}>
+                        <Image 
+                            source={images.veterinariTakingImage} 
+                            style={addvaccinationstyles.heroImage}
+                        />
+                    </View>
+                    <Text style={addvaccinationstyles.heroTitle}>Vaccination Record</Text>
+                    <Text style={addvaccinationstyles.heroSubtitle}>Keep your pet's vaccination records up to date</Text>
+                </View>
+
+                {/* Vaccination Details Form */}
+                <View style={addvaccinationstyles.formSection}>
+                    <View style={addvaccinationstyles.sectionCard}>
+                        <View style={addvaccinationstyles.sectionHeader}>
+                            <MaterialIcons name="medical-services" size={24} color="#58B9D0" />
+                            <Text style={addvaccinationstyles.sectionHeaderTitle}>Vaccination Details</Text>
+                        </View>
+
+                        {/* Vaccine Selection */}
+                        <View style={addvaccinationstyles.inputGroup}>
+                            <Text style={addvaccinationstyles.inputLabel}>Vaccine Name *</Text>
+                            <TouchableOpacity 
+                                style={addvaccinationstyles.bottomSheetTrigger}
+                                onPress={() => setShowVaccineModal(true)}
+                            >
+                                <Text style={[
+                                    addvaccinationstyles.bottomSheetTriggerText,
+                                    !selectedVaccine && addvaccinationstyles.bottomSheetPlaceholder
+                                ]}>
+                                    {getSelectedVaccineName() || 'Select vaccine type'}
+                                </Text>
+                                <MaterialIcons name="keyboard-arrow-down" size={24} color="#666" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Custom Vaccine Name */}
+                        <View style={addvaccinationstyles.inputGroup}>
+                            <Text style={addvaccinationstyles.inputLabel}>Or enter custom vaccine name</Text>
+                            <TextInput
+                                mode="outlined"
+                                placeholder="Enter vaccine name"
+                                value={vaccineName}
+                                onChangeText={setVaccineName}
+                                style={addvaccinationstyles.textInput}
+                                contentStyle={addvaccinationstyles.inputContent}
+                                outlineStyle={addvaccinationstyles.inputOutline}
+                                theme={{ 
+                                    roundness: 16,
+                                    colors: { primary: '#58B9D0', outline: '#E8E8E8' }
+                                }}
+                                left={
+                                    <TextInput.Icon
+                                        icon={() => (
+                                            <MaterialIcons 
+                                                name="edit" 
+                                                size={20} 
+                                                color="#666" 
+                                            />
+                                        )}
+                                    />
+                                }
+                            />
+                        </View>
+
+                        {/* Date Range */}
+                        <View style={addvaccinationstyles.dateRow}>
+                            <View style={addvaccinationstyles.dateColumn}>
+                                <Text style={addvaccinationstyles.inputLabel}>Vaccination Date *</Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowstartdate(true)}
+                                    style={addvaccinationstyles.dateButton}
+                                >
+                                    <MaterialIcons name="calendar-today" size={20} color="#58B9D0" />
+                                    <Text style={addvaccinationstyles.dateText}>
+                                        {startdate.toLocaleDateString('en-GB')}
+                                    </Text>
+                                </TouchableOpacity>
+                                {showstartdate && (
+                                    <DateTimePicker
+                                        testID="startDatePicker"
+                                        value={startdate}
+                                        mode="date"
+                                        display="default"
+                                        onChange={onChangestartdate}
+                                    />
+                                )}
+                            </View>
+
+                            <View style={addvaccinationstyles.dateColumn}>
+                                <Text style={addvaccinationstyles.inputLabel}>Expiry Date *</Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowenddate(true)}
+                                    style={addvaccinationstyles.dateButton}
+                                >
+                                    <MaterialIcons name="event" size={20} color="#FF6B6B" />
+                                    <Text style={addvaccinationstyles.dateText}>
+                                        {enddate.toLocaleDateString('en-GB')}
+                                    </Text>
+                                </TouchableOpacity>
+                                {showenddate && (
+                                    <DateTimePicker
+                                        testID="endDatePicker"
+                                        value={enddate}
+                                        mode="date"
+                                        display="default"
+                                        onChange={onChangeendtdate}
+                                    />
+                                )}
+                            </View>
+                        </View>
+
+                        {/* Notes */}
+                        <View style={addvaccinationstyles.inputGroup}>
+                            <Text style={addvaccinationstyles.inputLabel}>Additional Notes</Text>
+                            <TextInput
+                                mode="outlined"
+                                placeholder="Any special notes about this vaccination"
+                                value={notes}
+                                onChangeText={setNotes}
+                                multiline
+                                numberOfLines={3}
+                                style={addvaccinationstyles.textInput}
+                                contentStyle={addvaccinationstyles.inputContent}
+                                outlineStyle={addvaccinationstyles.inputOutline}
+                                theme={{ 
+                                    roundness: 16,
+                                    colors: { primary: '#58B9D0', outline: '#E8E8E8' }
+                                }}
+                                left={
+                                    <TextInput.Icon
+                                        icon={() => (
+                                            <MaterialIcons 
+                                                name="note" 
+                                                size={20} 
+                                                color="#666" 
+                                            />
+                                        )}
+                                    />
+                                }
+                            />
+                        </View>
+
+                        {/* Required Checkbox */}
+                        <View style={addvaccinationstyles.checkboxContainer}>
+                            <BouncyCheckbox
+                                size={20}
+                                fillColor="#58B9D0"
+                                unFillColor="#FFFFFF"
+                                text="This is a required vaccination"
+                                iconStyle={{ borderColor: "#58B9D0", borderWidth: 2 }}
+                                innerIconStyle={{ borderWidth: 1 }}
+                                textStyle={addvaccinationstyles.checkboxText}
+                                isChecked={isRequired}
+                                onPress={setIsRequired}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+
+            {/* Bottom Sheet Modal for Vaccine Selection */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showVaccineModal}
+                onRequestClose={() => setShowVaccineModal(false)}
+            >
+                <View style={addvaccinationstyles.modalOverlay}>
+                    <View style={addvaccinationstyles.bottomSheetContainer}>
+                        <View style={addvaccinationstyles.bottomSheetHandle}></View>
+                        <View style={addvaccinationstyles.bottomSheetHeader}>
+                            <Text style={addvaccinationstyles.bottomSheetTitle}>Select Vaccine</Text>
+                            <TouchableOpacity onPress={() => setShowVaccineModal(false)}>
+                                <MaterialIcons name="close" size={24} color="#666" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <FlatList
+                            data={vaccine_data}
+                            keyExtractor={(item) => item.value}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={addvaccinationstyles.bottomSheetItem}
+                                    onPress={() => {
+                                        setSelectedVaccine(item.value);
+                                        setVaccineName(''); // Clear custom name when selecting from list
+                                        setShowVaccineModal(false);
+                                    }}
+                                >
+                                    <Text style={addvaccinationstyles.bottomSheetItemText}>{item.label}</Text>
+                                    {selectedVaccine === item.value && (
+                                        <MaterialIcons name="check" size={20} color="#58B9D0" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={addvaccinationstyles.bottomSheetList}
+                        />
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Fixed Bottom Button */}
+            <View style={addvaccinationstyles.bottomButtonContainer}>
+                <TouchableOpacity 
+                    onPress={handleAddVaccination}
+                    style={[
+                        profileStyles.commonButton,
+                        profileStyles.commonButtonPrimary
+                    ]}
+                    activeOpacity={0.8}
+                >
+                    <MaterialIcons name="add" size={22} color="#58B9D0" style={profileStyles.commonButtonIcon} />
+                    <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextPrimary]}>
+                        Add Vaccination Record
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };

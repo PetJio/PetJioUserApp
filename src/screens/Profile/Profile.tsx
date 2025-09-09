@@ -142,45 +142,130 @@ const Profile: React.FC = () => {
 
   const fetchPetOwnerData = async () => {
     try {
-      // Try different possible token keys
-      const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-      let token = null;
+      console.log('🔍 TOKEN DEBUGGING - Starting token retrieval');
       
-      for (const key of possibleTokenKeys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value) {
-          // Parse JSON if the token is stored as a string
-          try {
-            token = JSON.parse(value);
-          } catch {
-            token = value;
-          }
-          break;
+      // Debug: Check all possible token storage locations
+      const allStorageKeys = await AsyncStorage.getAllKeys();
+      console.log('📱 All AsyncStorage keys:', allStorageKeys);
+      
+      // Use storageService to get token consistently
+      let token = await storageService.getUserToken();
+      console.log('🔧 StorageService token result:', {
+        found: !!token,
+        type: typeof token,
+        preview: token ? `${token.substring(0, 10)}...` : 'None'
+      });
+      
+      // If no token from storageService, try fallback method
+      if (!token) {
+        console.log('🔄 No token from storageService, trying manual search...');
+        const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+        
+        // Debug: Check what's actually stored in each key
+        for (const key of possibleTokenKeys) {
+          const rawValue = await AsyncStorage.getItem(key);
+          console.log(`🔑 Key "${key}":`, {
+            exists: !!rawValue,
+            type: typeof rawValue,
+            length: rawValue ? rawValue.length : 0,
+            preview: rawValue ? `${rawValue.substring(0, 20)}...` : 'null'
+          });
         }
+        
+        for (const key of possibleTokenKeys) {
+          const value = await AsyncStorage.getItem(key);
+          if (value) {
+            try {
+              token = JSON.parse(value);
+              console.log(`✅ Token successfully parsed from key: ${key}`);
+            } catch {
+              token = value;
+              console.log(`✅ Token used as string from key: ${key}`);
+            }
+            break;
+          }
+        }
+      } else {
+        console.log('✅ Token found using storageService');
       }
       
       if (!token) {
+        console.error('No authentication token found');
         Alert.alert('Error', 'Please login to view profile');
         setLoading(false);
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`, {
+      console.log('🚀 PROFILE API DEBUG - Starting profile fetch');
+      console.log('🔑 Token Details:', {
+        tokenExists: !!token,
+        tokenType: typeof token,
+        tokenLength: token ? token.length : 0,
+        tokenPreview: token ? `${token.substring(0, 10)}...` : 'No token',
+      });
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+      const requestHeaders = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      console.log('🌐 Request Details:', {
+        url: apiUrl,
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          ...requestHeaders,
+          Authorization: requestHeaders.Authorization ? `Bearer ${token.substring(0, 10)}...` : 'Missing',
         },
+      });
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: requestHeaders,
+      });
+
+      console.log('📥 Response Details:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+        });
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
-      const data: ApiResponse = await response.json();
+      const responseText = await response.text();
+      console.log('📄 Raw Response Text:', responseText);
+
+      let data: ApiResponse;
+      try {
+        data = JSON.parse(responseText);
+        console.log('✅ Parsed Response Data:', {
+          statusCode: data.statusCode,
+          message: data.message,
+          hasBody: !!data.body,
+          bodyKeys: data.body ? Object.keys(data.body) : [],
+        });
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
       
       if (data.statusCode === 200) {
+        console.log('✅ Success Response - Profile data loaded:', {
+          userId: data.body.userId,
+          firstName: data.body.firstName,
+          email: data.body.email,
+          hasProfileImg: !!data.body.profileImg,
+        });
+        
         setPetOwner(data.body);
         // Populate form fields
         setFirstName(data.body.firstName || '');
@@ -192,13 +277,24 @@ const Profile: React.FC = () => {
         setCity(data.body.city || '');
         setState(data.body.state || '');
         setPinCode(data.body.pinCode || '');
+        
+        console.log('✅ Form fields populated successfully');
       } else {
+        console.error('❌ API returned non-200 status:', {
+          statusCode: data.statusCode,
+          message: data.message,
+        });
         setMessage({type: 'error', text: data.message || 'Failed to fetch profile data'});
       }
     } catch (error) {
-      console.error('Error fetching pet owner data:', error);
+      console.error('🔥 Critical Error in fetchPetOwnerData:', {
+        errorName: error.name,
+        errorMessage: error.message,
+        errorStack: error.stack,
+      });
       setMessage({type: 'error', text: `Failed to fetch profile data: ${error.message}`});
     } finally {
+      console.log('🏁 fetchPetOwnerData completed, setting loading to false');
       setLoading(false);
     }
   };
@@ -206,70 +302,164 @@ const Profile: React.FC = () => {
   const fetchPetProfiles = async () => {
     setLoadingPets(true);
     try {
-      // Try different possible token keys like in fetchPetOwnerData
-      const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-      let token = null;
+      console.log('🔍 PET PROFILES DEBUG - Starting pet profiles fetch');
       
-      for (const key of possibleTokenKeys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value) {
-          try {
-            token = JSON.parse(value);
-          } catch {
-            token = value;
-          }
-          break;
-        }
-      }
+      // Use storageService to get token consistently
+      let token = await storageService.getUserToken();
       
-      // Try to get userId from multiple sources
-      let userId = null;
-      
-      // First try from storageService
-      try {
-        const userData = await storageService.getUserData();
-        userId = userData?.userId;
-      } catch (error) {
-        console.log('Could not get userId from storageService:', error);
-      }
-      
-      // If not found, try to get from petOwner state
-      if (!userId && petOwner) {
-        userId = petOwner.userId;
-      }
-      
-      // If still not found, try AsyncStorage directly
-      if (!userId) {
-        const possibleUserKeys = ['userData', 'user', 'userInfo'];
-        for (const key of possibleUserKeys) {
+      // If no token from storageService, try fallback method
+      if (!token) {
+        console.log('🔄 No token from storageService, trying manual search...');
+        const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+        
+        for (const key of possibleTokenKeys) {
           const value = await AsyncStorage.getItem(key);
           if (value) {
             try {
-              const userData = JSON.parse(value);
-              if (userData?.userId) {
-                userId = userData.userId;
-                break;
+              token = JSON.parse(value);
+              console.log(`✅ Token successfully parsed from key: ${key}`);
+            } catch {
+              token = value;
+              console.log(`✅ Token used as string from key: ${key}`);
+            }
+            break;
+          }
+        }
+      } else {
+        console.log('✅ Token found using storageService');
+      }
+      
+      console.log('🔑 Pet Profiles Token Details:', {
+        tokenExists: !!token,
+        tokenType: typeof token,
+        tokenLength: token ? token.length : 0,
+        tokenPreview: token ? `${token.substring(0, 10)}...` : 'No token',
+      });
+      
+      // Use the same owner ID approach as AddPet - get the 'id' field from petOwner
+      let ownerId = null;
+      
+      console.log('🔍 Trying to get owner ID from multiple sources...');
+      
+      // First priority: Use the 'id' field from petOwner state (this is the owner ID we need)
+      if (petOwner && petOwner.id) {
+        ownerId = petOwner.id;
+        console.log('✅ Found owner ID from petOwner.id:', ownerId);
+      }
+      
+      // Second priority: Try to get owner data from API directly if petOwner is not available
+      if (!ownerId) {
+        console.log('🔄 petOwner.id not available, fetching from API...');
+        try {
+          if (!token) {
+            console.error('❌ No token available for API call');
+          } else {
+            const ownerApiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+            console.log('🌐 Fetching owner data from:', ownerApiUrl);
+            
+            const ownerResponse = await fetch(ownerApiUrl, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            console.log('📥 Owner API Response Details:', {
+              status: ownerResponse.status,
+              statusText: ownerResponse.statusText,
+              ok: ownerResponse.ok,
+            });
+            
+            if (ownerResponse.ok) {
+              const ownerResponseText = await ownerResponse.text();
+              console.log('📄 Owner Raw Response Text:', ownerResponseText);
+              
+              const ownerData = JSON.parse(ownerResponseText);
+              if (ownerData.statusCode === 200 && ownerData.body?.id) {
+                ownerId = ownerData.body.id;
+                console.log('✅ Owner ID found from API:', ownerId);
+              } else {
+                console.error('❌ Owner API returned non-200 status or no ID found');
               }
-            } catch (error) {
-              console.log(`Error parsing ${key}:`, error);
+            } else {
+              const errorText = await ownerResponse.text();
+              console.error('❌ Owner API Error:', errorText);
+            }
+          }
+        } catch (ownerError) {
+          console.error('🔥 Error fetching owner data:', ownerError);
+        }
+      }
+      
+      // Fallback: Try old method with userId for backward compatibility
+      if (!ownerId) {
+        console.log('🔄 Falling back to userId method...');
+        
+        // First try from storageService
+        try {
+          const userData = await storageService.getUserData();
+          ownerId = userData?.userId;
+          console.log('StorageService userData:', userData);
+          console.log('Using userId as fallback ownerId:', ownerId);
+        } catch (error) {
+          console.log('Could not get userId from storageService:', error);
+        }
+        
+        // If not found, try to get from petOwner state
+        if (!ownerId && petOwner) {
+          ownerId = petOwner.userId;
+          console.log('Using petOwner.userId as fallback ownerId:', ownerId);
+        }
+        
+        // If still not found, try AsyncStorage directly
+        if (!ownerId) {
+          const possibleUserKeys = ['userData', 'user', 'userInfo'];
+          for (const key of possibleUserKeys) {
+            const value = await AsyncStorage.getItem(key);
+            if (value) {
+              try {
+                const userData = JSON.parse(value);
+                if (userData?.userId) {
+                  ownerId = userData.userId;
+                  console.log(`Found userId in ${key}:`, ownerId);
+                  break;
+                }
+              } catch (error) {
+                console.log(`Error parsing ${key}:`, error);
+              }
             }
           }
         }
       }
       
       if (!token) {
-        console.error('No authentication token found');
+        console.error('❌ No authentication token found');
         setMessage({type: 'error', text: 'Authentication token not found. Please login again.'});
         return;
       }
       
-      if (!userId) {
-        console.error('No userId found');
-        setMessage({type: 'error', text: 'User ID not found. Please try refreshing the page.'});
+      if (!ownerId) {
+        console.error('❌ No owner ID found from any source');
+        setMessage({type: 'error', text: 'Owner ID not found. Please try refreshing the page.'});
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile/owner/${userId}`, {
+      console.log('🚀 PET PROFILES API DEBUG - Starting pet profiles fetch');
+      console.log('🔑 Final Owner ID being used:', ownerId);
+      console.log('🔑 Owner ID type:', typeof ownerId);
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/owner/${ownerId}`;
+      console.log('🌐 Pet Profiles Request Details:', {
+        url: apiUrl,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token.substring(0, 10)}...`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -277,22 +467,69 @@ const Profile: React.FC = () => {
         },
       });
 
+      console.log('📥 Pet Profiles Response Details:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ Pet Profiles API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+        });
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
-      const result: PetApiResponse = await response.json();
+      const responseText = await response.text();
+      console.log('📄 Pet Profiles Raw Response Text:', responseText);
+
+      let result: PetApiResponse;
+      try {
+        result = JSON.parse(responseText);
+        console.log('✅ Pet Profiles Parsed Response Data:', {
+          statusCode: result.statusCode,
+          message: result.message,
+          hasBody: !!result.body,
+          petCount: result.body ? result.body.length : 0,
+          petNames: result.body ? result.body.map(pet => pet.petName) : [],
+        });
+      } catch (parseError) {
+        console.error('❌ Pet Profiles JSON Parse Error:', parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
       
       if (result.statusCode === 200) {
+        console.log('✅ Pet Profiles Success - Data loaded:', {
+          petCount: result.body ? result.body.length : 0,
+          pets: result.body ? result.body.map(pet => ({
+            id: pet.id,
+            name: pet.petName,
+            category: pet.category?.catName,
+            size: pet.size?.size,
+            gender: pet.gender?.name,
+          })) : [],
+        });
         setPetProfiles(result.body || []);
       } else {
+        console.error('❌ Pet Profiles API returned non-200 status:', {
+          statusCode: result.statusCode,
+          message: result.message,
+        });
         throw new Error(result.message || 'Failed to fetch pet profiles');
       }
     } catch (error) {
-      console.error('Error fetching pet profiles:', error);
+      console.error('🔥 Critical Error in fetchPetProfiles:', {
+        errorName: error.name,
+        errorMessage: error.message,
+        errorStack: error.stack,
+      });
       setMessage({type: 'error', text: `Failed to load pet profiles: ${error.message}`});
     } finally {
+      console.log('🏁 fetchPetProfiles completed, setting loadingPets to false');
       setLoadingPets(false);
     }
   };
@@ -427,18 +664,23 @@ const Profile: React.FC = () => {
 
   const getPresignedUrl = async (fileName: string, fileType: string) => {
     try {
-      const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-      let token = null;
+      // Use storageService to get token consistently
+      let token = await storageService.getUserToken();
       
-      for (const key of possibleTokenKeys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value) {
-          try {
-            token = JSON.parse(value);
-          } catch {
-            token = value;
+      // If no token from storageService, try fallback method
+      if (!token) {
+        const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+        
+        for (const key of possibleTokenKeys) {
+          const value = await AsyncStorage.getItem(key);
+          if (value) {
+            try {
+              token = JSON.parse(value);
+            } catch {
+              token = value;
+            }
+            break;
           }
-          break;
         }
       }
 
@@ -553,18 +795,23 @@ const Profile: React.FC = () => {
 
   const updatePetOwnerProfile = async (profileImageUrl: string) => {
     try {
-      const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-      let token = null;
+      // Use storageService to get token consistently
+      let token = await storageService.getUserToken();
       
-      for (const key of possibleTokenKeys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value) {
-          try {
-            token = JSON.parse(value);
-          } catch {
-            token = value;
+      // If no token from storageService, try fallback method
+      if (!token) {
+        const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+        
+        for (const key of possibleTokenKeys) {
+          const value = await AsyncStorage.getItem(key);
+          if (value) {
+            try {
+              token = JSON.parse(value);
+            } catch {
+              token = value;
+            }
+            break;
           }
-          break;
         }
       }
 
@@ -725,6 +972,25 @@ const Profile: React.FC = () => {
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         <View style={profileStyles.errorContainer}>
           <Text style={profileStyles.errorText}>Failed to load profile data</Text>
+          <TouchableOpacity 
+            onPress={handleLogout}
+            style={[
+              profileStyles.commonButton,
+              profileStyles.commonButtonDanger,
+              isLoggingOut && profileStyles.loadingButton,
+              { marginTop: 20 }
+            ]}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? (
+              <ActivityIndicator size="small" color="#FF6B6B" />
+            ) : (
+              <>
+                <MaterialIcons name="logout" size={20} color="#FF6B6B" style={{marginRight: 8}} />
+                <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextDanger]}>Sign Out</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     );
@@ -1298,231 +1564,51 @@ interface PetCardProps {
 }
 
 const PetCard: React.FC<PetCardProps> = ({ pet, onUpdate }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [petName, setPetName] = useState(pet.petName || '');
-  const [ageYears, setAgeYears] = useState(pet.ageInYears?.toString() || '');
-  const [ageMonths, setAgeMonths] = useState(pet.ageInMonths?.toString() || '');
-  const [weight, setWeight] = useState(pet.weight || '');
-  const [height, setHeight] = useState(pet.height || '');
-  const [dailyFeedCount, setDailyFeedCount] = useState(pet.dailyFeedCount?.toString() || '');
-  const [treats, setTreats] = useState(pet.treats || '');
-  const [cookies, setCookies] = useState(pet.cookie || '');
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      // Use the same token retrieval strategy as other functions
-      const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-      let token = null;
-      
-      for (const key of possibleTokenKeys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value) {
-          try {
-            token = JSON.parse(value);
-          } catch {
-            token = value;
-          }
-          break;
-        }
-      }
-      
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-      
-      const updateData = {
-        petName,
-        ageInYears: ageYears ? parseInt(ageYears) : null,
-        ageInMonths: ageMonths ? parseInt(ageMonths) : null,
-        weight,
-        height,
-        dailyFeedCount: dailyFeedCount ? parseInt(dailyFeedCount) : null,
-        treats,
-        cookie: cookies,
-      };
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile/${pet.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (response.ok) {
-        setIsEditing(false);
-        onUpdate();
-      } else {
-        const errorText = await response.text();
-        throw new Error(`Failed to update pet profile: ${errorText}`);
-      }
-    } catch (error) {
-      console.error('Error updating pet:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Reset values
-    setPetName(pet.petName || '');
-    setAgeYears(pet.ageInYears?.toString() || '');
-    setAgeMonths(pet.ageInMonths?.toString() || '');
-    setWeight(pet.weight || '');
-    setHeight(pet.height || '');
-    setDailyFeedCount(pet.dailyFeedCount?.toString() || '');
-    setTreats(pet.treats || '');
-    setCookies(pet.cookie || '');
-  };
 
   return (
     <View style={profileStyles.petCard}>
       <View style={profileStyles.petCardHeader}>
         <View style={profileStyles.petImageContainer}>
-          <Image
-            source={{ uri: pet.profileImg || undefined }}
-            style={profileStyles.petImage}
-            defaultSource={require('../../../assets/icons/googleIcon.png')}
-          />
+          {pet.profileImg ? (
+            <Image
+              source={{ uri: pet.profileImg }}
+              style={profileStyles.petImage}
+              defaultSource={require('../../../assets/icons/googleIcon.png')}
+            />
+          ) : (
+            <View style={[profileStyles.petImage, profileStyles.defaultPetImageContainer]}>
+              <MaterialIcons name="pets" size={40} color="#58B9D0" />
+            </View>
+          )}
         </View>
         <View style={profileStyles.petBasicInfo}>
           <Text style={profileStyles.petName}>{pet.petName}</Text>
           <Text style={profileStyles.petCategory}>{pet.category.catName} • {pet.gender.name}</Text>
           <Text style={profileStyles.petSize}>Size: {pet.size.size}</Text>
+          {pet.ageInYears !== null && pet.ageInMonths !== null && (
+            <Text style={profileStyles.petAge}>
+              Age: {pet.ageInYears} years {pet.ageInMonths} months
+            </Text>
+          )}
+          {pet.weight && (
+            <Text style={profileStyles.petWeight}>Weight: {pet.weight} kg</Text>
+          )}
+          {pet.dailyFeedCount && (
+            <Text style={profileStyles.petFeedCount}>Daily Feeds: {pet.dailyFeedCount}</Text>
+          )}
         </View>
         <TouchableOpacity
-          onPress={() => setIsEditing(!isEditing)}
+          onPress={() => navigate('EditPet', { pet })}
           style={profileStyles.editPetButton}
         >
           <MaterialIcons 
-            name={isEditing ? "close" : "edit"} 
+            name="edit" 
             size={20} 
             color="#58B9D0" 
           />
         </TouchableOpacity>
       </View>
 
-      {isEditing && (
-        <View style={profileStyles.petEditForm}>
-          <View style={profileStyles.petInputRow}>
-            <View style={profileStyles.petInputHalf}>
-              <TextInput
-                mode="outlined"
-                label="Pet Name"
-                value={petName}
-                onChangeText={setPetName}
-                style={profileStyles.petInput}
-              />
-            </View>
-            <View style={profileStyles.petInputHalf}>
-              <TextInput
-                mode="outlined"
-                label="Weight (kg)"
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="numeric"
-                style={profileStyles.petInput}
-              />
-            </View>
-          </View>
-
-          <View style={profileStyles.petInputRow}>
-            <View style={profileStyles.petInputHalf}>
-              <TextInput
-                mode="outlined"
-                label="Age (Years)"
-                value={ageYears}
-                onChangeText={setAgeYears}
-                keyboardType="numeric"
-                style={profileStyles.petInput}
-              />
-            </View>
-            <View style={profileStyles.petInputHalf}>
-              <TextInput
-                mode="outlined"
-                label="Age (Months)"
-                value={ageMonths}
-                onChangeText={setAgeMonths}
-                keyboardType="numeric"
-                style={profileStyles.petInput}
-              />
-            </View>
-          </View>
-
-          <View style={profileStyles.petInputRow}>
-            <View style={profileStyles.petInputHalf}>
-              <TextInput
-                mode="outlined"
-                label="Height (cm)"
-                value={height}
-                onChangeText={setHeight}
-                keyboardType="numeric"
-                style={profileStyles.petInput}
-              />
-            </View>
-            <View style={profileStyles.petInputHalf}>
-              <TextInput
-                mode="outlined"
-                label="Daily Feed Count"
-                value={dailyFeedCount}
-                onChangeText={setDailyFeedCount}
-                keyboardType="numeric"
-                style={profileStyles.petInput}
-              />
-            </View>
-          </View>
-
-          <TextInput
-            mode="outlined"
-            label="Treats"
-            value={treats}
-            onChangeText={setTreats}
-            style={profileStyles.petInputFull}
-            multiline
-          />
-
-          <TextInput
-            mode="outlined"
-            label="Cookies/Snacks"
-            value={cookies}
-            onChangeText={setCookies}
-            style={profileStyles.petInputFull}
-            multiline
-          />
-
-          <View style={profileStyles.petActionButtons}>
-            <TouchableOpacity
-              onPress={handleCancel}
-              style={profileStyles.petCancelButton}
-            >
-              <Text style={profileStyles.petCancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSave}
-              style={[profileStyles.petSaveButton, isSaving && profileStyles.loadingButton]}
-              disabled={isSaving}
-            >
-              <LinearGradient
-                colors={['#58B9D0', '#4A9FB8']}
-                style={profileStyles.petSaveGradient}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-              >
-                {isSaving ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={profileStyles.petSaveButtonText}>Save</Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
     </View>
   );
 };

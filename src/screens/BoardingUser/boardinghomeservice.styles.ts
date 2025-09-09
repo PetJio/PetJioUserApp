@@ -223,6 +223,21 @@ const boardinghomeservicestyles = StyleSheet.create({
         width: responsiveWidth(5),
         height: responsiveHeight(2),
     },
+    // Book button styles
+    bookButton: {
+        backgroundColor: '#007AFF',
+        borderRadius: responsiveWidth(2),
+        paddingVertical: responsiveHeight(1),
+        paddingHorizontal: responsiveWidth(6),
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: responsiveHeight(1),
+    },
+    bookButtonText: {
+        color: '#FFFFFF',
+        fontSize: responsiveWidth(3.5),
+        fontWeight: '600',
+    },
 });
 
 export default boardinghomeservicestyles;

@@ -131,7 +131,7 @@ const ChatList: React.FC = () => {
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Chats</Text>
-          <Text style={styles.headerSubtitle}>Stay connected with your pet care providers</Text>
+          <Text style={styles.headerSubtitle}>Chat with providers</Text>
         </View>
         <TouchableOpacity style={styles.newChatButton}>
           <MaterialIcons name="edit" size={20} color="#58B9D0" />

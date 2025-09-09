@@ -59,14 +59,14 @@ const boardingdetailstyles = StyleSheet.create({
         marginTop: responsiveHeight(2),
         marginBottom: responsiveHeight(1),
         borderRadius: 20,
-        padding: responsiveWidth(6),
+        padding: responsiveWidth(5),
         borderWidth: 1,
         borderColor: '#E8EBF0',
     },
 
     // Provider Info Styles
     gap: {
-        gap: responsiveHeight(2),
+        gap: responsiveHeight(1.5),
     },
     
     userTextWidth: {
@@ -144,13 +144,11 @@ const boardingdetailstyles = StyleSheet.create({
     },
     
     userimage: {
-        width: responsiveWidth(24),
-        height: responsiveWidth(24),
-        borderRadius: responsiveWidth(12),
-        marginBottom: responsiveHeight(2),
+        width: responsiveWidth(20),
+        height: responsiveWidth(20),
+        borderRadius: responsiveWidth(10),
+        marginBottom: responsiveHeight(1),
         alignSelf: 'center',
-        borderWidth: 3,
-        borderColor: '#E8EBF0',
     },
 
     // Tab Navigation Styles
@@ -201,7 +199,7 @@ const boardingdetailstyles = StyleSheet.create({
     center: {
         alignItems: 'center',
         paddingHorizontal: responsiveWidth(5),
-        // paddingVertical: responsiveHeight(2),
+        paddingVertical: responsiveHeight(2),
         marginTop: responsiveHeight(2),
     },
     
@@ -218,167 +216,6 @@ const boardingdetailstyles = StyleSheet.create({
     },
     
     ContinueText: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: '#58B9D0',
-        letterSpacing: 0.5,
-        marginLeft: responsiveWidth(2),
-    },
-    
-    // Missing styles
-    setDigitSize: {
-        fontSize: 16,
-        color: '#58B9D0',
-        fontWeight: '700',
-    },
-    
-    iconTextSpace: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    
-    bold: {
-        fontWeight: '700',
-        color: '#1A1D29',
-    },
-
-    // Loading and Error States
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: responsiveWidth(5),
-    },
-
-    loadingText: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: responsiveHeight(2),
-        textAlign: 'center',
-    },
-
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: responsiveWidth(5),
-    },
-
-    errorTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1A1D29',
-        marginTop: responsiveHeight(2),
-        marginBottom: responsiveHeight(1),
-        textAlign: 'center',
-    },
-
-    errorText: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: responsiveHeight(3),
-        lineHeight: 20,
-    },
-
-    retryButton: {
-        backgroundColor: '#58B9D0',
-        paddingHorizontal: responsiveWidth(8),
-        paddingVertical: responsiveHeight(1.5),
-        borderRadius: 12,
-    },
-
-    retryButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#FFFFFF',
-    },
-
-    // Debug text styles
-    debugContainer: {
-        backgroundColor: '#F0F0F0',
-        margin: responsiveWidth(5),
-        padding: responsiveWidth(3),
-        borderRadius: 8,
-        marginBottom: responsiveHeight(1),
-    },
-
-    debugText: {
-        fontSize: 12,
-        color: '#333',
-        fontFamily: 'monospace',
-    },
-
-    // Booking details section
-    bookingDetailsSection: {
-        backgroundColor: '#F8F9FB',
-        borderRadius: 16,
-        padding: responsiveWidth(4),
-        marginTop: responsiveHeight(1),
-        borderWidth: 1,
-        borderColor: '#E8EBF0',
-    },
-
-    bookingDetailsTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#1A1D29',
-        marginBottom: responsiveHeight(1),
-    },
-
-    bookingDetailItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: responsiveHeight(0.5),
-    },
-
-    bookingDetailLabel: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    bookingDetailValue: {
-        fontSize: 14,
-        color: '#1A1D29',
-        fontWeight: '600',
-    },
-
-    // Floating Button - Matching BookingUser Page Style
-    floatingButtonContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: responsiveWidth(5),
-        paddingVertical: responsiveHeight(2),
-        borderTopWidth: 1,
-        borderTopColor: '#E8EBF0',
-        // Shadow for iOS
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        // Elevation for Android
-        elevation: 8,
-    },
-
-    floatingButton: {
-        width: '100%',
-        height: responsiveHeight(6.5),
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: '#58B9D0',
-        backgroundColor: '#E6F3F7',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-
-    floatingButtonText: {
         fontSize: 17,
         fontWeight: '700',
         color: '#58B9D0',

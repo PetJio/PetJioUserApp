@@ -49,7 +49,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: responsiveWidth(3),
     paddingHorizontal: 20,
-    paddingBottom: responsiveHeight(2),
+    paddingVertical: responsiveHeight(2),
+    
   },
   textInput: {
     backgroundColor: '#FFFFFF',

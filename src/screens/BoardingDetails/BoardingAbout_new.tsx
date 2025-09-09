@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import Icons from '../../../assets/icons';
 import boardingaboutstyles from './boardingabout.styles';
+import BoardingModal from '../BoardingModal/BoardingModal';
 
 interface BoardingAboutProps {
     serviceDetails?: any;
@@ -18,6 +19,7 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({
     facilityName = "Pet Boarding Facility",
     experience = 3
 }) => {
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
     
     // Extract data from API response
     const boarding = serviceDetails?.boarding || {};
@@ -39,6 +41,12 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({
     
     return (
         <View style={boardingaboutstyles.container}>
+            <View>
+                <Text style={boardingaboutstyles.bioText}>Bio</Text>
+                <Text style={boardingaboutstyles.paragraphText}>
+                    {description}
+                </Text>
+            </View>
 
             {/* Service Details */}
             <View style={boardingaboutstyles.languageJobText}>
@@ -122,6 +130,15 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({
                         <Text style={boardingaboutstyles.mealCareOutSide}>Outside</Text>
                     </View>
                 </View>
+            </View>
+           
+            <BoardingModal modalVisible={modalVisible} setModalVisible={setModalVisible}/>
+            <View style={boardingaboutstyles.fixedButtonContainer}>
+                <TouchableOpacity
+                    onPress={() => setModalVisible(true)}
+                    style={boardingaboutstyles.nextBtnContainer}>
+                    <Text style={boardingaboutstyles.nextBtnText}>Book Now at {price} per day</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );

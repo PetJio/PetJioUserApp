@@ -654,6 +654,33 @@ const profileStyles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
     },
     
+    // Pet details styles
+    petAge: {
+        fontSize: FONT_SIZES.sm,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+    },
+    petWeight: {
+        fontSize: FONT_SIZES.sm,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+    },
+    petFeedCount: {
+        fontSize: FONT_SIZES.sm,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+    },
+    
+    // Default pet image container
+    defaultPetImageContainer: {
+        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'rgba(88, 185, 208, 0.3)',
+        borderStyle: 'dashed',
+    },
+    
     // New Enhanced UI Styles
     profileWelcomeCard: {
         backgroundColor: '#FFFFFF',

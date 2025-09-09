@@ -79,6 +79,7 @@ export type RootStackParamList = {
   ConfirmDetails: undefined;
   AddVaccination: undefined;
   AddPet: undefined;
+  EditPet: { pet: any };
   
   // Chat Screens
   ChatList: undefined;

@@ -9,6 +9,7 @@ import {
   StatusBar,
   Platform,
   KeyboardAvoidingView,
+  Image,
 } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -24,6 +25,7 @@ import { shadows } from '../../styles/shadows';
 import { API_CONFIG } from '../../config/api';
 import { storageService } from '../../utils/storage';
 import { goBack } from '../../utils/navigationService';
+import { RootStackNavigationProp } from '../../types/navigation';
 
 interface PetCategory {
   id: number;
@@ -40,6 +42,24 @@ interface PetGender {
   name: string;
 }
 
+interface PetProfile {
+  id: number;
+  petName: string;
+  ageInYears: number | null;
+  ageInMonths: number | null;
+  category: PetCategory;
+  size: PetSize;
+  height: string | null;
+  profileImg: string | null;
+  gender: PetGender;
+  weight: string | null;
+  dailyFeedCount: number | null;
+  treats: string | null;
+  cookie: string | null;
+  allergies?: string | null;
+  disability?: string | null;
+}
+
 interface ValidationErrors {
   petName?: string;
   ageInYears?: string;
@@ -49,19 +69,24 @@ interface ValidationErrors {
   gender?: string;
 }
 
-const AddPet: React.FC = () => {
-  const [petName, setPetName] = useState('');
-  const [ageInYears, setAgeInYears] = useState('');
-  const [ageInMonths, setAgeInMonths] = useState('');
-  const [category, setCategory] = useState<number | null>(null);
-  const [size, setSize] = useState<number | null>(null);
-  const [height, setHeight] = useState('');
-  const [gender, setGender] = useState<number | null>(null);
-  const [weight, setWeight] = useState('');
-  const [treats, setTreats] = useState('');
-  const [cookie, setCookie] = useState('');
-  const [allergies, setAllergies] = useState('');
-  const [disability, setDisability] = useState('');
+interface EditPetProps extends RootStackNavigationProp<'EditPet'> {}
+
+const EditPet: React.FC<EditPetProps> = ({ route }) => {
+  const pet = route?.params?.pet;
+
+  const [petName, setPetName] = useState(pet?.petName || '');
+  const [ageInYears, setAgeInYears] = useState(pet?.ageInYears?.toString() || '');
+  const [ageInMonths, setAgeInMonths] = useState(pet?.ageInMonths?.toString() || '');
+  const [category, setCategory] = useState<number | null>(pet?.category?.id || null);
+  const [size, setSize] = useState<number | null>(pet?.size?.id || null);
+  const [height, setHeight] = useState(pet?.height || '');
+  const [gender, setGender] = useState<number | null>(pet?.gender?.id || null);
+  const [weight, setWeight] = useState(pet?.weight || '');
+  const [treats, setTreats] = useState(pet?.treats || '');
+  const [cookie, setCookie] = useState(pet?.cookie || '');
+  const [allergies, setAllergies] = useState(pet?.allergies || '');
+  const [disability, setDisability] = useState(pet?.disability || '');
+  const [dailyFeedCount, setDailyFeedCount] = useState(pet?.dailyFeedCount?.toString() || '');
 
   const [petCategories, setPetCategories] = useState<PetCategory[]>([]);
   const [petSizes, setPetSizes] = useState<PetSize[]>([]);
@@ -73,6 +98,12 @@ const AddPet: React.FC = () => {
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   useEffect(() => {
+    if (!pet) {
+      Alert.alert('Error', 'Pet data not found', [
+        { text: 'OK', onPress: () => goBack() }
+      ]);
+      return;
+    }
     fetchDropdownData();
   }, []);
 
@@ -86,33 +117,6 @@ const AddPet: React.FC = () => {
           return JSON.parse(value);
         } catch {
           return value;
-        }
-      }
-    }
-    return null;
-  };
-
-  const getUserId = async () => {
-    try {
-      const userData = await storageService.getUserData();
-      if (userData?.userId) {
-        return userData.userId;
-      }
-    } catch (error) {
-      console.log('Could not get userId from storageService:', error);
-    }
-
-    const possibleUserKeys = ['userData', 'user', 'userInfo'];
-    for (const key of possibleUserKeys) {
-      const value = await AsyncStorage.getItem(key);
-      if (value) {
-        try {
-          const userData = JSON.parse(value);
-          if (userData?.userId) {
-            return userData.userId;
-          }
-        } catch (error) {
-          console.log(`Error parsing ${key}:`, error);
         }
       }
     }
@@ -231,7 +235,7 @@ const AddPet: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!validateForm() || !pet) {
       setMessage({type: 'error', text: 'Please fix the errors below'});
       return;
     }
@@ -241,52 +245,45 @@ const AddPet: React.FC = () => {
 
     try {
       const token = await getAuthToken();
-      const ownerId = await getUserId();
 
       if (!token) {
         Alert.alert('Error', 'Authentication token not found. Please login again.');
         return;
       }
 
-      if (!ownerId) {
-        Alert.alert('Error', 'User ID not found. Please try refreshing the app.');
-        return;
-      }
-
-      const petData = {
-        ownerId: ownerId,
+      const updateData = {
         petName: petName.trim(),
         size: size!,
         ageInYears: Number(ageInYears),
         ageInMonths: Number(ageInMonths),
         category: category!,
         height: height.trim() || "0",
-        profileImg: "img",
         gender: gender!,
         weight: weight ? Number(weight) : 0,
         treats: treats.trim() || "",
         cookie: cookie.trim() || "",
         allergies: allergies.trim() || "",
         disability: disability.trim() || "no",
+        dailyFeedCount: dailyFeedCount ? Number(dailyFeedCount) : 0,
       };
 
-      console.log('Creating pet profile with data:', petData);
+      console.log('Updating pet profile with data:', updateData);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile`, {
-        method: 'POST',
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile/${pet.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(petData),
+        body: JSON.stringify(updateData),
       });
 
       const result = await response.json();
 
-      if (response.ok && result.statusCode === 201) {
+      if (response.ok) {
         Alert.alert(
           'Success',
-          'Pet profile created successfully!',
+          'Pet profile updated successfully!',
           [
             {
               text: 'OK',
@@ -295,14 +292,14 @@ const AddPet: React.FC = () => {
           ]
         );
       } else {
-        throw new Error(result.message || 'Failed to create pet profile');
+        throw new Error(result.message || 'Failed to update pet profile');
       }
 
     } catch (error) {
-      console.error('Error creating pet profile:', error);
+      console.error('Error updating pet profile:', error);
       setMessage({
         type: 'error',
-        text: `Failed to create pet profile: ${error.message}`,
+        text: `Failed to update pet profile: ${error.message}`,
       });
     } finally {
       setLoading(false);
@@ -337,8 +334,8 @@ const AddPet: React.FC = () => {
           <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Add Pet Profile</Text>
-          <Text style={styles.headerSubtitle}>Create a new pet profile</Text>
+          <Text style={styles.headerTitle}>Edit Pet Profile</Text>
+          <Text style={styles.headerSubtitle}>Update {pet?.petName}'s information</Text>
         </View>
         <View style={styles.headerPlaceholder} />
       </View>
@@ -361,6 +358,45 @@ const AddPet: React.FC = () => {
               <Text style={styles.messageText}>{message.text}</Text>
             </View>
           )}
+
+          {/* Pet Profile Photo Section */}
+          <View style={styles.profilePhotoSection}>
+            <View style={styles.profilePhotoCard}>
+              <TouchableOpacity 
+                style={styles.profilePhotoButton}
+                activeOpacity={0.8}
+              >
+                <View style={styles.profilePhotoWrapper}>
+                  {pet?.profileImg && pet.profileImg !== 'img' ? (
+                    <Image
+                      source={{ uri: pet.profileImg }}
+                      style={styles.profilePhotoImage}
+                      defaultSource={require('../../../assets/icons/googleIcon.png')}
+                    />
+                  ) : (
+                    <View style={[styles.profilePhotoImage, styles.defaultPetImageContainer]}>
+                      <MaterialIcons name="pets" size={50} color="#58B9D0" />
+                    </View>
+                  )}
+                  <View style={styles.cameraIconOverlay}>
+                    <MaterialIcons name="camera-alt" size={20} color="#ffffff" />
+                  </View>
+                </View>
+              </TouchableOpacity>
+              
+              <View style={styles.petInfoContainer}>
+                <Text style={styles.petNameTitle}>{pet?.petName || 'Pet Name'}</Text>
+                <Text style={styles.petCategoryTitle}>
+                  {pet?.category?.catName} • {pet?.gender?.name}
+                </Text>
+              </View>
+              
+              <Text style={styles.photoUploadText}>
+                <MaterialIcons name="touch-app" size={16} color="#666" />
+                {' '}Tap photo to update
+              </Text>
+            </View>
+          </View>
 
           {/* Basic Information Section */}
           <View style={styles.sectionCard}>
@@ -610,10 +646,11 @@ const AddPet: React.FC = () => {
 
               <TextInput
                 mode="outlined"
-                label="Treats"
-                placeholder="e.g. Dog biscuits"
-                value={treats}
-                onChangeText={setTreats}
+                label="Daily Feed Count"
+                placeholder="e.g. 3"
+                value={dailyFeedCount}
+                onChangeText={setDailyFeedCount}
+                keyboardType="numeric"
                 style={styles.textInput}
                 contentStyle={styles.inputContent}
                 outlineStyle={styles.inputOutline}
@@ -625,87 +662,7 @@ const AddPet: React.FC = () => {
                   <TextInput.Icon
                     icon={() => (
                       <MaterialIcons 
-                        name="cake" 
-                        size={20} 
-                        color="#666" 
-                      />
-                    )}
-                  />
-                }
-              />
-
-              <TextInput
-                mode="outlined"
-                label="Cookie"
-                placeholder="e.g. Peanut butter cookies"
-                value={cookie}
-                onChangeText={setCookie}
-                style={styles.textInput}
-                contentStyle={styles.inputContent}
-                outlineStyle={styles.inputOutline}
-                theme={{ 
-                  roundness: 16,
-                  colors: { primary: '#58B9D0', outline: '#E8E8E8' }
-                }}
-                left={
-                  <TextInput.Icon
-                    icon={() => (
-                      <MaterialIcons 
-                        name="cookie" 
-                        size={20} 
-                        color="#666" 
-                      />
-                    )}
-                  />
-                }
-              />
-
-              <TextInput
-                mode="outlined"
-                label="Allergies"
-                placeholder="e.g. Nuts, dairy"
-                value={allergies}
-                onChangeText={setAllergies}
-                multiline
-                numberOfLines={2}
-                style={styles.textInput}
-                contentStyle={styles.inputContent}
-                outlineStyle={styles.inputOutline}
-                theme={{ 
-                  roundness: 16,
-                  colors: { primary: '#58B9D0', outline: '#E8E8E8' }
-                }}
-                left={
-                  <TextInput.Icon
-                    icon={() => (
-                      <MaterialIcons 
-                        name="warning" 
-                        size={20} 
-                        color="#666" 
-                      />
-                    )}
-                  />
-                }
-              />
-
-              <TextInput
-                mode="outlined"
-                label="Disability"
-                placeholder="e.g. None or describe"
-                value={disability}
-                onChangeText={setDisability}
-                style={styles.textInput}
-                contentStyle={styles.inputContent}
-                outlineStyle={styles.inputOutline}
-                theme={{ 
-                  roundness: 16,
-                  colors: { primary: '#58B9D0', outline: '#E8E8E8' }
-                }}
-                left={
-                  <TextInput.Icon
-                    icon={() => (
-                      <MaterialIcons 
-                        name="accessibility" 
+                        name="restaurant" 
                         size={20} 
                         color="#666" 
                       />
@@ -855,12 +812,12 @@ const AddPet: React.FC = () => {
                 {loading ? (
                   <View style={styles.loginButtonContent}>
                     <ActivityIndicator size="small" color="white" />
-                    <Text style={styles.loadingButtonText}>Creating Profile...</Text>
+                    <Text style={styles.loadingButtonText}>Updating Profile...</Text>
                   </View>
                 ) : (
                   <View style={styles.loginButtonContent}>
-                    <MaterialIcons name="add" size={24} color="white" />
-                    <Text style={styles.loginButtonText}>Add Pet Profile</Text>
+                    <MaterialIcons name="save" size={24} color="white" />
+                    <Text style={styles.loginButtonText}>Update Pet Profile</Text>
                   </View>
                 )}
               </LinearGradient>
@@ -917,7 +874,7 @@ const styles = {
   headerTitleContainer: {
     flex: 1,
     alignItems: 'center' as const,
-    marginLeft: -22, // Offset for back button
+    marginLeft: -22,
   },
   headerTitle: {
     fontSize: 20,
@@ -1105,6 +1062,84 @@ const styles = {
     fontWeight: typography.fontWeight.bold,
     marginLeft: spacing.sm,
   },
+  
+  // Profile Photo Section Styles
+  profilePhotoSection: {
+    marginBottom: 20,
+  },
+  profilePhotoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#E8EBF0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  profilePhotoButton: {
+    marginBottom: 16,
+  },
+  profilePhotoWrapper: {
+    position: 'relative' as const,
+  },
+  profilePhotoImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F8F9FB',
+  },
+  defaultPetImageContainer: {
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(88, 185, 208, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(88, 185, 208, 0.3)',
+    borderStyle: 'dashed' as const,
+  },
+  cameraIconOverlay: {
+    position: 'absolute' as const,
+    bottom: 8,
+    right: 8,
+    backgroundColor: '#58B9D0',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  petInfoContainer: {
+    alignItems: 'center' as const,
+    marginBottom: 12,
+  },
+  petNameTitle: {
+    fontSize: 22,
+    fontWeight: 'bold' as const,
+    color: '#1A1D29',
+    marginBottom: 4,
+    textAlign: 'center' as const,
+  },
+  petCategoryTitle: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500' as const,
+    textAlign: 'center' as const,
+  },
+  photoUploadText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400' as const,
+    textAlign: 'center' as const,
+    marginTop: 8,
+  },
 };
 
-export default AddPet;
+export default EditPet;

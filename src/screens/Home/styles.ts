@@ -251,6 +251,172 @@ GapView:{
         width: responsiveWidth(100),
         alignItems: 'center',
     },
+    
+    // New Pet Section Styles
+    petsContainer: {
+        paddingHorizontal: responsiveWidth(3.5),
+        marginBottom: responsiveHeight(2),
+    },
+    
+    petsDisplayContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        paddingHorizontal: responsiveWidth(2),
+        flexWrap: 'wrap',
+    },
+    
+    petCard: {
+        alignItems: 'center',
+        marginHorizontal: responsiveWidth(1),
+        marginVertical: responsiveHeight(0.5),
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(4),
+        padding: responsiveWidth(3),
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.22,
+        shadowRadius: 2.22,
+        minWidth: responsiveWidth(20),
+        maxWidth: responsiveWidth(25),
+    },
+    
+    petImageContainer: {
+        position: 'relative',
+        borderRadius: responsiveWidth(12),
+        padding: responsiveWidth(1),
+        marginBottom: responsiveHeight(1),
+    },
+    
+    petImage: {
+        width: responsiveWidth(16),
+        height: responsiveWidth(16),
+        borderRadius: responsiveWidth(8),
+        backgroundColor: '#F8F9FB',
+    },
+    
+    petStatusIndicator: {
+        position: 'absolute',
+        bottom: responsiveWidth(1),
+        right: responsiveWidth(1),
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(2.5),
+        padding: responsiveWidth(0.5),
+        elevation: 2,
+    },
+    
+    petStatusDot: {
+        width: responsiveWidth(1.5),
+        height: responsiveWidth(1.5),
+        borderRadius: responsiveWidth(0.75),
+        backgroundColor: '#4CAF50',
+    },
+    
+    petName: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#1A1D29',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.3),
+    },
+    
+    petInfo: {
+        fontSize: 9,
+        fontWeight: '400',
+        color: '#666',
+        textAlign: 'center',
+    },
+    
+    emptyPetCard: {
+        backgroundColor: 'rgba(248, 249, 251, 0.8)',
+        borderWidth: 1,
+        borderColor: '#E8EBF0',
+        borderStyle: 'dashed',
+    },
+    
+    emptyPetImageContainer: {
+        backgroundColor: 'transparent',
+    },
+    
+    emptyPetSubtext: {
+        fontSize: 8,
+        fontWeight: '400',
+        color: '#999',
+        textAlign: 'center',
+        marginTop: responsiveHeight(0.2),
+    },
+    
+    
+    loadingContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: responsiveHeight(8),
+    },
+    
+    loadingText: {
+        marginTop: responsiveHeight(1),
+        fontSize: FONT_SIZES.md,
+        color: '#666',
+        fontWeight: typography.fontWeight.medium,
+    },
+    
+    errorContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: responsiveHeight(8),
+        paddingHorizontal: responsiveWidth(5),
+    },
+    
+    errorText: {
+        marginTop: responsiveHeight(1),
+        fontSize: FONT_SIZES.md,
+        color: '#FF6B6B',
+        fontWeight: typography.fontWeight.medium,
+        textAlign: 'center',
+        marginBottom: responsiveHeight(2),
+    },
+    
+    retryButton: {
+        backgroundColor: '#58B9D0',
+        paddingHorizontal: responsiveWidth(8),
+        paddingVertical: responsiveHeight(1.5),
+        borderRadius: responsiveWidth(6),
+    },
+    
+    retryButtonText: {
+        color: '#FFFFFF',
+        fontSize: FONT_SIZES.md,
+        fontWeight: typography.fontWeight.semibold,
+    },
+    
+    defaultPetImageContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(88, 185, 208, 0.3)',
+    },
+    
+    emptyPetSlot: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(204, 204, 204, 0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(204, 204, 204, 0.3)',
+        borderStyle: 'dashed',
+    },
+    
+    emptyPetText: {
+        fontSize: 10,
+        fontWeight: '500',
+        color: '#CCCCCC',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.3),
+    },
 });
 
 export default styles;

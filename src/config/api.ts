@@ -34,6 +34,9 @@ export const API_ENDPOINTS = {
     DETAILS: '/api/services/:id',
     BOOK: '/api/services/book',
     BOARDING: '/api/services/boarding',
+    BOARDING_AVAILABILITY: '/api/boarding-service-availibility/by-day',
+    BOARDING_DETAILS: '/api/boarding-service/get-service-details/:id',
+    BOARDING_REVIEWS: '/api/boarding-reviews/get-by-service/:id',
     GROOMING: '/api/services/grooming',
     WALKING: '/api/services/walking',
     TRAINING: '/api/services/training',
@@ -92,6 +95,14 @@ export const buildQueryString = (params: Record<string, any>): string => {
   return searchParams.toString();
 };
 
+// Helper function to build query string without encoding colons (for time parameters)
+export const buildQueryStringWithoutEncoding = (params: Record<string, any>): string => {
+  return Object.entries(params)
+    .filter(([key, value]) => value !== null && value !== undefined)
+    .map(([key, value]) => `${key}=${String(value)}`)
+    .join('&');
+};
+
 // Network request wrapper with better error handling
 export const apiRequest = async (
   endpoint: string,
@@ -100,18 +111,22 @@ export const apiRequest = async (
 ): Promise<any> => {
   const url = buildApiUrl(endpoint, pathParams);
   
+  // Create AbortController for timeout (React Native compatible)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+  
   const config: RequestInit = {
     ...options,
     headers: {
       ...API_CONFIG.HEADERS,
       ...options.headers,
     },
-    // Add timeout using AbortController
-    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+    signal: controller.signal,
   };
 
   try {
     const response = await fetch(url, config);
+    clearTimeout(timeoutId); // Clear timeout on successful response
     
     // Handle non-JSON responses
     const contentType = response.headers.get('content-type');
@@ -129,6 +144,8 @@ export const apiRequest = async (
     
     return data;
   } catch (error) {
+    clearTimeout(timeoutId); // Clear timeout on error
+    
     if (error.name === 'AbortError') {
       throw new Error('Request timeout. Please check your connection and try again.');
     }

@@ -8,7 +8,7 @@ const boardingreviewstyles = StyleSheet.create({
     
     container:{ 
         flex: 1,
-        top:responsiveHeight(3),
+        top:responsiveHeight(1),
     },
 
     contentGap:{ 
@@ -148,6 +148,99 @@ datefontSize:{
         fontSize: 16,
         fontWeight: '400',
         color: '#FFFFFF',
+    },
+
+    // Loading and Error States
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: responsiveWidth(5),
+        marginTop: responsiveHeight(5),
+    },
+
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+        marginTop: responsiveHeight(2),
+        textAlign: 'center',
+    },
+
+    // Enhanced review styles
+    reviewCard: {
+        backgroundColor: '#FFFFFF',
+        marginHorizontal: responsiveWidth(4),
+        marginVertical: responsiveHeight(1),
+        borderRadius: 16,
+        padding: responsiveWidth(4),
+        borderWidth: 1,
+        borderColor: '#E8EBF0',
+    },
+
+    reviewHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: responsiveHeight(1),
+    },
+
+    reviewerName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1A1D29',
+        flex: 1,
+    },
+
+    reviewDate: {
+        fontSize: 12,
+        color: '#666',
+        fontWeight: '500',
+    },
+
+    starsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: responsiveHeight(0.5),
+    },
+
+    ratingText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFB800',
+        marginLeft: responsiveWidth(2),
+    },
+
+    reviewComment: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+        marginTop: responsiveHeight(0.5),
+    },
+
+    noReviewsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: responsiveWidth(8),
+        marginTop: responsiveHeight(5),
+    },
+
+    noReviewsIcon: {
+        marginBottom: responsiveHeight(2),
+    },
+
+    noReviewsTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1D29',
+        marginBottom: responsiveHeight(1),
+        textAlign: 'center',
+    },
+
+    noReviewsText: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 20,
     },
 });
 

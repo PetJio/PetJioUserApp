@@ -8,8 +8,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
 import Icons from '../../../assets/icons';
 import {
@@ -18,12 +20,54 @@ import {
 } from 'react-native-responsive-dimensions';
 import images from '../../../assets/images';
 import { storageService } from '../../utils/storage';
+import { API_CONFIG } from '../../config/api';
+import { navigate } from '../../utils/navigationService';
+
+interface PetCategory {
+  id: number;
+  catName: string;
+}
+
+interface PetSize {
+  id: number;
+  size: string;
+}
+
+interface PetGender {
+  id: number;
+  name: string;
+}
+
+interface PetProfile {
+  id: number;
+  petName: string;
+  ageInYears: number | null;
+  ageInMonths: number | null;
+  category: PetCategory;
+  size: PetSize;
+  height: string | null;
+  profileImg: string | null;
+  gender: PetGender;
+  weight: string | null;
+  dailyFeedCount: number | null;
+  treats: string | null;
+  cookie: string | null;
+}
+
+interface PetApiResponse {
+  statusCode: number;
+  message: string;
+  body: PetProfile[];
+}
 
 const Home: React.FC = () => {
   const flatListRef = useRef<FlatList>(null);
   const screenWidth = Dimensions.get('window').width;
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [userName, setUserName] = useState<string>('User');
+  const [pets, setPets] = useState<PetProfile[]>([]);
+  const [loadingPets, setLoadingPets] = useState<boolean>(true);
+  const [petsError, setPetsError] = useState<string | null>(null);
 
   // Memoize the scroll function
   const scrollToIndex = useCallback((index: number) => {
@@ -59,7 +103,155 @@ const Home: React.FC = () => {
     };
 
     loadUserName();
+    fetchPets(); // Fetch pets when component mounts
   }, []);
+
+  const getAuthToken = async () => {
+    const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+    
+    for (const key of possibleTokenKeys) {
+      const value = await AsyncStorage.getItem(key);
+      if (value) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+    }
+    return null;
+  };
+
+  const getOwnerIdFromAPI = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        console.error('No authentication token found');
+        return null;
+      }
+
+      console.log('🚀 HOME PAGE DEBUG - Fetching owner data');
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        return null;
+      }
+
+      const responseText = await response.text();
+      console.log('📄 Raw Response Text for Home Page:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('✅ Parsed Response Data:', {
+          statusCode: data.statusCode,
+          message: data.message,
+          hasBody: !!data.body,
+          ownerId: data.body?.id,
+        });
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError);
+        return null;
+      }
+      
+      if (data.statusCode === 200 && data.body?.id) {
+        console.log('✅ Owner ID found:', data.body.id);
+        return data.body.id;
+      } else {
+        console.error('❌ API returned non-200 status or no owner ID found');
+        return null;
+      }
+    } catch (error) {
+      console.error('🔥 Critical Error in getOwnerIdFromAPI:', error);
+      return null;
+    }
+  };
+
+  const fetchPets = async () => {
+    setLoadingPets(true);
+    setPetsError(null);
+    
+    try {
+      console.log('🔍 HOME PAGE PETS DEBUG - Starting pets fetch');
+      
+      const token = await getAuthToken();
+      if (!token) {
+        console.error('❌ No authentication token found');
+        setPetsError('Authentication token not found. Please login again.');
+        return;
+      }
+
+      // Get the owner ID from API
+      const ownerId = await getOwnerIdFromAPI();
+      if (!ownerId) {
+        console.error('❌ No owner ID found');
+        setPetsError('Owner ID not found. Please try refreshing the page.');
+        return;
+      }
+
+      console.log('🚀 FETCHING PETS - Starting pet profiles fetch');
+      console.log('🔑 Using Owner ID:', ownerId);
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/owner/${ownerId}`;
+      console.log('🌐 Pet Profiles Request URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Pet Profiles Response Status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Pet Profiles API Error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const responseText = await response.text();
+      console.log('📄 Pet Profiles Raw Response Text:', responseText);
+
+      let result: PetApiResponse;
+      try {
+        result = JSON.parse(responseText);
+        console.log('✅ Pet Profiles Parsed Response:', {
+          statusCode: result.statusCode,
+          message: result.message,
+          petCount: result.body ? result.body.length : 0,
+          petNames: result.body ? result.body.map(pet => pet.petName) : [],
+        });
+      } catch (parseError) {
+        console.error('❌ Pet Profiles JSON Parse Error:', parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
+      
+      if (result.statusCode === 200) {
+        console.log('✅ Pet Profiles Success - Data loaded:', result.body);
+        setPets(result.body || []);
+      } else {
+        console.error('❌ Pet Profiles API returned non-200 status:', result.statusCode);
+        throw new Error(result.message || 'Failed to fetch pet profiles');
+      }
+    } catch (error) {
+      console.error('🔥 Critical Error in fetchPets:', error);
+      setPetsError(`Failed to load pets: ${error.message}`);
+    } finally {
+      console.log('🏁 fetchPets completed');
+      setLoadingPets(false);
+    }
+  };
 
   const onScrollFailed = (error: any) => {
     const offset = error.index * screenWidth;
@@ -241,29 +433,83 @@ const Home: React.FC = () => {
 
       <ScrollView 
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: responsiveHeight(2) }}
+        contentContainerStyle={{ paddingTop: responsiveHeight(0.5) }}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.subcontainer}>
 
-        <View style={styles.doctoranddogimagecontainer}>
-          <View>
-            <View style={styles.doctorcontainer}>
-              <Image source={images.BellaDog} style={styles.ImageSize} />
+        {/* Dynamic Pets Section */}
+        <View style={styles.petsContainer}>
+          {loadingPets ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#58B9D0" />
+              <Text style={styles.loadingText}>Loading your pets...</Text>
             </View>
-            <Text style={styles.dogname}>Bella</Text>
-          </View>
-          <View>
-            <View>
-              <View style={styles.dogcontainer}>
-                <Image source={images.DaisyDog} style={styles.dogimageSize} />
-              </View>
-              <Text style={styles.dogname}>Daisy</Text>
+          ) : petsError ? (
+            <View style={styles.errorContainer}>
+              <MaterialIcons name="error-outline" size={48} color="#FF6B6B" />
+              <Text style={styles.errorText}>{petsError}</Text>
+              <TouchableOpacity 
+                style={styles.retryButton} 
+                onPress={fetchPets}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-          <View style={styles.pluscontainer}>
-            <Image source={Icons.BiPlus} />
-          </View>
+          ) : (
+            <View style={styles.petsDisplayContainer}>
+              {/* Display actual pets */}
+              {pets.slice(0, 2).map((pet, index) => (
+                <TouchableOpacity 
+                  key={pet.id} 
+                  style={styles.petCard}
+                  onPress={() => navigate('EditPet', { pet })}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.petImageContainer, { backgroundColor: index === 0 ? '#E8F5E8' : '#FFF0E6' }]}>
+                    {pet.profileImg && pet.profileImg !== 'img' ? (
+                      <Image 
+                        source={{ uri: pet.profileImg }} 
+                        style={styles.petImage}
+                        defaultSource={images.BellaDog}
+                      />
+                    ) : (
+                      <View style={[styles.petImage, styles.defaultPetImageContainer]}>
+                        <MaterialIcons name="pets" size={32} color="#58B9D0" />
+                      </View>
+                    )}
+                    {/* Pet status indicator */}
+                    <View style={styles.petStatusIndicator}>
+                      <View style={styles.petStatusDot} />
+                    </View>
+                  </View>
+                  <Text style={styles.petName} numberOfLines={1}>{pet.petName}</Text>
+                  <Text style={styles.petInfo} numberOfLines={1}>
+                    {pet.category?.catName || 'Pet'} • {pet.gender?.name || 'Unknown'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              
+              {/* Show empty slots if less than 2 pets */}
+              {Array.from({ length: Math.max(0, 2 - pets.length) }).map((_, index) => (
+                <TouchableOpacity 
+                  key={`empty-${index}`}
+                  style={[styles.petCard, styles.emptyPetCard]}
+                  onPress={() => navigate('AddPet')}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.petImageContainer, styles.emptyPetImageContainer]}>
+                    <View style={[styles.petImage, styles.emptyPetSlot]}>
+                      <MaterialIcons name="add" size={32} color="#CCCCCC" />
+                    </View>
+                  </View>
+                  <Text style={styles.emptyPetText}>Add Pet</Text>
+                  <Text style={styles.emptyPetSubtext}>Tap to add</Text>
+                </TouchableOpacity>
+              ))}
+              
+            </View>
+          )}
         </View>
       </View>
 
@@ -278,7 +524,7 @@ const Home: React.FC = () => {
         <View
           style={{
             width: '100%',
-            paddingVertical: responsiveHeight(6),
+            paddingBottom: responsiveHeight(8),
             paddingHorizontal: responsiveWidth(6),
             alignItems: 'center',
             justifyContent: 'center',

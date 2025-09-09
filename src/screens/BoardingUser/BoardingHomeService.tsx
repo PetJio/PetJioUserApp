@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text,Image ,TouchableOpacity,ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import boardinghomeservicestyles from './boardinghomeservice.styles';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 
 // Define stack params
@@ -12,17 +12,36 @@ type RootStackParamList = {
     UserAbout:undefined;
     TrainerAbout:undefined;
     TrainingDetails:undefined;
-    BoardingDetails:undefined;
+    BoardingDetails: {
+        providerId?: number;
+        selectedDate: string;
+        selectedTime: string;
+        city: string;
+    };
 };
 
 // Define prop types
 type InSiteServiceProps = {
-    navigation: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
+    navigation: NativeStackNavigationProp<RootStackParamList, 'BoardingDetails'>;
+    selectedDate?: string;
+    selectedTime?: string;
+    city?: string;
 };
 
-
-
-const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
+const BoardingHomeService: React.FC<InSiteServiceProps> = ({ 
+    navigation, 
+    selectedDate = new Date().toISOString().split('T')[0],
+    selectedTime = '10:00 AM',
+    city = 'Kolkata'
+}) => {
+    const handleBookNow = (providerId: number) => {
+        navigation.navigate('BoardingDetails', {
+            providerId,
+            selectedDate,
+            selectedTime,
+            city
+        });
+    };
     return (
         <View style={boardinghomeservicestyles.container}>
              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={boardinghomeservicestyles.contentContainerStyle}>
@@ -78,6 +97,13 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
                                     <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
                                 </View>
                             </View>
+
+                            {/* Book Now Button */}
+                            <TouchableOpacity 
+                                style={boardinghomeservicestyles.bookButton}
+                                onPress={() => handleBookNow(1)}>
+                                <Text style={boardinghomeservicestyles.bookButtonText}>Book Now</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>  
