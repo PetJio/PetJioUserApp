@@ -86,10 +86,9 @@ android {
         versionCode 1
         versionName "1.0"
         // Temporary: restrict native ABIs during development to speed up C/C++ builds.
-        // Remove or adjust this when producing universal/release builds.
-        ndk {
-            abiFilters "x86_64"
-        }
+    // Removed temporary ABI restriction so native libraries for arm devices
+    // are packaged into release APKs. Keep this removed for production builds
+    // unless you intentionally want ABI splits.
     }
     signingConfigs {
         debug {
