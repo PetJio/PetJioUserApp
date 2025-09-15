@@ -99,8 +99,11 @@ export class FirebaseMessagingService {
       const authToken = await this.getAuthToken();
       
       if (!authToken) {
-        console.error('No authentication token found for device registration');
-        return false;
+  console.error('No authentication token found for device registration');
+  // Save the token as pending so it can be registered after login
+  await AsyncStorage.setItem('pending_fcm_token', fcmToken);
+  console.log('Saved pending FCM token for later registration');
+  return false;
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notifications/register-device`, {
@@ -132,6 +135,32 @@ export class FirebaseMessagingService {
       }
     } catch (error) {
       console.error('Error registering device token:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Try to register a pending token saved when auth wasn't available.
+   * Call this after successful login.
+   */
+  static async registerPendingToken(): Promise<boolean> {
+    try {
+      const pending = await AsyncStorage.getItem('pending_fcm_token');
+      if (!pending) {
+        console.log('No pending FCM token to register');
+        return true;
+      }
+      console.log('Attempting to register pending FCM token...');
+      const registered = await this.registerDeviceToken(pending);
+      if (registered) {
+        await AsyncStorage.removeItem('pending_fcm_token');
+        console.log('Pending FCM token registered and cleared');
+        return true;
+      }
+      console.warn('Pending FCM token registration still failed');
+      return false;
+    } catch (error) {
+      console.error('Error registering pending FCM token:', error);
       return false;
     }
   }

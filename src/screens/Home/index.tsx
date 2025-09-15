@@ -1,15 +1,18 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
-  FlatList,
-  Dimensions,
-  Image,
   TouchableOpacity,
-  ScrollView,
-  StatusBar,
+  Image,
+  FlatList,
   ActivityIndicator,
+  Alert,
+  ScrollView,
+  RefreshControl,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
@@ -265,21 +268,21 @@ const Home: React.FC = () => {
     index,
   });
 
-  const Carousel = [
-    { id: '1', name: 'firstwalker', image: images.firstwalker },
-    { id: '2', name: 'secondwalker', image: images.secondwalker },
-    { id: '3', name: 'thirdwalker', image: images.thirdwalker },
-    { id: '4', name: 'thirdwalker', image: images.thirdwalker },
-  ];
+    const Carousel = [
+        { id: '1', name: 'firstwalker', image: images.firstwalker },
+        { id: '2', name: 'secondwalker', image: images.secondwalker },
+        { id: '3', name: 'thirdwalker', image: images.thirdwalker },
+        { id: '4', name: 'thirdwalker', image: images.thirdwalker },
+    ];
 
-  const renderItem = ({
-    item,
-  }: {
-    item: { id: string; name: string; image: any };
-  }) => {
-    return (
-      <View style={{ width: screenWidth }}>
-        {/* <Image
+    const renderItem = ({
+        item,
+    }: {
+        item: { id: string; name: string; image: any };
+    }) => {
+        return (
+            <View style={{ width: screenWidth }}>
+                {/* <Image
                     source={item.image}
                     style={{
                         width: responsiveWidth(90),
@@ -289,437 +292,281 @@ const Home: React.FC = () => {
                     }}
                 /> */}
 
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            width: responsiveWidth(90),
-            height: responsiveHeight(18.5),
-            borderRadius: responsiveWidth(1),
-            backgroundColor: '#58B9D0',
-            marginLeft: responsiveWidth(4.8),
-          }}
-        >
-          <View>
-            <View
-              style={{
-                flexDirection: 'row',
-                paddingVertical: responsiveHeight(2.2),
-                paddingHorizontal: responsiveWidth(4),
-                gap: responsiveWidth(2),
-              }}
-            >
-              <Image source={Icons.earthIcon} />
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: '500',
-                  letterSpacing: 0,
-                  color: '#FFFFFF',
-                  lineHeight: 20,
-                }}
-              >
-                Law updates
-              </Text>
+                <View  style={{flexDirection:'row', justifyContent:'space-between', width:responsiveWidth(90),height:responsiveHeight(18.5),borderRadius:responsiveWidth(1),backgroundColor:'#58B9D0',marginLeft: responsiveWidth(4.8)}}>
+                    <View>
+                    <View style={{flexDirection:'row',paddingVertical:responsiveHeight(2.2),paddingHorizontal:responsiveWidth(4),gap:responsiveWidth(2)}}>
+                          <Image source={Icons.earthIcon}/>
+                          <Text style={{fontSize:12,fontWeight:'500',letterSpacing:0,color:'#FFFFFF',lineHeight:20}}>Law updates</Text>
+                    </View>
+
+                    <View>
+                    <View style={{flexDirection:'row',paddingHorizontal:responsiveWidth(4)}}>
+                            <Text style={{fontSize:20,fontWeight:'500',lineHeight:23,letterSpacing:0,color:'#FFFFFF'}}>+</Text>
+                            <Text style={{fontSize:20,fontWeight:'500',lineHeight:23,letterSpacing:0,color:'#FFFFFF'}}>35</Text>
+                            <Text style={{fontSize:20,fontWeight:'500',lineHeight:23,letterSpacing:0,color:'#FFFFFF',left:responsiveWidth(2)}}>places</Text>
+                     </View>
+                       <Text style={{fontSize:13,fontWeight:'500',lineHeight:16,letterSpacing:0,color:'#FFFFFF',paddingHorizontal:responsiveWidth(4)}}>New vaccination departments for {"\n"} your pet </Text>
+                    </View>
+                    </View>
+                    <View>
+                          <Image source={Icons.IoMdPaw}/>
+                    </View>
+                         
+                </View>
+
             </View>
+        );
+    };
 
-            <View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  paddingHorizontal: responsiveWidth(4),
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: '500',
-                    lineHeight: 23,
-                    letterSpacing: 0,
-                    color: '#FFFFFF',
-                  }}
-                >
-                  +
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: '500',
-                    lineHeight: 23,
-                    letterSpacing: 0,
-                    color: '#FFFFFF',
-                  }}
-                >
-                  35
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: '500',
-                    lineHeight: 23,
-                    letterSpacing: 0,
-                    color: '#FFFFFF',
-                    left: responsiveWidth(2),
-                  }}
-                >
-                  places
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '500',
-                  lineHeight: 16,
-                  letterSpacing: 0,
-                  color: '#FFFFFF',
-                  paddingHorizontal: responsiveWidth(4),
-                }}
-              >
-                New vaccination departments for {'\n'} your pet{' '}
-              </Text>
-            </View>
-          </View>
-          <View>
-            <Image source={Icons.IoMdPaw} />
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const handleScroll = (event: any) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / screenWidth);
-    if (index !== activeIndex) {
-      setActiveIndex(index);
-    }
-  };
-
-  const renderDotIndicators = () => {
-    return Carousel.map(
-      (dot: { id: string; name: string; image: any }, index: number) => {
-        if (activeIndex === index) {
-          return <View key={index} style={styles.green_dot_Indicator} />;
-        } else {
-          return <View key={index} style={styles.white_dot_Indicator} />;
+    const handleScroll = (event: any) => {
+        const scrollPosition = event.nativeEvent.contentOffset.x;
+        const index = Math.round(scrollPosition / screenWidth);
+        if (index !== activeIndex) {
+            setActiveIndex(index);
         }
-      },
-    );
-  };
+    };
+
+    const renderDotIndicators = () => {
+        return Carousel.map(
+            (dot: { id: string; name: string; image: any }, index: number) => {
+                if (activeIndex === index) {
+                    return (
+                        <View
+                            key={index}
+                            style={styles.green_dot_Indicator}
+                        />
+                    );
+                } else {
+                    return (
+                        <View
+                            key={index}
+                            style={styles.white_dot_Indicator}
+                        />
+                    );
+                }
+            },
+        );
+    };
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
-      
-      {/* Sticky Header */}
-      <View style={styles.stickyHeader}>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.stickyHeaderTitle}>Hello, {userName}</Text>
-          <Text style={styles.stickyHeaderSubtitle}>Welcome back to PetJio</Text>
-        </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <MaterialIcons name="event" size={24} color="#58B9D0" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+      <View style={styles.subcontainer}>
+        {/* Header Section - Reference Project Style */}
+        <View style={styles.subcontainertextwithIcon}>
+          <Text style={styles.text}>Hello, {userName}</Text>
+          <View style={styles.IconGap}>
+            <Image source={Icons.BlackBiCalendar}/>
             <View style={styles.relative}>
-              <MaterialIcons name="notifications" size={24} color="#58B9D0" />
+              <Image source={Icons.BiBell}/>
               <View style={styles.positionofAlertIcon}>
-                <View style={styles.alertDot} />
+                <Image source={Icons.alertEllipse}/>
               </View>
             </View>
-          </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: responsiveHeight(0.5) }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.subcontainer}>
-
-        {/* Dynamic Pets Section */}
-        <View style={styles.petsContainer}>
+        {/* Pets Section - Reference Project Style */}
+        <View style={styles.doctoranddogimagecontainer}>
           {loadingPets ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#58B9D0" />
-              <Text style={styles.loadingText}>Loading your pets...</Text>
+              <ActivityIndicator size="small" color="#58B9D0" />
             </View>
           ) : petsError ? (
             <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={48} color="#FF6B6B" />
-              <Text style={styles.errorText}>{petsError}</Text>
-              <TouchableOpacity 
-                style={styles.retryButton} 
-                onPress={fetchPets}
-              >
-                <Text style={styles.retryButtonText}>Retry</Text>
-              </TouchableOpacity>
+              <Text style={styles.errorText}>Error loading pets</Text>
             </View>
           ) : (
-            <View style={styles.petsDisplayContainer}>
-              {/* Display actual pets */}
-              {pets.slice(0, 2).map((pet, index) => (
+            <>
+              {/* First pet slot */}
+              {pets.length > 0 ? (
                 <TouchableOpacity 
-                  key={pet.id} 
-                  style={styles.petCard}
-                  onPress={() => navigate('EditPet', { pet })}
+                  onPress={() => navigate('EditPet', { pet: pets[0] })}
                   activeOpacity={0.8}
                 >
-                  <View style={[styles.petImageContainer, { backgroundColor: index === 0 ? '#E8F5E8' : '#FFF0E6' }]}>
-                    {pet.profileImg && pet.profileImg !== 'img' ? (
-                      <Image 
-                        source={{ uri: pet.profileImg }} 
-                        style={styles.petImage}
-                        defaultSource={images.BellaDog}
-                      />
-                    ) : (
-                      <View style={[styles.petImage, styles.defaultPetImageContainer]}>
-                        <MaterialIcons name="pets" size={32} color="#58B9D0" />
-                      </View>
-                    )}
-                    {/* Pet status indicator */}
-                    <View style={styles.petStatusIndicator}>
-                      <View style={styles.petStatusDot} />
+                  <View>
+                    <View style={styles.doctorcontainer}>
+                      {pets[0].profileImg && pets[0].profileImg !== 'img' ? (
+                        <Image 
+                          source={{ uri: pets[0].profileImg }} 
+                          style={styles.ImageSize}
+                          defaultSource={images.BellaDog}
+                        />
+                      ) : (
+                        <Image 
+                          source={images.BellaDog} 
+                          style={styles.ImageSize}
+                        />
+                      )}   
                     </View>
+                    <Text style={styles.dogname}>{pets[0].petName}</Text> 
                   </View>
-                  <Text style={styles.petName} numberOfLines={1}>{pet.petName}</Text>
-                  <Text style={styles.petInfo} numberOfLines={1}>
-                    {pet.category?.catName || 'Pet'} • {pet.gender?.name || 'Unknown'}
-                  </Text>
                 </TouchableOpacity>
-              ))}
-              
-              {/* Show empty slots if less than 2 pets */}
-              {Array.from({ length: Math.max(0, 2 - pets.length) }).map((_, index) => (
+              ) : (
                 <TouchableOpacity 
-                  key={`empty-${index}`}
-                  style={[styles.petCard, styles.emptyPetCard]}
                   onPress={() => navigate('AddPet')}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.petImageContainer, styles.emptyPetImageContainer]}>
-                    <View style={[styles.petImage, styles.emptyPetSlot]}>
-                      <MaterialIcons name="add" size={32} color="#CCCCCC" />
+                  <View>
+                    <View style={styles.doctorcontainer}>
+                      <Image source={images.BellaDog} style={styles.ImageSize} />    
                     </View>
+                    <Text style={styles.dogname}>Add Pet</Text> 
                   </View>
-                  <Text style={styles.emptyPetText}>Add Pet</Text>
-                  <Text style={styles.emptyPetSubtext}>Tap to add</Text>
                 </TouchableOpacity>
-              ))}
-              
-            </View>
+              )}
+
+              {/* Second pet slot - Always show DaisyDog container */}
+              {pets.length > 1 ? (
+                <TouchableOpacity 
+                  onPress={() => navigate('EditPet', { pet: pets[1] })}
+                  activeOpacity={0.8}
+                >
+                  <View>
+                    <View style={styles.dogcontainer}>
+                      {pets[1].profileImg && pets[1].profileImg !== 'img' ? (
+                        <Image 
+                          source={{ uri: pets[1].profileImg }} 
+                          style={styles.dogimageSize}
+                          defaultSource={images.DaisyDog}
+                        />
+                      ) : (
+                        <Image 
+                          source={images.DaisyDog} 
+                          style={styles.dogimageSize}
+                        />
+                      )}   
+                    </View>
+                    <Text style={styles.dogname}>{pets[1].petName}</Text> 
+                  </View>
+                </TouchableOpacity>
+              ) :(
+                 <TouchableOpacity 
+                  style={styles.pluscontainer}
+                  onPress={() => navigate('AddPet')}
+                  activeOpacity={0.8}
+                >
+                  <Image source={Icons.BiPlus}/>
+                </TouchableOpacity>
+              )}
+
+
+              {/* Plus button only shows when no pets */}
+              {pets.length === 0 && (
+                <TouchableOpacity 
+                  style={styles.pluscontainer}
+                  onPress={() => navigate('AddPet')}
+                  activeOpacity={0.8}
+                >
+                  <Image source={Icons.BiPlus}/>
+                </TouchableOpacity>
+              )}
+            </>
           )}
         </View>
       </View>
 
-      {/* Coming Soon - Full Appointments Section */}
-      <View
-        style={{
-          top: responsiveHeight(5.5),
-          paddingHorizontal: responsiveWidth(5),
-          marginBottom: responsiveHeight(3),
-        }}
-      >
-        <View
-          style={{
-            width: '100%',
-            paddingBottom: responsiveHeight(8),
-            paddingHorizontal: responsiveWidth(6),
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'transparent',
-            minHeight: responsiveHeight(25),
-          }}
-        >
-          {/* Large Coming Soon Icon */}
-          <MaterialIcons
-            name="build-circle"
-            size={80}
-            color="#58B9D0"
-            style={{ marginBottom: responsiveHeight(2) }}
-          />
-
-          {/* Main Coming Soon Text */}
-          <Text
-            style={{
-              fontSize: 32,
-              fontWeight: '800',
-              color: '#2C5282',
-              marginBottom: responsiveHeight(1.5),
-              textAlign: 'center',
-              letterSpacing: 0.5,
-            }}
-          >
-            Coming Soon!
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '600',
-              color: '#58B9D0',
-              marginBottom: responsiveHeight(2),
-              textAlign: 'center',
-            }}
-          >
-            Exciting Features on the Way
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: '400',
-              color: '#718096',
-              textAlign: 'center',
-              lineHeight: 24,
-              paddingHorizontal: responsiveWidth(2),
-              marginBottom: responsiveHeight(3),
-            }}
-          >
-            We're working hard to bring you lots of amazing features! This isn't just about appointments - we're building a complete pet care ecosystem for you and your furry friends.
-          </Text>
-
-          {/* Feature Preview Pills */}
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: 8,
-              marginBottom: responsiveHeight(2),
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: '#E6F9FF',
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: '#B3E5FF',
-              }}
-            >
-              <Text
-                style={{ fontSize: 12, color: '#2C5282', fontWeight: '500' }}
-              >
-                Easy Booking
-              </Text>
-            </View>
-            <View
-              style={{
-                backgroundColor: '#E6F9FF',
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: '#B3E5FF',
-              }}
-            >
-              <Text
-                style={{ fontSize: 12, color: '#2C5282', fontWeight: '500' }}
-              >
-                Reminders
-              </Text>
-            </View>
-            <View
-              style={{
-                backgroundColor: '#E6F9FF',
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: '#B3E5FF',
-              }}
-            >
-              <Text
-                style={{ fontSize: 12, color: '#2C5282', fontWeight: '500' }}
-              >
-                Track History
-              </Text>
-            </View>
-          </View>
-
-          {/* Animated Dots */}
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 12,
-            }}
-          >
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: '#58B9D0',
-              }}
-            />
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: '#A0D8EF',
-              }}
-            />
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: '#58B9D0',
-              }}
-            />
+      {/* Appointments Section - Reference Project Style */}
+      <View>
+        <View style={styles.secondcontainer}>
+          <View style={styles.flex}>
+            <Text style={styles.appointmentText}>Appointments</Text>
+            <Text style={styles.showallText}>Show All</Text>
           </View>
         </View>
       </View>
 
-      {/* <View>
-        <View>
-                <View style={styles.fourthcontainer}>
-                        <View style={styles.flex}>
-                            <Text style={styles.appointmentText}>News</Text>
-                            <Text style={styles.showallText}>Show All</Text>
-                        </View>
-                </View>
-           
-         </View>
-
-        <View style={{ top: responsiveHeight(9) }}>
-          <FlatList
-            data={Carousel}
-            ref={flatListRef}
-            getItemLayout={getItemLayout}
-            renderItem={renderItem}
-            keyExtractor={item => item.id}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            bounces={false}
-            onScrollToIndexFailed={onScrollFailed}
-          />
-
-          <View style={styles.bottomparentview}>
-            <View style={styles.dots_Indicator}>
-              <TouchableOpacity>
-                <Image
-                  source={Icons.IoIosArrowBack}
-                  style={{ bottom: responsiveWidth(0.9) }}
-                />
-              </TouchableOpacity>
-              {renderDotIndicators()}
-              <Image
-                source={Icons.IoIosArrowForwardWhite}
-                style={{ bottom: responsiveWidth(0.9) }}
-              />
+      <View style={{top:responsiveHeight(5.5),paddingHorizontal:responsiveWidth(5)}}>
+        <View style={{width:responsiveWidth(90),borderRadius:responsiveWidth(2),backgroundColor:'#F0FCFF',flexDirection:'row'}}>
+          <View style={{width:responsiveWidth(0.90),backgroundColor:'#58B9D0',borderTopLeftRadius:responsiveWidth(8),borderBottomLeftRadius:responsiveWidth(8)}}></View>
+          <View>
+            <View style={{flexDirection:'row',justifyContent:'space-between', paddingVertical:responsiveHeight(0.90), paddingHorizontal:responsiveWidth(3.2),width:responsiveWidth(90),}}>
+              <View>
+                <Text style={{fontSize:14,fontWeight:'500',lineHeight:17,color:'#3C3C3C'}} >Dr. Samar Halder</Text>
+                <Text style={{fontSize:11,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#858585'}} >Consultation</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: -10 }}>
+                {pets.length > 0 ? (
+                  pets.slice(0, 2).map((pet, index) => (
+                    <View key={pet.id} style={index === 0 ? {} : { marginLeft: -10 }}>
+                      {pet.profileImg && pet.profileImg !== 'img' ? (
+                        <Image 
+                          source={{ uri: pet.profileImg }} 
+                          style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, borderColor: '#fff' }}
+                        />
+                      ) : (
+                        <Image 
+                          source={index === 0 ? images.BellaDog : images.DaisyDog}  
+                          style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, borderColor: '#fff' }} 
+                        />
+                      )}
+                    </View>
+                  ))
+                ) : (
+                  <>
+                    <Image source={images.BellaDog} style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 2,borderColor: '#fff' }} />
+                    <View style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#C8F8B1', overflow: 'hidden', marginLeft: -10 }}>
+                      <Image source={images.DaisyDog} style={{ width: 70, height: 70, position: 'absolute', top: -20, left: -15, resizeMode: 'cover', }} />
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
+            <View style={{width:responsiveWidth(83),borderBottomWidth:responsiveWidth(0.20),borderColor:'#E8E8E8',left:responsiveWidth(2.5)}}/>
+            <View style={{paddingVertical:responsiveHeight(1),paddingHorizontal:responsiveWidth(3),gap:responsiveWidth(2.5)}}>
+              <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
+                <Image source={Icons.BiMap}/>
+                <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,color:'#858585'}}>32/E-1 M . L . B, Road, Bally, Howrah</Text>
+              </View>
+              <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
+                <Image source={Icons.BiCalendar}/>
+                <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,color:'#858585'}}>Wednesday, October 25, 2024</Text>
+              </View>
+              <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
+                <Image source={Icons.BiTimeFive}/>
+                <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,color:'#858585'}}>2:00 PM</Text>
+              </View>
             </View>
           </View>
         </View>
       </View>
 
+      {/* News Section - Reference Project Style */}
+      <View>
+        <View style={styles.fourthcontainer}>
+          <View style={styles.flex}>
+            <Text style={styles.appointmentText}>News</Text>
+            <Text style={styles.showallText}>Show All</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={{top:responsiveHeight(9)}}>
+        <FlatList
+          data={Carousel}
+          ref={flatListRef}
+          getItemLayout={getItemLayout}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          bounces={false}
+          onScrollToIndexFailed={onScrollFailed}
+        />
+
+        <View style={styles.bottomparentview}>
+          <View style={styles.dots_Indicator}>
+            <TouchableOpacity>
+              <Image source={Icons.IoIosArrowBack} style={{bottom:responsiveWidth(0.90)}}/>
+            </TouchableOpacity>
+            {renderDotIndicators()}
+            <Image source={Icons.IoIosArrowForwardWhite} style={{bottom:responsiveWidth(0.90)}}/>
+          </View>
+        </View>
+      </View>
+
+      {/* Blogs Section - Reference Project Style */}
       <View>
         <View style={styles.fivethcontainer}>
           <View style={styles.flex}>
@@ -727,348 +574,24 @@ const Home: React.FC = () => {
             <Text style={styles.showallText}>Show All</Text>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.paddingBottom}
-          >
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.paddingBottom}>
             <View style={styles.GapView}>
               <View style={{ paddingHorizontal: responsiveWidth(3.5) }}>
-                <View
-                  style={{
-                    width: responsiveWidth(90),
-                    borderRadius: responsiveWidth(2),
-                    borderWidth: responsiveWidth(0.3),
-                    borderColor: '#EBEBEB',
-                    padding: responsiveWidth(2),
-                  }}
-                >
-                  <View
-                    style={{ flexDirection: 'row', gap: responsiveWidth(2) }}
-                  >
-                    <Image
-                      source={images.silentDog}
-                      style={{
-                        width: responsiveWidth(20),
-                        height: responsiveHeight(9),
-                        borderRadius: responsiveWidth(1),
-                      }}
-                      resizeMode="cover"
-                    />
-
+                <View style={{ width: responsiveWidth(90), borderRadius: responsiveWidth(2), borderWidth: responsiveWidth(0.3), borderColor: '#EBEBEB', padding: responsiveWidth(2) }}>
+                  <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                    <Image source={images.silentDog} style={{ width: responsiveWidth(20), height: responsiveHeight(9), borderRadius: responsiveWidth(1) }} resizeMode="cover" />
                     <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: '600',
-                          lineHeight: 14,
-                          letterSpacing: 0,
-                          color: '#4B4B4B',
-                        }}
-                        numberOfLines={1}
-                      >
+                      <Text style={{ fontSize: 12, fontWeight: '600', lineHeight: 14, letterSpacing: 0, color: '#4B4B4B' }} numberOfLines={1}>
                         How to Calm Dog Anxiety
                       </Text>
-
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginVertical: responsiveHeight(0.5),
-                        }}
-                      >
-                        <Image
-                          source={Icons.ClockCircle}
-                          style={{
-                            width: responsiveWidth(2.5),
-                            height: responsiveHeight(1.5),
-                            marginRight: responsiveWidth(1),
-                          }}
-                          resizeMode="contain"
-                        />
-                        <Text
-                          style={{
-                            fontSize: 9,
-                            fontWeight: '500',
-                            lineHeight: 10,
-                            letterSpacing: 0,
-                            color: '#7B7B7B',
-                          }}
-                        >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: responsiveHeight(0.5) }}>
+                        <Image source={Icons.ClockCircle} style={{ width: responsiveWidth(2.5), height: responsiveHeight(1.5), marginRight: responsiveWidth(1) }} resizeMode="contain" />
+                        <Text style={{ fontSize: 9, fontWeight: '500', lineHeight: 10, letterSpacing: 0, color: '#7B7B7B' }}>
                           10th October 2024
                         </Text>
                       </View>
-
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          lineHeight: 13,
-                          fontWeight: '400',
-                          letterSpacing: 0,
-                          color: '#848484',
-                        }}
-                        numberOfLines={3}
-                      >
-                        All of us have things that scare us, but for our
-                        four-legged friends, loud noises, new situations and
-                        changes in the{' '}
-                        <Text style={{ color: '#4494A8' }}>Read More</Text>
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={{ paddingHorizontal: responsiveWidth(3.5) }}>
-                <View
-                  style={{
-                    width: responsiveWidth(90),
-                    borderRadius: responsiveWidth(2),
-                    borderWidth: responsiveWidth(0.3),
-                    borderColor: '#EBEBEB',
-                    padding: responsiveWidth(2),
-                  }}
-                >
-                  <View
-                    style={{ flexDirection: 'row', gap: responsiveWidth(2) }}
-                  >
-                    <Image
-                      source={images.catwashImage}
-                      style={{
-                        width: responsiveWidth(20),
-                        height: responsiveHeight(9),
-                        borderRadius: responsiveWidth(1),
-                      }}
-                      resizeMode="cover"
-                    />
-
-                    <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: '600',
-                          lineHeight: 14,
-                          letterSpacing: 0,
-                          color: '#4B4B4B',
-                        }}
-                        numberOfLines={1}
-                      >
-                        Guide to Grooming your Cat
-                      </Text>
-
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginVertical: responsiveHeight(0.5),
-                        }}
-                      >
-                        <Image
-                          source={Icons.ClockCircle}
-                          style={{
-                            width: responsiveWidth(2.5),
-                            height: responsiveHeight(1.5),
-                            marginRight: responsiveWidth(1),
-                          }}
-                          resizeMode="contain"
-                        />
-                        <Text
-                          style={{
-                            fontSize: 9,
-                            fontWeight: '500',
-                            lineHeight: 10,
-                            letterSpacing: 0,
-                            color: '#7B7B7B',
-                          }}
-                        >
-                          10th October 2024
-                        </Text>
-                      </View>
-
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          lineHeight: 13,
-                          fontWeight: '400',
-                          letterSpacing: 0,
-                          color: '#848484',
-                        }}
-                        numberOfLines={3}
-                      >
-                        All of us have things that scare us, but for our
-                        four-legged friends, loud noises, new situations and
-                        changes in the{' '}
-                        <Text style={{ color: '#4494A8' }}>Read More</Text>
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={{ paddingHorizontal: responsiveWidth(3.5) }}>
-                <View
-                  style={{
-                    width: responsiveWidth(90),
-                    borderRadius: responsiveWidth(2),
-                    borderWidth: responsiveWidth(0.3),
-                    borderColor: '#EBEBEB',
-                    padding: responsiveWidth(2),
-                  }}
-                >
-                  <View
-                    style={{ flexDirection: 'row', gap: responsiveWidth(2) }}
-                  >
-                    <Image
-                      source={images.catwashImage}
-                      style={{
-                        width: responsiveWidth(20),
-                        height: responsiveHeight(9),
-                        borderRadius: responsiveWidth(1),
-                      }}
-                      resizeMode="cover"
-                    />
-
-                    <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: '600',
-                          lineHeight: 14,
-                          letterSpacing: 0,
-                          color: '#4B4B4B',
-                        }}
-                        numberOfLines={1}
-                      >
-                        Guide to Grooming your Cat
-                      </Text>
-
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginVertical: responsiveHeight(0.5),
-                        }}
-                      >
-                        <Image
-                          source={Icons.ClockCircle}
-                          style={{
-                            width: responsiveWidth(2.5),
-                            height: responsiveHeight(1.5),
-                            marginRight: responsiveWidth(1),
-                          }}
-                          resizeMode="contain"
-                        />
-                        <Text
-                          style={{
-                            fontSize: 9,
-                            fontWeight: '500',
-                            lineHeight: 10,
-                            letterSpacing: 0,
-                            color: '#7B7B7B',
-                          }}
-                        >
-                          10th October 2024
-                        </Text>
-                      </View>
-
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          lineHeight: 13,
-                          fontWeight: '400',
-                          letterSpacing: 0,
-                          color: '#848484',
-                        }}
-                        numberOfLines={3}
-                      >
-                        All of us have things that scare us, but for our
-                        four-legged friends, loud noises, new situations and
-                        changes in the{' '}
-                        <Text style={{ color: '#4494A8' }}>Read More</Text>
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={{ paddingHorizontal: responsiveWidth(3.5) }}>
-                <View
-                  style={{
-                    width: responsiveWidth(90),
-                    borderRadius: responsiveWidth(2),
-                    borderWidth: responsiveWidth(0.3),
-                    borderColor: '#EBEBEB',
-                    padding: responsiveWidth(2),
-                  }}
-                >
-                  <View
-                    style={{ flexDirection: 'row', gap: responsiveWidth(2) }}
-                  >
-                    <Image
-                      source={images.catwashImage}
-                      style={{
-                        width: responsiveWidth(20),
-                        height: responsiveHeight(9),
-                        borderRadius: responsiveWidth(1),
-                      }}
-                      resizeMode="cover"
-                    />
-
-                    <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: '600',
-                          lineHeight: 14,
-                          letterSpacing: 0,
-                          color: '#4B4B4B',
-                        }}
-                        numberOfLines={1}
-                      >
-                        Guide to Grooming your Cat
-                      </Text>
-
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginVertical: responsiveHeight(0.5),
-                        }}
-                      >
-                        <Image
-                          source={Icons.ClockCircle}
-                          style={{
-                            width: responsiveWidth(2.5),
-                            height: responsiveHeight(1.5),
-                            marginRight: responsiveWidth(1),
-                          }}
-                          resizeMode="contain"
-                        />
-                        <Text
-                          style={{
-                            fontSize: 9,
-                            fontWeight: '500',
-                            lineHeight: 10,
-                            letterSpacing: 0,
-                            color: '#7B7B7B',
-                          }}
-                        >
-                          10th October 2024
-                        </Text>
-                      </View>
-
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          lineHeight: 13,
-                          fontWeight: '400',
-                          letterSpacing: 0,
-                          color: '#848484',
-                        }}
-                        numberOfLines={3}
-                      >
-                        All of us have things that scare us, but for our
-                        four-legged friends, loud noises, new situations and
-                        changes in the{' '}
+                      <Text style={{ fontSize: 10, lineHeight: 13, fontWeight: '400', letterSpacing: 0, color: '#848484' }} numberOfLines={3}>
+                        All of us have things that scare us, but for our four-legged friends, loud noises, new situations and changes in the{' '}
                         <Text style={{ color: '#4494A8' }}>Read More</Text>
                       </Text>
                     </View>
@@ -1078,8 +601,7 @@ const Home: React.FC = () => {
             </View>
           </ScrollView>
         </View>
-      </View> */}
-      </ScrollView>
+      </View>
     </View>
   );
 };

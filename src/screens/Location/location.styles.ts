@@ -12,11 +12,45 @@ import { typography } from '../../styles/typography';
 const locationStyles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FB',
+        backgroundColor: '#fff',
+    },
+    topImage: {
+        width: responsiveWidth(100),
+        height: responsiveHeight(50),
     },
     scrollContainer: {
+        flex: 1,
+    },
+    scrollContent: {
         flexGrow: 1,
-        backgroundColor: '#F8F9FB',
+        paddingBottom: 20,
+    },
+    formContainer: {
+        paddingHorizontal: 20,
+        paddingTop: 10,
+    },
+    heading: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#000',
+    },
+    subheading: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: responsiveHeight(3),
+    },
+    setLeftIconposition: {
+        position: 'relative'
+    },
+    arrowIconPosition: {
+        position: 'absolute',
+        top: responsiveHeight(6),
+        left: responsiveWidth(8)
+    },
+    leftArrowIconSize: {
+        width: responsiveWidth(8),
+        height: responsiveHeight(2)
     },
     
     // Header Styles
@@ -108,7 +142,8 @@ const locationStyles = StyleSheet.create({
         gap: responsiveHeight(1.5),
     },
     inputContainer: {
-        marginBottom: responsiveHeight(1.2),
+        gap: responsiveHeight(1),
+        marginBottom: 10,
     },
     textInput: {
         backgroundColor: '#FFFFFF',
@@ -140,11 +175,11 @@ const locationStyles = StyleSheet.create({
     },
     errorText: {
         color: '#FF6B6B',
-        fontSize: FONT_SIZES.sm,
+        fontSize: 12,
         marginTop: 4,
-        marginBottom: responsiveHeight(0.5),
+        marginBottom: 8,
         marginLeft: 4,
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: '500',
     },
     inputLabel: {
         fontSize: 16,
@@ -156,27 +191,18 @@ const locationStyles = StyleSheet.create({
         marginRight: 8,
     },
     
-    // Location Button (styled like Google button)
+    // Location Button matching SignUp button styling  
     locationButton: {
-        width: '100%',
-        height: responsiveHeight(6.5),
-        borderRadius: 20,
-        borderWidth: 2,
         justifyContent: 'center',
         alignItems: 'center',
-        flexDirection: 'row',
-        shadowColor: '#58B9D0',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 6,
-        borderColor: '#D1D5DB',
-        backgroundColor: '#F9FAFB',
-        marginBottom: spacing.lg,
-        marginTop: spacing.md,
+        width: responsiveWidth(90),
+        height: responsiveHeight(5.8),
+        borderRadius: responsiveHeight(1),
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#E2E2E2',
+        marginBottom: responsiveHeight(2),
+        alignSelf: 'center'
     },
     locationButtonGradient: {
         // Not needed for new style - remove gradient
@@ -187,11 +213,11 @@ const locationStyles = StyleSheet.create({
         justifyContent: 'center',
     },
     locationButtonText: {
-        fontSize: 17,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-        color: '#6B7280',
-        marginLeft: 8,
+        color: '#58B9D0',
+        fontSize: 16,
+        fontWeight: '600',
+        lineHeight: 16,
+        letterSpacing: 1
     },
     
     // Signup Button (styled like SignIn page buttons)
@@ -225,6 +251,25 @@ const locationStyles = StyleSheet.create({
         letterSpacing: 0.5,
         color: '#58B9D0',
         marginLeft: 8,
+    },
+
+    // Login button styles matching SignUp theme
+    loginButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: responsiveWidth(90),
+        height: responsiveHeight(5.8),
+        borderRadius: responsiveHeight(1),
+        backgroundColor: '#58B9D0',
+        marginBottom: responsiveHeight(2),
+        alignSelf: 'center'
+    },
+    loginText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        lineHeight: 16,
+        letterSpacing: 1
     },
     
     loadingButton: {

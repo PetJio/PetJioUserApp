@@ -12,12 +12,45 @@ import { typography } from '../../styles/typography';
 const profileStyles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FB',
+        backgroundColor: '#fff',
+    },
+    topImage: {
+        width: responsiveWidth(100),
+        height: responsiveHeight(50),
     },
     scrollContainer: {
+        flex: 1,
+    },
+    scrollContent: {
         flexGrow: 1,
-        backgroundColor: '#F8F9FB',
-        paddingTop: spacing.sm,
+        paddingBottom: 20,
+    },
+    formContainer: {
+        paddingHorizontal: 20,
+        paddingTop: 10,
+    },
+    heading: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#000',
+    },
+    subheading: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: responsiveHeight(3),
+    },
+    setLeftIconposition: {
+        position: 'relative'
+    },
+    arrowIconPosition: {
+        position: 'absolute',
+        top: responsiveHeight(6),
+        left: responsiveWidth(8)
+    },
+    leftArrowIconSize: {
+        width: responsiveWidth(8),
+        height: responsiveHeight(2)
     },
     headerContainer: {
         position: 'relative',
@@ -492,7 +525,6 @@ const profileStyles = StyleSheet.create({
     tabContainer: {
         flexDirection: 'row',
         backgroundColor: '#FFFFFF',
-        marginHorizontal: spacing.lg,
         marginTop: spacing.xs,
         marginBottom: spacing.md,
         borderRadius: BORDER_RADIUS.xl,
@@ -1014,6 +1046,25 @@ const profileStyles = StyleSheet.create({
         width: 20,
         height: 20,
         marginRight: 8,
+    },
+
+    // Reference theme button styling (matching SignUp/Location)
+    loginButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: responsiveWidth(90),
+        height: responsiveHeight(5.8),
+        borderRadius: responsiveHeight(1),
+        backgroundColor: '#58B9D0',
+        marginBottom: responsiveHeight(2),
+        alignSelf: 'center'
+    },
+    loginText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        lineHeight: 16,
+        letterSpacing: 1
     },
 });
 

@@ -3,20 +3,18 @@ import {
     responsiveHeight,
     responsiveWidth,
 } from 'react-native-responsive-dimensions';
-import { FONT_SIZES } from '../../constants/dimensions';
-import { typography } from '../../styles/typography';
 
 const styles = StyleSheet.create({
-    // Sticky Header Styles
+    // Sticky Header Styles - Compact version
     stickyHeader: {
         backgroundColor: '#F8F9FB',
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
-        paddingBottom: 16,
-        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'ios' ? 50 : 30,
+        paddingBottom: 12,
+        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomWidth: 1,
+        borderBottomWidth: 0.5,
         borderBottomColor: '#E8EBF0',
     },
     
@@ -25,35 +23,31 @@ const styles = StyleSheet.create({
     },
     
     stickyHeaderTitle: {
-        fontSize: FONT_SIZES.xxl,
-        fontWeight: typography.fontWeight.bold,
+        fontSize: 18,
+        fontWeight: 'bold',
         color: '#1A1D29',
-        marginBottom: 2,
+        marginBottom: 1,
     },
     
     stickyHeaderSubtitle: {
-        fontSize: FONT_SIZES.sm,
+        fontSize: 12,
         color: '#666',
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: '400',
     },
     
     headerIcons: {
         flexDirection: 'row',
-        gap: responsiveWidth(2.5),
+        gap: responsiveWidth(2),
     },
     
     container: {
-        flex: 1,
-        backgroundColor: '#F8F9FB',
+        top: responsiveHeight(4),
+        width: responsiveWidth(100),
+        height: responsiveHeight(100),
+        backgroundColor: '#FFFFFF',
     },
     subcontainer: { top: responsiveHeight(2), gap: responsiveWidth(2.8) },
-    subcontainertextwithIcon: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: responsiveWidth(100),
-        paddingHorizontal: responsiveWidth(4),
-    },
-    IconGap: { flexDirection: 'row', gap: responsiveWidth(2.5) },
+    
     iconButton: {
         padding: responsiveWidth(1),
         borderRadius: responsiveWidth(2),
@@ -73,6 +67,380 @@ const styles = StyleSheet.create({
         backgroundColor: '#FF3B30',
         borderWidth: 1,
         borderColor: '#FFFFFF',
+    },
+    
+    petsContainer: {
+        paddingHorizontal: responsiveWidth(4),
+        marginBottom: responsiveHeight(2),
+        marginTop: responsiveHeight(1.5),
+    },
+    
+    // Enhanced pets section header styles - Compact
+    petsSectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: responsiveHeight(1),
+        paddingHorizontal: responsiveWidth(0.5),
+    },
+    
+    petsSectionTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1D29',
+        letterSpacing: 0.3,
+    },
+    
+    petsSectionSubtitle: {
+        fontSize: 11,
+        fontWeight: '400',
+        color: '#666',
+        marginTop: responsiveHeight(0.1),
+    },
+    
+    addPetButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#58B9D0',
+        paddingHorizontal: responsiveWidth(3),
+        paddingVertical: responsiveHeight(0.8),
+        borderRadius: responsiveWidth(4),
+        shadowColor: '#58B9D0',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    
+    addPetButtonText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
+        marginLeft: responsiveWidth(1),
+    },
+    
+    petsDisplayContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        paddingHorizontal: responsiveWidth(0.5),
+        gap: responsiveWidth(3),
+    },
+    
+    petCard: {
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(3),
+        padding: responsiveWidth(2.5),
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+        marginBottom: responsiveHeight(1.5),
+        width: responsiveWidth(43),
+        minHeight: responsiveHeight(16),
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    
+    petCardGradient: {
+        flex: 1,
+        width: '100%',
+        alignItems: 'center',
+        padding: responsiveWidth(2),
+        borderRadius: responsiveWidth(4),
+    },
+    
+    petImageContainer: {
+        position: 'relative',
+        borderRadius: responsiveWidth(8),
+        padding: responsiveWidth(0.8),
+        marginBottom: responsiveHeight(0.6),
+        width: responsiveWidth(16),
+        height: responsiveWidth(16),
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    
+    petImage: {
+        width: responsiveWidth(14),
+        height: responsiveWidth(14),
+        borderRadius: responsiveWidth(7),
+        backgroundColor: '#F8F9FB',
+        resizeMode: 'cover',
+    },
+    
+    petStatusIndicator: {
+        position: 'absolute',
+        bottom: responsiveWidth(1.5),
+        right: responsiveWidth(1.5),
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(3),
+        padding: responsiveWidth(0.5),
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    
+    petStatusDot: {
+        width: responsiveWidth(2),
+        height: responsiveWidth(2),
+        borderRadius: responsiveWidth(1),
+        backgroundColor: '#4CAF50',
+    },
+    
+    petInfoContainer: {
+        alignItems: 'center',
+        width: '100%',
+        paddingTop: responsiveHeight(0.5),
+    },
+    
+    petName: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#1A1D29',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.1),
+    },
+    
+    petInfo: {
+        fontSize: 9,
+        fontWeight: '500',
+        color: '#58B9D0',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.2),
+        textTransform: 'capitalize',
+    },
+    
+    petAgeInfo: {
+        fontSize: 7,
+        fontWeight: '400',
+        color: '#999',
+        textAlign: 'center',
+        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        paddingHorizontal: responsiveWidth(1.5),
+        paddingVertical: responsiveHeight(0.2),
+        borderRadius: responsiveWidth(2),
+        marginTop: responsiveHeight(0.1),
+        overflow: 'hidden',
+    },
+    
+    emptyPetCard: {
+        borderColor: 'rgba(88, 185, 208, 0.2)',
+        borderStyle: 'dashed',
+        backgroundColor: 'rgba(88, 185, 208, 0.02)',
+    },
+    
+    emptyPetImageContainer: {
+        backgroundColor: 'rgba(88, 185, 208, 0.05)',
+    },
+    
+    emptyPetSlot: {
+        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    
+    emptyPetText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#58B9D0',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.1),
+    },
+    
+    emptyPetSubtext: {
+        fontSize: 9,
+        fontWeight: '400',
+        color: '#999',
+        textAlign: 'center',
+    },
+    
+    defaultPetImageContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    
+    loadingContainer: {
+        alignItems: 'center',
+        paddingVertical: responsiveHeight(4),
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(3),
+        marginTop: responsiveHeight(1),
+    },
+    
+    loadingText: {
+        marginTop: responsiveHeight(1),
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+    },
+    
+    errorContainer: {
+        alignItems: 'center',
+        paddingVertical: responsiveHeight(4),
+        paddingHorizontal: responsiveWidth(4),
+        backgroundColor: '#FFFFFF',
+        borderRadius: responsiveWidth(3),
+        marginTop: responsiveHeight(1),
+        borderWidth: 1,
+        borderColor: '#FFE5E5',
+    },
+    
+    errorText: {
+        fontSize: 14,
+        color: '#FF6B6B',
+        textAlign: 'center',
+        marginTop: responsiveHeight(1),
+        marginBottom: responsiveHeight(2),
+    },
+    
+    retryButton: {
+        backgroundColor: '#58B9D0',
+        paddingHorizontal: responsiveWidth(6),
+        paddingVertical: responsiveHeight(1),
+        borderRadius: responsiveWidth(2),
+    },
+    
+    retryButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    subcontainertextwithIcon: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: responsiveWidth(100),
+        paddingHorizontal: responsiveWidth(4),
+    },
+    text: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#000000',
+        letterSpacing: 0,
+    },
+    IconGap: { 
+        flexDirection: 'row', 
+        gap: responsiveWidth(2.5) 
+    },
+    doctoranddogimagecontainer: {
+        flexDirection: 'row',
+        paddingHorizontal: responsiveWidth(3.5),
+        gap: responsiveWidth(2.2),
+    },
+    doctorcontainer: {
+        width: responsiveWidth(15),
+        height: responsiveWidth(15),
+        borderRadius: responsiveWidth(15),
+        backgroundColor: '#C8F8B1',
+        overflow: 'hidden',
+    },
+    dogcontainer: {
+        width: responsiveWidth(15),
+        height: responsiveWidth(15),
+        borderRadius: responsiveWidth(15),
+        backgroundColor: '#FFB11F',
+        overflow: 'hidden',
+    },
+    pluscontainer: {
+        width: responsiveWidth(13),
+        height: responsiveHeight(6),
+        borderRadius: responsiveWidth(8),
+        backgroundColor: '#F0FCFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: responsiveWidth(0.3),
+        borderColor: '#58B9D0',
+        marginTop: responsiveHeight(0.5),
+    },
+    ImageSize: {
+        width: responsiveWidth(15),
+        height: responsiveWidth(15),
+        borderRadius: responsiveWidth(7.5),
+    },
+    dogimageSize: {
+        width: responsiveWidth(15),
+        height: responsiveWidth(15),
+        borderRadius: responsiveWidth(7.5),
+    },
+    dogname: {
+        fontSize: 12,
+        fontWeight: '500',
+        letterSpacing: 0,
+        color: '#000000',
+        textAlign: 'center',
+        marginTop: responsiveHeight(0.5),
+    },
+    secondcontainer: {
+        top: responsiveHeight(5),
+        paddingHorizontal: responsiveWidth(5),
+    },
+    fourthcontainer: {
+        top: responsiveHeight(8),
+        paddingHorizontal: responsiveWidth(5),
+    },
+    fivethcontainer: {
+        top: responsiveHeight(12),
+        paddingHorizontal: responsiveWidth(5),
+        paddingBottom: responsiveHeight(5),
+    },
+    flex: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    appointmentText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000000',
+        letterSpacing: 0,
+    },
+    showallText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#58B9D0',
+        letterSpacing: 0,
+    },
+    dots_Indicator: {
+        flexDirection: 'row',
+        gap: responsiveWidth(2),
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    green_dot_Indicator: {
+        width: responsiveWidth(2),
+        height: responsiveWidth(2),
+        borderRadius: responsiveWidth(1),
+        backgroundColor: '#58B9D0',
+    },
+    white_dot_Indicator: {
+        width: responsiveWidth(2),
+        height: responsiveWidth(2),
+        borderRadius: responsiveWidth(1),
+        backgroundColor: '#D1D5DB',
+    },
+    bottomparentview: {
+        position: 'absolute',
+        top: responsiveHeight(13.5),
+        width: responsiveWidth(100),
+        alignItems: 'center',
+    },
+    GapView: {
+        gap: responsiveHeight(2),
+    },
+    paddingBottom: {
+        paddingBottom: responsiveHeight(2),
+    },
+    positionofAlertIcon: {
+        position: 'absolute',
+        bottom: responsiveHeight(2.6),
+        left: responsiveWidth(3),
     },
     doctoranddogimagecontainer: {
         flexDirection: 'row',
@@ -250,172 +618,6 @@ GapView:{
         top: responsiveHeight(13.5), // Adjust as needed
         width: responsiveWidth(100),
         alignItems: 'center',
-    },
-    
-    // New Pet Section Styles
-    petsContainer: {
-        paddingHorizontal: responsiveWidth(3.5),
-        marginBottom: responsiveHeight(2),
-    },
-    
-    petsDisplayContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        paddingHorizontal: responsiveWidth(2),
-        flexWrap: 'wrap',
-    },
-    
-    petCard: {
-        alignItems: 'center',
-        marginHorizontal: responsiveWidth(1),
-        marginVertical: responsiveHeight(0.5),
-        backgroundColor: '#FFFFFF',
-        borderRadius: responsiveWidth(4),
-        padding: responsiveWidth(3),
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.22,
-        shadowRadius: 2.22,
-        minWidth: responsiveWidth(20),
-        maxWidth: responsiveWidth(25),
-    },
-    
-    petImageContainer: {
-        position: 'relative',
-        borderRadius: responsiveWidth(12),
-        padding: responsiveWidth(1),
-        marginBottom: responsiveHeight(1),
-    },
-    
-    petImage: {
-        width: responsiveWidth(16),
-        height: responsiveWidth(16),
-        borderRadius: responsiveWidth(8),
-        backgroundColor: '#F8F9FB',
-    },
-    
-    petStatusIndicator: {
-        position: 'absolute',
-        bottom: responsiveWidth(1),
-        right: responsiveWidth(1),
-        backgroundColor: '#FFFFFF',
-        borderRadius: responsiveWidth(2.5),
-        padding: responsiveWidth(0.5),
-        elevation: 2,
-    },
-    
-    petStatusDot: {
-        width: responsiveWidth(1.5),
-        height: responsiveWidth(1.5),
-        borderRadius: responsiveWidth(0.75),
-        backgroundColor: '#4CAF50',
-    },
-    
-    petName: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#1A1D29',
-        textAlign: 'center',
-        marginBottom: responsiveHeight(0.3),
-    },
-    
-    petInfo: {
-        fontSize: 9,
-        fontWeight: '400',
-        color: '#666',
-        textAlign: 'center',
-    },
-    
-    emptyPetCard: {
-        backgroundColor: 'rgba(248, 249, 251, 0.8)',
-        borderWidth: 1,
-        borderColor: '#E8EBF0',
-        borderStyle: 'dashed',
-    },
-    
-    emptyPetImageContainer: {
-        backgroundColor: 'transparent',
-    },
-    
-    emptyPetSubtext: {
-        fontSize: 8,
-        fontWeight: '400',
-        color: '#999',
-        textAlign: 'center',
-        marginTop: responsiveHeight(0.2),
-    },
-    
-    
-    loadingContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: responsiveHeight(8),
-    },
-    
-    loadingText: {
-        marginTop: responsiveHeight(1),
-        fontSize: FONT_SIZES.md,
-        color: '#666',
-        fontWeight: typography.fontWeight.medium,
-    },
-    
-    errorContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: responsiveHeight(8),
-        paddingHorizontal: responsiveWidth(5),
-    },
-    
-    errorText: {
-        marginTop: responsiveHeight(1),
-        fontSize: FONT_SIZES.md,
-        color: '#FF6B6B',
-        fontWeight: typography.fontWeight.medium,
-        textAlign: 'center',
-        marginBottom: responsiveHeight(2),
-    },
-    
-    retryButton: {
-        backgroundColor: '#58B9D0',
-        paddingHorizontal: responsiveWidth(8),
-        paddingVertical: responsiveHeight(1.5),
-        borderRadius: responsiveWidth(6),
-    },
-    
-    retryButtonText: {
-        color: '#FFFFFF',
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.semibold,
-    },
-    
-    defaultPetImageContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(88, 185, 208, 0.1)',
-        borderWidth: 1,
-        borderColor: 'rgba(88, 185, 208, 0.3)',
-    },
-    
-    emptyPetSlot: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(204, 204, 204, 0.05)',
-        borderWidth: 1,
-        borderColor: 'rgba(204, 204, 204, 0.3)',
-        borderStyle: 'dashed',
-    },
-    
-    emptyPetText: {
-        fontSize: 10,
-        fontWeight: '500',
-        color: '#CCCCCC',
-        textAlign: 'center',
-        marginBottom: responsiveHeight(0.3),
     },
 });
 

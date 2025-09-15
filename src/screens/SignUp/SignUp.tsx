@@ -18,7 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
-import loginstyles from './signup.styles';
+import signupstyles from './signup.styles';
 import profileStyles from '../Profile/profileStyles';
 import { RootStackParamList } from '../../types/navigation';
 import googleSignInService, { GoogleSignInResponse } from '../../services/googleSignInService';
@@ -183,356 +183,204 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
   }, [message]);
 
   return (
-    <KeyboardAvoidingView
-      style={loginstyles.container}
+    <KeyboardAvoidingView 
+      style={signupstyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
-      
-      {/* Sticky Header with Back Button */}
-      <View style={loginstyles.stickyHeader}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          style={loginstyles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
-        </TouchableOpacity>
-        <View style={loginstyles.headerTitleContainer}>
-          <Text style={loginstyles.headerTitle}>Sign Up</Text>
-          <Text style={loginstyles.headerSubtitle}>Create your account</Text>
-        </View>
-        <View style={loginstyles.headerPlaceholder} />
-      </View>
-
-      <Animated.ScrollView
-        contentContainerStyle={loginstyles.scrollContainer}
+      <ScrollView 
+        style={signupstyles.scrollContainer}
+        contentContainerStyle={signupstyles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
+        keyboardShouldPersistTaps="handled"
       >
-        <View style={loginstyles.contentContainer}>
-          <View style={loginstyles.welcomeSection}>
-            <Text style={loginstyles.welcomeText}>Welcome!</Text>
-            <Text style={loginstyles.subtitle}>Tell us a bit about yourself</Text>
-          </View>
+        <View style={signupstyles.setLeftIconposition}>
+          <Image source={images.signupImage} style={signupstyles.topImage} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={signupstyles.arrowIconPosition}>
+            <View>
+              <Image source={Icons.LeftArrow} style={signupstyles.leftArrowIconSize}/>
+            </View>
+          </TouchableOpacity>
+        </View>
 
+        <View style={signupstyles.formContainer}>
+          <View style={{alignItems:'center'}}>
+            <Text style={signupstyles.heading}>Create Account</Text>
+            <Text style={signupstyles.subheading}>Join us and start your journey</Text>
+          </View>
+          
           {message && (
             <View style={[
-              loginstyles.messageContainer,
-              message.type === 'success' ? loginstyles.successMessage : loginstyles.errorMessage
+              signupstyles.messageContainer,
+              message.type === 'success' ? signupstyles.successMessage : signupstyles.errorMessage
             ]}>
-              <Text style={loginstyles.messageText}>{message.text}</Text>
+              <Text style={signupstyles.messageText}>{message.text}</Text>
             </View>
           )}
 
-          <View style={loginstyles.formSection}>
-            <View style={loginstyles.inputGroup}>
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Enter First Name"
-                  placeholder="First Name"
-                  value={firstName}
-                  onChangeText={(value) => {
-                    setFirstName(value);
-                    clearFieldError('firstName');
-                  }}
-                  theme={{
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.firstName ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.firstName && loginstyles.inputError
-                  ]}
-                  autoCapitalize="words"
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="person"
-                          size={20}
-                          color={errors.firstName ? '#FF6B6B' : '#666'}
-                        />
-                      )}
-                    />
-                  }
-                />
-                {errors.firstName && <Text style={loginstyles.errorText}>{errors.firstName}</Text>}
-              </View>
+          <View style={signupstyles.inputContainer}>
+          <TextInput
+            mode="outlined"
+            label="Enter First Name"
+            placeholder="First Name"
+            value={firstName}
+            onChangeText={(value) => {
+              setFirstName(value);
+              clearFieldError('firstName');
+            }}
+            theme={{ 
+              roundness: 12,
+              colors: { primary: '#58B9D0', outline: errors.firstName ? '#FF6B6B' : '#E2E2E2' }
+            }}
+            error={!!errors.firstName}
+          />
+          {errors.firstName && <Text style={signupstyles.errorText}>{errors.firstName}</Text>}
+          
+          <TextInput
+            mode="outlined"
+            label="Enter Last Name" 
+            placeholder="Last Name"
+            value={lastName}
+            onChangeText={(value) => {
+              setLastName(value);
+              clearFieldError('lastName');
+            }}
+            theme={{ 
+              roundness: 12,
+              colors: { primary: '#58B9D0', outline: errors.lastName ? '#FF6B6B' : '#E2E2E2' }
+            }}
+            error={!!errors.lastName}
+          />
+          {errors.lastName && <Text style={signupstyles.errorText}>{errors.lastName}</Text>}
 
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Enter Last Name"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChangeText={(value) => {
-                    setLastName(value);
-                    clearFieldError('lastName');
-                  }}
-                  theme={{
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.lastName ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.lastName && loginstyles.inputError
-                  ]}
-                  autoCapitalize="words"
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="person-outline"
-                          size={20}
-                          color={errors.lastName ? '#FF6B6B' : '#666'}
-                        />
-                      )}
-                    />
-                  }
-                />
-                {errors.lastName && <Text style={loginstyles.errorText}>{errors.lastName}</Text>}
-              </View>
+          <TextInput
+            mode="outlined"
+            label="Email Address"
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={(value) => {
+              setEmail(value);
+              clearFieldError('email');
+            }}
+            theme={{ 
+              roundness: 12,
+              colors: { primary: '#58B9D0', outline: errors.email ? '#FF6B6B' : '#E2E2E2' }
+            }}
+            error={!!errors.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {errors.email && <Text style={signupstyles.errorText}>{errors.email}</Text>}
 
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Email Address"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChangeText={(value) => {
-                    setEmail(value);
-                    clearFieldError('email');
-                  }}
-                  theme={{
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.email ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.email && loginstyles.inputError
-                  ]}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="email"
-                          size={20}
-                          color={errors.email ? '#FF6B6B' : '#666'}
-                        />
-                      )}
-                    />
-                  }
-                />
-                {errors.email && <Text style={loginstyles.errorText}>{errors.email}</Text>}
-              </View>
+          <TextInput
+            mode="outlined"
+            label="Phone Number"
+            placeholder="Enter your phone number"
+            value={phoneNumber}
+            onChangeText={(value) => {
+              setPhoneNumber(value);
+              clearFieldError('phoneNumber');
+            }}
+            theme={{ 
+              roundness: 12,
+              colors: { primary: '#58B9D0', outline: errors.phoneNumber ? '#FF6B6B' : '#E2E2E2' }
+            }}
+            error={!!errors.phoneNumber}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+          {errors.phoneNumber && <Text style={signupstyles.errorText}>{errors.phoneNumber}</Text>}
 
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Phone Number"
-                  placeholder="Enter your phone number"
-                  value={phoneNumber}
-                  onChangeText={(value) => {
-                    setPhoneNumber(value);
-                    clearFieldError('phoneNumber');
-                  }}
-                  theme={{
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.phoneNumber ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.phoneNumber && loginstyles.inputError
-                  ]}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="phone"
-                          size={20}
-                          color={errors.phoneNumber ? '#FF6B6B' : '#666'}
-                        />
-                      )}
-                    />
-                  }
-                />
-                {errors.phoneNumber && <Text style={loginstyles.errorText}>{errors.phoneNumber}</Text>}
-              </View>
+          <TextInput
+            mode="outlined"
+            label="Password"
+            placeholder="Enter your password"
+            value={password}
+            onChangeText={(value) => {
+              setPassword(value);
+              clearFieldError('password');
+            }}
+            secureTextEntry={!showPassword}
+            theme={{ 
+              roundness: 12,
+              colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E2E2E2' }
+            }}
+            error={!!errors.password}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? Icons.eyeInvisible : Icons.eyeInvisible}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+          />
+          {errors.password && <Text style={signupstyles.errorText}>{errors.password}</Text>}
 
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={(value) => {
-                    setPassword(value);
-                    clearFieldError('password');
-                  }}
-                  secureTextEntry={!showPassword}
-                  theme={{
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.password && loginstyles.inputError
-                  ]}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="lock"
-                          size={20}
-                          color={errors.password ? '#FF6B6B' : '#666'}
-                        />
-                      )}
-                    />
-                  }
-                  right={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name={showPassword ? 'visibility-off' : 'visibility'}
-                          size={20}
-                          color="#666"
-                        />
-                      )}
-                      onPress={() => setShowPassword(!showPassword)}
-                    />
-                  }
-                />
-                {errors.password && <Text style={loginstyles.errorText}>{errors.password}</Text>}
-              </View>
-
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChangeText={(value) => {
-                    setConfirmPassword(value);
-                    clearFieldError('confirmPassword');
-                  }}
-                  secureTextEntry={!showConfirmPassword}
-                  theme={{
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.confirmPassword ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.confirmPassword && loginstyles.inputError
-                  ]}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="lock-outline"
-                          size={20}
-                          color={errors.confirmPassword ? '#FF6B6B' : '#666'}
-                        />
-                      )}
-                    />
-                  }
-                  right={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name={showConfirmPassword ? 'visibility-off' : 'visibility'}
-                          size={20}
-                          color="#666"
-                        />
-                      )}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    />
-                  }
-                />
-                {errors.confirmPassword && <Text style={loginstyles.errorText}>{errors.confirmPassword}</Text>}
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleSignIn}
-              style={[
-                profileStyles.commonButton,
-                profileStyles.commonButtonPrimary,
-                isLoading && profileStyles.loadingButton
-              ]}
-              activeOpacity={0.8}
-              disabled={isLoading}
-            >
-              <MaterialIcons name="arrow-forward" size={22} color="#58B9D0" />
-              <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextPrimary]}>Next</Text>
-            </TouchableOpacity>
-
-            <View style={loginstyles.dividerContainer}>
-              <View style={loginstyles.dividerLine} />
-              <Text style={loginstyles.dividerText}>Or Register with</Text>
-              <View style={loginstyles.dividerLine} />
-            </View>
-
-            <View style={[loginstyles.socialButtonsContainer, { justifyContent: 'center' }]}>
-              <TouchableOpacity
-                style={[
-                  profileStyles.commonButton,
-                  profileStyles.commonButtonGray,
-                  isLoading && profileStyles.loadingButton
-                ]}
-                activeOpacity={0.7}
-                onPress={handleGoogleSignUp}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#6B7280" />
-                ) : (
-                  <>
-                    <Image source={Icons.googleIcon} style={profileStyles.commonButtonIconSmall} />
-                    <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextGray]}>
-                      {isLoading ? 'Creating account...' : 'Google'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            <View style={loginstyles.signupPrompt}>
-              <Text style={loginstyles.signupText}>
-                Have an account?{' '}
-                <Text
-                  style={loginstyles.signupLink}
-                  onPress={() => navigation.navigate("LogIn")}
-                >
-                  Log in
-                </Text>
-              </Text>
-            </View>
+          <TextInput
+            mode="outlined"
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChangeText={(value) => {
+              setConfirmPassword(value);
+              clearFieldError('confirmPassword');
+            }}
+            secureTextEntry={!showConfirmPassword}
+            theme={{ 
+              roundness: 12,
+              colors: { primary: '#58B9D0', outline: errors.confirmPassword ? '#FF6B6B' : '#E2E2E2' }
+            }}
+            error={!!errors.confirmPassword}
+            right={
+              <TextInput.Icon
+                icon={showConfirmPassword ? Icons.eyeInvisible : Icons.eyeInvisible}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              />
+            }
+          />
+          {errors.confirmPassword && <Text style={signupstyles.errorText}>{errors.confirmPassword}</Text>}
           </View>
-        </View>
-      </Animated.ScrollView>
 
+          <TouchableOpacity 
+           onPress={handleSignIn}
+           style={[signupstyles.loginButton, isLoading && {opacity: 0.7}]}
+           disabled={isLoading}>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={signupstyles.loginText}>Next</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={signupstyles.orContainer}>
+           <View style={signupstyles.line} />
+           <Text style={signupstyles.orText}>Or register with</Text>
+           <View style={signupstyles.line} />
+          </View>
+
+          <View style={signupstyles.socialButtons}>
+            <TouchableOpacity 
+              style={[signupstyles.socialButton, isLoading && {opacity: 0.7}]}
+              onPress={handleGoogleSignUp}
+              disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#666" />
+              ) : (
+                <Image source={Icons.googleIcon} style={signupstyles.socialIcon} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={signupstyles.socialButton}>
+              <Image source={Icons.facebookIcon} style={signupstyles.socialIcon} />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={signupstyles.registerText}>
+            Have an account?{' '}
+           <TouchableOpacity onPress={()=>navigation.navigate("LogIn")}>
+            <Text style={signupstyles.registerLink}>Log in</Text>
+           </TouchableOpacity>
+          </Text>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

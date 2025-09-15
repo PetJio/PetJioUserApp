@@ -321,12 +321,18 @@ const BoardingUser: React.FC<BoardingUserProps> = ({ navigation, route }) => {
                         </Text>
                         
                         <View style={boardinguserstyles.scheduleInfo}>
-                            <Text style={boardinguserstyles.scheduleText}>
-                                📅 Available on {availableDay}
-                            </Text>
-                            <Text style={boardinguserstyles.scheduleText}>
-                                ⏰ {timeSlot}
-                            </Text>
+                            <View style={boardinguserstyles.scheduleItem}>
+                                <MaterialIcons name="calendar-today" size={16} color="#666" />
+                                <Text style={boardinguserstyles.scheduleText}>
+                                    Available on {availableDay}
+                                </Text>
+                            </View>
+                            <View style={boardinguserstyles.scheduleItem}>
+                                <MaterialIcons name="access-time" size={16} color="#666" />
+                                <Text style={boardinguserstyles.scheduleText}>
+                                    {timeSlot}
+                                </Text>
+                            </View>
                         </View>
                     </View>
                     

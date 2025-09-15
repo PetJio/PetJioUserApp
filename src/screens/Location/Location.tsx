@@ -10,6 +10,8 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
+  PermissionsAndroid,
+  Linking,
 } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -201,58 +203,107 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
     }
   };
 
-  // Auto-capture coordinates when component mounts
+  // Auto-capture coordinates when component mounts with fallback strategy
   const captureCoordinates = () => {
-    setIsGettingLocation(true);
-    
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Store coordinates silently without filling address
-        setLocationData(prev => ({
-          ...prev,
-          lat: latitude,
-          lng: longitude,
-        }));
-        
-        setHasCoordinates(true);
-        setIsGettingLocation(false);
-        
-        setMessage({
-          type: 'success', 
-          text: 'Location detected! Click "Use My Current Location" to fill address details.'
-        });
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        let errorMessage = 'Could not detect location automatically.';
-        
-        // Provide specific error messages
-        switch (error.code) {
-          case 1:
-            errorMessage = 'Location access denied. Please enable permissions and try the button.';
-            break;
-          case 2:
-            errorMessage = 'GPS unavailable. Use the button to try again.';
-            break;
-          case 3:
-            errorMessage = 'Location timeout. Use the button to try again.';
-            break;
+    const requestAndGet = async () => {
+      try {
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) {
+          setMessage({ type: 'error', text: 'Location permission denied. Please enable it in settings.' });
+          return;
         }
-        
-        setMessage({
-          type: 'error', 
-          text: errorMessage
-        });
+
+        setIsGettingLocation(true);
+        console.log('[Location] Getting current position with high accuracy...');
+
+        // First attempt: High accuracy with moderate timeout
+        Geolocation.getCurrentPosition(
+          (position) => {
+            console.log('[Location] High accuracy position received:', position);
+            const { latitude, longitude } = position.coords;
+            
+            setLocationData(prev => ({
+              ...prev,
+              lat: latitude,
+              lng: longitude,
+            }));
+            
+            setHasCoordinates(true);
+            setIsGettingLocation(false);
+            
+            setMessage({
+              type: 'success', 
+              text: 'Location detected! Click "Use My Current Location" to fill address details.'
+            });
+          },
+          (error) => {
+            console.error('[Location] High accuracy failed:', error);
+            
+            // If high accuracy fails, try with lower accuracy as fallback
+            console.log('[Location] Trying with lower accuracy as fallback...');
+            
+            Geolocation.getCurrentPosition(
+              (position) => {
+                console.log('[Location] Low accuracy position received:', position);
+                const { latitude, longitude } = position.coords;
+                
+                setLocationData(prev => ({
+                  ...prev,
+                  lat: latitude,
+                  lng: longitude,
+                }));
+                
+                setHasCoordinates(true);
+                setIsGettingLocation(false);
+                
+                setMessage({
+                  type: 'success', 
+                  text: 'Approximate location detected! Click "Use My Current Location" to fill address details.'
+                });
+              },
+              (fallbackError) => {
+                console.error('[Location] Fallback also failed:', fallbackError);
+                let errorMessage = 'Could not detect location automatically.';
+                
+                switch (fallbackError.code) {
+                  case 1: // PERMISSION_DENIED
+                    errorMessage = 'Location access denied. Please enable permissions and try the button.';
+                    break;
+                  case 2: // POSITION_UNAVAILABLE
+                    errorMessage = 'GPS unavailable. Please check location settings and try the button.';
+                    break;
+                  case 3: // TIMEOUT
+                    errorMessage = 'Location detection timed out. Try using the "Use My Current Location" button.';
+                    break;
+                }
+                
+                setMessage({
+                  type: 'error', 
+                  text: errorMessage
+                });
+                setIsGettingLocation(false);
+              },
+              {
+                enableHighAccuracy: false, // Low accuracy fallback
+                timeout: 20000, // Longer timeout for fallback
+                maximumAge: 60000, // Accept older cached location
+              }
+            );
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000, // Shorter timeout for first attempt
+            maximumAge: 5000, // Fresh location preferred
+          }
+        );
+      } catch (err) {
+        console.error('[Location] Permission request error:', err);
+        setMessage({ type: 'error', text: 'Unable to request location permission' });
         setIsGettingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000, // Accept cached location up to 30 seconds old
       }
-    );
+    };
+
+    requestAndGet();
   };
 
   // Fill address using existing coordinates or get new ones
@@ -265,44 +316,158 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
     } else {
       // Get fresh coordinates and fill address
       setIsFillingAddress(true);
-      
-      Geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          // Store coordinates and fill address
-          await reverseGeocode(latitude, longitude);
-          setHasCoordinates(true);
-          setIsFillingAddress(false);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          let errorMessage = 'Failed to get your location. Please enter manually.';
-          
-          switch (error.code) {
-            case 1:
-              errorMessage = 'Location access denied. Please enable location permissions.';
-              break;
-            case 2:
-              errorMessage = 'Location unavailable. Please check your GPS.';
-              break;
-            case 3:
-              errorMessage = 'Location request timed out. Please try again.';
-              break;
+      const requestAndFill = async () => {
+        try {
+          const hasPermission = await requestLocationPermission();
+          if (!hasPermission) {
+            setMessage({ type: 'error', text: 'Location permission denied. Please enable it in settings.' });
+            setIsFillingAddress(false);
+            return;
           }
-          
-          setMessage({
-            type: 'error', 
-            text: errorMessage
-          });
+
+          Geolocation.getCurrentPosition(
+            async (position) => {
+              console.log('[Location] High accuracy position for address fill:', position);
+              const { latitude, longitude } = position.coords;
+              
+              // Store coordinates and fill address
+              await reverseGeocode(latitude, longitude);
+              setHasCoordinates(true);
+              setIsFillingAddress(false);
+            },
+            (error) => {
+              console.error('[Location] High accuracy failed for address fill:', error);
+              
+              // Try with lower accuracy as fallback
+              console.log('[Location] Trying lower accuracy for address fill...');
+              
+              Geolocation.getCurrentPosition(
+                async (position) => {
+                  console.log('[Location] Low accuracy position for address fill:', position);
+                  const { latitude, longitude } = position.coords;
+                  
+                  await reverseGeocode(latitude, longitude);
+                  setHasCoordinates(true);
+                  setIsFillingAddress(false);
+                },
+                (fallbackError) => {
+                  console.error('[Location] Both attempts failed for address fill:', fallbackError);
+                  let errorMessage = 'Failed to get your location. Please enter manually.';
+                  
+                  switch (fallbackError.code) {
+                    case 1: // PERMISSION_DENIED
+                      errorMessage = 'Location access denied. Please enable location permissions.';
+                      break;
+                    case 2: // POSITION_UNAVAILABLE
+                      errorMessage = 'Location unavailable. Please check your GPS and try again.';
+                      break;
+                    case 3: // TIMEOUT
+                      errorMessage = 'Location request timed out. Please try again or enter manually.';
+                      break;
+                  }
+                  
+                  setMessage({
+                    type: 'error', 
+                    text: errorMessage
+                  });
+                  setIsFillingAddress(false);
+                },
+                {
+                  enableHighAccuracy: false, // Low accuracy fallback
+                  timeout: 25000, // Longer timeout for fallback
+                  maximumAge: 30000, // Accept older location for fallback
+                }
+              );
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 12000, // Moderate timeout for first attempt
+              maximumAge: 0, // Fresh location for address fill
+            }
+          );
+        } catch (err) {
+          console.error('Permission request error:', err);
+          setMessage({ type: 'error', text: 'Unable to request location permission' });
           setIsFillingAddress(false);
-        },
+        }
+      };
+
+      requestAndFill();
+    }
+  };
+
+  // Request location permission at runtime for Android
+  const requestLocationPermission = async (): Promise<boolean> => {
+    console.log('[Location] Requesting permissions...');
+    
+    if (Platform.OS === 'ios') {
+      // For iOS, permissions are handled in Info.plist
+      console.log('[Location] iOS permissions handled in Info.plist');
+      return true;
+    }
+    
+    // For Android
+    try {
+      console.log('[Location] Requesting Android location permissions (coarse+fine)');
+
+      // Check current permissions first
+      const fineCheck = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+      const coarseCheck = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+      
+      console.log('[Location] Current permissions:', { fine: fineCheck, coarse: coarseCheck });
+      
+      // If we already have permissions, return true
+      if (fineCheck || coarseCheck) {
+        console.log('[Location] Permissions already granted');
+        return true;
+      }
+
+      // Request fine location first as it's more important
+      const fine = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 10000,
+          title: 'PetJio Location Permission',
+          message: 'PetJio needs precise location to autofill your address.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
         }
       );
+
+      // Request coarse location as a fallback
+      const coarse = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        {
+          title: 'PetJio Location Permission',
+          message: 'PetJio needs location to autofill your address. Coarse location helps when precise is not available.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        }
+      );
+
+      console.log('[Location] Android permission results:', { fine, coarse });
+
+      // If user selected NEVER_ASK_AGAIN for either, guide them to settings
+      if (fine === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN || coarse === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+        console.warn('[Location] Permission set to NEVER_ASK_AGAIN');
+        Alert.alert(
+          'Location Permission Required',
+          'Location permission is required to auto-fill your address. Please enable it in app settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
+        );
+        return false;
+      }
+
+      const hasPermission = fine === PermissionsAndroid.RESULTS.GRANTED || coarse === PermissionsAndroid.RESULTS.GRANTED;
+      console.log('[Location] Final permission result:', hasPermission);
+      return hasPermission;
+    } catch (err) {
+      console.error('[Location] Android permission error:', err);
+      return false;
     }
   };
 
@@ -360,6 +525,22 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
     }
   };
 
+  // Configure geolocation settings
+  useEffect(() => {
+    // Set configuration for better Android performance
+    if (Platform.OS === 'android') {
+      console.log('[Location] Configuring geolocation for Android');
+      
+      // Set Android-specific configuration
+      Geolocation.setRNConfiguration({
+        skipPermissionRequests: false, // We handle permissions ourselves
+        authorizationLevel: 'whenInUse',
+        enableBackgroundLocationUpdates: false,
+        locationProvider: 'auto' // Use both GPS and network
+      });
+    }
+  }, []);
+
   useEffect(() => {
     if (locationData.pincode.length === 6) {
       fetchAddressFromPincode(locationData.pincode);
@@ -390,39 +571,30 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
   };
 
   return (
-    <View style={locationStyles.container}>
-      {/* Sticky Header */}
-      <View style={locationStyles.stickyHeader}>
-        <TouchableOpacity 
-          style={locationStyles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <View style={locationStyles.headerTitleContainer}>
-          <Text style={locationStyles.headerTitle}>Where are you?</Text>
-        </View>
-        <View style={locationStyles.backButton} />
-      </View>
-
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView 
+      style={locationStyles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        style={locationStyles.scrollContainer} 
+        contentContainerStyle={locationStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <Animated.ScrollView 
-          contentContainerStyle={locationStyles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
-          scrollEventThrottle={16}
-        >
-          <View style={locationStyles.contentContainer}>
-            <View style={{ marginBottom: 20, alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, color: '#666', textAlign: 'center' }}>Help us know your location</Text>
-            </View>
+        <View style={locationStyles.setLeftIconposition}>
+          <Image source={images.signupImage} style={locationStyles.topImage} />
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()} 
+            style={locationStyles.arrowIconPosition}
+          >
+            <Image source={Icons.LeftArrow} style={locationStyles.leftArrowIconSize}/>
+          </TouchableOpacity>
+        </View>
+
+        <View style={locationStyles.formContainer}>
+          <View style={{alignItems:'center'}}>
+            <Text style={locationStyles.heading}>Enter Your Location</Text>
+            <Text style={locationStyles.subheading}>Help us know where you are</Text>
+          </View>
 
           {message && (
             <View style={[
@@ -433,8 +605,7 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
             </View>
           )}
 
-          <View style={locationStyles.formSection}>
-            <View style={locationStyles.inputGroup}>
+          <View style={locationStyles.inputContainer}>
               <View>
                 <TextInput
                   mode="outlined"
@@ -443,28 +614,12 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   value={locationData.address}
                   onChangeText={(value) => updateLocationData('address', value)}
                   theme={{ 
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.address ? '#FF6B6B' : '#E8E8E8' }
+                    roundness: 12,
+                    colors: { primary: '#58B9D0', outline: errors.address ? '#FF6B6B' : '#E2E2E2' }
                   }}
-                  style={locationStyles.textInput}
-                  contentStyle={locationStyles.inputContent}
-                  outlineStyle={[
-                    locationStyles.inputOutline,
-                    errors.address && locationStyles.inputError
-                  ]}
+                  error={!!errors.address}
                   multiline
                   numberOfLines={3}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name="home" 
-                          size={20} 
-                          color={errors.address ? '#FF6B6B' : '#666'} 
-                        />
-                      )}
-                    />
-                  }
                 />
                 {errors.address && <Text style={locationStyles.errorText}>{errors.address}</Text>}
               </View>
@@ -477,27 +632,11 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   value={locationData.city}
                   onChangeText={(value) => updateLocationData('city', value)}
                   theme={{ 
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.city ? '#FF6B6B' : '#E8E8E8' }
+                    roundness: 12,
+                    colors: { primary: '#58B9D0', outline: errors.city ? '#FF6B6B' : '#E2E2E2' }
                   }}
-                  style={locationStyles.textInput}
-                  contentStyle={locationStyles.inputContent}
-                  outlineStyle={[
-                    locationStyles.inputOutline,
-                    errors.city && locationStyles.inputError
-                  ]}
+                  error={!!errors.city}
                   autoCapitalize="words"
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name="location-city" 
-                          size={20} 
-                          color={errors.city ? '#FF6B6B' : '#666'} 
-                        />
-                      )}
-                    />
-                  }
                 />
                 {errors.city && <Text style={locationStyles.errorText}>{errors.city}</Text>}
               </View>
@@ -510,27 +649,11 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   value={locationData.state}
                   onChangeText={(value) => updateLocationData('state', value)}
                   theme={{ 
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.state ? '#FF6B6B' : '#E8E8E8' }
+                    roundness: 12,
+                    colors: { primary: '#58B9D0', outline: errors.state ? '#FF6B6B' : '#E2E2E2' }
                   }}
-                  style={locationStyles.textInput}
-                  contentStyle={locationStyles.inputContent}
-                  outlineStyle={[
-                    locationStyles.inputOutline,
-                    errors.state && locationStyles.inputError
-                  ]}
+                  error={!!errors.state}
                   autoCapitalize="words"
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name="location-on" 
-                          size={20} 
-                          color={errors.state ? '#FF6B6B' : '#666'} 
-                        />
-                      )}
-                    />
-                  }
                 />
                 {errors.state && <Text style={locationStyles.errorText}>{errors.state}</Text>}
               </View>
@@ -543,28 +666,12 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   value={locationData.pincode}
                   onChangeText={(value) => updateLocationData('pincode', value)}
                   theme={{ 
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.pincode ? '#FF6B6B' : '#E8E8E8' }
+                    roundness: 12,
+                    colors: { primary: '#58B9D0', outline: errors.pincode ? '#FF6B6B' : '#E2E2E2' }
                   }}
-                  style={locationStyles.textInput}
-                  contentStyle={locationStyles.inputContent}
-                  outlineStyle={[
-                    locationStyles.inputOutline,
-                    errors.pincode && locationStyles.inputError
-                  ]}
+                  error={!!errors.pincode}
                   keyboardType="numeric"
                   maxLength={6}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name="pin-drop" 
-                          size={20} 
-                          color={errors.pincode ? '#FF6B6B' : '#666'} 
-                        />
-                      )}
-                    />
-                  }
                   right={
                     isPincodeLoading && locationData.pincode.length === 6 ? (
                       <TextInput.Icon
@@ -585,52 +692,32 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
               activeOpacity={0.8}
               disabled={isFillingAddress || isGettingLocation}
             >
-              <LinearGradient
-                colors={['rgba(88, 185, 208, 0.1)', 'rgba(88, 185, 208, 0.05)']}
-                style={locationStyles.locationButtonGradient}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 1}}
-              >
-                <View style={locationStyles.locationButtonContent}>
-                  {(isFillingAddress || isGettingLocation) ? (
-                    <ActivityIndicator size="small" color="#58B9D0" />
-                  ) : (
-                    <MaterialIcons 
-                      name={hasCoordinates ? "home" : "gps-fixed"} 
-                      size={24} 
-                      color="#58B9D0" 
-                    />
-                  )}
-                  <Text style={locationStyles.locationButtonText}>
-                    {isFillingAddress ? 'Filling Address...' : 
-                     isGettingLocation ? 'Detecting Location...' : 
-                     'Use My Current Location'}
-                  </Text>
-                </View>
-              </LinearGradient>
+              {(isFillingAddress || isGettingLocation) ? (
+                <ActivityIndicator size="small" color="#58B9D0" />
+              ) : (
+                <Text style={locationStyles.locationButtonText}>
+                  {isFillingAddress ? 'Filling Address...' : 
+                   isGettingLocation ? 'Detecting Location...' : 
+                   'Use My Current Location'}
+                </Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity 
               onPress={handleSignUp}
-              style={[
-                profileStyles.commonButton,
-                profileStyles.commonButtonPrimary,
-                isLoading && profileStyles.loadingButton
-              ]}
+              style={locationStyles.loginButton}
               activeOpacity={0.8}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextPrimary]}>Sign Up</Text>
+                <Text style={locationStyles.loginText}>Sign Up</Text>
               )}
             </TouchableOpacity>
-          </View>
         </View>
-      </Animated.ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -6,7 +6,11 @@ import {
     Image,
     TextInput,
     ScrollView,
+    StatusBar,
+    Platform,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import Icon from 'react-native-vector-icons/Feather';
@@ -32,12 +36,9 @@ type RootStackParamList = {
     PetMartPaymentMethod:undefined;
 };
 
-// Define the navigation prop type
-type PaymentMethodScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MyCart'>;
-
 // Define props interface for the component
 interface UserDetailsProps {
-    navigation: PaymentMethodScreenNavigationProp; // Navigation is now required
+    navigation: any; // Simplified navigation type
 }
 
 const local_data = [
@@ -72,6 +73,40 @@ const CheckOut: React.FC<UserDetailsProps> = ({navigation}) => {
     const [selectedBreed, setSelectedBreed] = useState<string>('1');
     const [country, setCountry] = useState<string>('1');
     const [checked, setChecked] = useState<string>('option1');
+    
+    // Sample order items - in real app this would come from props/context
+    const orderItems = [
+        {
+            id: 1,
+            name: 'Chompzilla Squeaky Plush Toy',
+            category: 'Toy',
+            price: 221.00,
+            image: images.tongImage,
+            quantity: 1
+        },
+        {
+            id: 2,
+            name: 'Premium Dog Food',
+            category: 'Food',
+            price: 850.00,
+            image: images.tongImage,
+            quantity: 2
+        },
+        {
+            id: 3,
+            name: 'Dog Collar Premium',
+            category: 'Accessory',
+            price: 450.00,
+            image: images.tongImage,
+            quantity: 1
+        }
+    ];
+
+    const subtotal = orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const deliveryFee = 50;
+    const tax = subtotal * 0.18; // 18% tax
+    const total = subtotal + deliveryFee + tax;
+
     const handleTimeChange = (
         event: any,
         selectedTime: Date | undefined,
@@ -90,146 +125,148 @@ const CheckOut: React.FC<UserDetailsProps> = ({navigation}) => {
                 : setToTime(formattedTime);
         }
     };
+
     return (
         <View style={checkoutstyles.container}>
+            <StatusBar backgroundColor="#F8F9FB" barStyle="dark-content" />
+            
+            {/* Header */}
+            <View style={checkoutstyles.header}>
+                <TouchableOpacity 
+                    onPress={() => navigation.navigate('MyCart')}
+                    style={checkoutstyles.backButtonContainer}
+                >
+                    <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
+                </TouchableOpacity>
+                
+                <View style={checkoutstyles.headerTitleContainer}>
+                    <Text style={checkoutstyles.headerTitle}>Checkout</Text>
+                    <Text style={checkoutstyles.headerSubtitle}>Review your order</Text>
+                </View>
+                
+                <View style={checkoutstyles.headerPlaceholder} />
+            </View>
 
-             <View style={checkoutstyles.containerchild}>
-                    <TouchableOpacity onPress={()=>navigation.navigate('MyCart')}>
-                        <View style={checkoutstyles.containerfirstsubchild}>
-                            <Image
-                                source={Icons.LeftArrow}
-                                style={checkoutstyles.leftarrowicon}
-                            />
-                            <Text style={checkoutstyles.checkoutText}>
-                                Checkout
+            <ScrollView 
+                style={checkoutstyles.scrollContainer}
+                contentContainerStyle={checkoutstyles.scrollContentContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Delivery Address Section */}
+                <View style={checkoutstyles.sectionContainer}>
+                    <View style={checkoutstyles.sectionHeader}>
+                        <MaterialIcons name="location-on" size={24} color="#58B9D0" />
+                        <Text style={checkoutstyles.sectionTitle}>Delivery Address</Text>
+                    </View>
+                    
+                    <View style={checkoutstyles.addressContainer}>
+                        <View style={checkoutstyles.addressInfo}>
+                            <Text style={checkoutstyles.addressLabel}>Home</Text>
+                            <Text style={checkoutstyles.addressText}>
+                                32/E-1 M.L.B, Road, Bally, Howrah, West Bengal - 711201
                             </Text>
                         </View>
-                    </TouchableOpacity>
-                </View>
-           
-                <View style={{ paddingHorizontal:responsiveWidth(4),top:responsiveHeight(3),gap:responsiveHeight(2)}}>
-                       <View>
-                      <Text style={{fontSize:14,fontWeight:'500',lineHeight:18,letterSpacing:0,color:'#000000'}}>Delivery Address</Text>
-               </View>
-
-               <View>
-                    <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-                           <Image source={Icons.BiMap}/>
-                           <View style={{width:responsiveWidth(9)}}>
-                                 <Text style={{fontSize:12,fontWeight:'500',lineHeight:16,letterSpacing:0,color:'#000000'}}>Home</Text>
-                                  <TouchableOpacity
-                                //    onPress={()=>navigation.navigate("DeliveryAddress")}
-                                  >
-
-                                    <View style={{flexDirection:'row',justifyContent:'space-between',width:responsiveWidth(85)}}>
-                                        <Text style={{fontSize:10,fontWeight:'400',lineHeight:12,color:'#A4A3A3'}} >32/E-1 M.L.B, Road , Bally, Howrah,</Text>
-                                         <View style={{justifyContent:'center', alignItems:'center', width:responsiveWidth(16),height:responsiveHeight(2.5),borderWidth:1,borderColor:'#E5E5E5'}}>
-                                               <Text style={{fontSize:10,fontWeight:'500',lineHeight:12,letterSpacing:0,color:'#58B9D0'}}>CHANGE</Text>
-                                         </View>
-                                 </View>
-
-                                  </TouchableOpacity>
-                           </View> 
+                        
+                        <TouchableOpacity style={checkoutstyles.changeButton}>
+                            <Text style={checkoutstyles.changeButtonText}>CHANGE</Text>
+                        </TouchableOpacity>
                     </View>
-               </View>
-
-                   <View style={{ borderWidth: 0.5, borderColor: '#ECECEC' }} />
-                
-                   <View style={{gap:responsiveHeight(2)}}>
-                    
-                      <View>
-                            <Text style={{fontSize:14,fontWeight:'500',lineHeight:18,letterSpacing:0,color:'#000000'}}>Order List</Text>
-                            
-                      </View>
-                            
-            <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-             <View style={{width:responsiveWidth(14),height:responsiveHeight(5.5), borderWidth:1, borderColor:'#FFFFFF', borderRadius:responsiveWidth(2),backgroundColor:'#E8E8E8'}}>
-                <Image source={images.tongImage} style={{width:responsiveWidth(12.5),height:responsiveHeight(4.5),borderRadius:responsiveWidth(2)}} />  
-            </View>
-             <View style={{gap:responsiveHeight(0.20)}}>
-                  <Text style={{fontSize:12,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#484848'}}>Chompzilla Squeaky Plush Toy</Text>
-                  <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#9D9D9D'}}>Toy</Text>
-                  <View style={{ width:responsiveWidth(75), flexDirection:'row',justifyContent:'space-between'}}>
-                         <Text style={{fontSize:13,fontWeight:'500',letterSpacing:0,lineHeight:14,color:'#000000'}}>₹221.00</Text>
-                          
-                  </View>
-             </View>
-            </View>
-                  
-            <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-             <View style={{width:responsiveWidth(14),height:responsiveHeight(5.5), borderWidth:1, borderColor:'#FFFFFF', borderRadius:responsiveWidth(2),backgroundColor:'#E8E8E8'}}>
-                <Image source={images.tongImage} style={{width:responsiveWidth(12.5),height:responsiveHeight(4.5),borderRadius:responsiveWidth(2)}} />  
-            </View>
-             <View style={{gap:responsiveHeight(0.20)}}>
-                  <Text style={{fontSize:12,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#484848'}}>Chompzilla Squeaky Plush Toy</Text>
-                  <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#9D9D9D'}}>Toy</Text>
-                  <View style={{ width:responsiveWidth(75), flexDirection:'row',justifyContent:'space-between'}}>
-                         <Text style={{fontSize:13,fontWeight:'500',letterSpacing:0,lineHeight:14,color:'#000000'}}>₹221.00</Text>
-                          
-                  </View>
-             </View>
-            </View>
-                  
-            <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-             <View style={{width:responsiveWidth(14),height:responsiveHeight(5.5), borderWidth:1, borderColor:'#FFFFFF', borderRadius:responsiveWidth(2),backgroundColor:'#E8E8E8'}}>
-                <Image source={images.tongImage} style={{width:responsiveWidth(12.5),height:responsiveHeight(4.5),borderRadius:responsiveWidth(2)}} />  
-            </View>
-             <View style={{gap:responsiveHeight(0.20)}}>
-                  <Text style={{fontSize:12,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#484848'}}>Chompzilla Squeaky Plush Toy</Text>
-                  <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#9D9D9D'}}>Toy</Text>
-                  <View style={{ width:responsiveWidth(75), flexDirection:'row',justifyContent:'space-between'}}>
-                         <Text style={{fontSize:13,fontWeight:'500',letterSpacing:0,lineHeight:14,color:'#000000'}}>₹221.00</Text>
-                          
-                  </View>
-             </View>
-            </View>
-
-                   </View>
-
                 </View>
 
+                {/* Order Summary Section */}
+                <View style={checkoutstyles.sectionContainer}>
+                    <View style={checkoutstyles.sectionHeader}>
+                        <MaterialIcons name="shopping-bag" size={24} color="#58B9D0" />
+                        <Text style={checkoutstyles.sectionTitle}>Order Summary</Text>
+                    </View>
+                    
+                    {orderItems.map((item, index) => (
+                        <View key={item.id} style={checkoutstyles.orderItem}>
+                            <View style={checkoutstyles.itemImageContainer}>
+                                <Image source={item.image} style={checkoutstyles.itemImage} />
+                            </View>
+                            
+                            <View style={checkoutstyles.itemDetails}>
+                                <Text style={checkoutstyles.itemName}>{item.name}</Text>
+                                <Text style={checkoutstyles.itemCategory}>{item.category}</Text>
+                                <View style={checkoutstyles.itemPriceContainer}>
+                                    <Text style={checkoutstyles.itemPrice}>₹{item.price.toFixed(2)}</Text>
+                                    <Text style={checkoutstyles.itemQuantity}>Qty: {item.quantity}</Text>
+                                </View>
+                            </View>
+                        </View>
+                    ))}
+                </View>
 
+                {/* Price Breakdown Section */}
+                <View style={checkoutstyles.sectionContainer}>
+                    <View style={checkoutstyles.sectionHeader}>
+                        <MaterialIcons name="receipt" size={24} color="#58B9D0" />
+                        <Text style={checkoutstyles.sectionTitle}>Price Details</Text>
+                    </View>
+                    
+                    <View style={checkoutstyles.priceBreakdown}>
+                        <View style={checkoutstyles.priceRow}>
+                            <Text style={checkoutstyles.priceLabel}>Subtotal ({orderItems.length} items)</Text>
+                            <Text style={checkoutstyles.priceValue}>₹{subtotal.toFixed(2)}</Text>
+                        </View>
+                        
+                        <View style={checkoutstyles.priceRow}>
+                            <Text style={checkoutstyles.priceLabel}>Delivery Fee</Text>
+                            <Text style={checkoutstyles.priceValue}>₹{deliveryFee.toFixed(2)}</Text>
+                        </View>
+                        
+                        <View style={checkoutstyles.priceRow}>
+                            <Text style={checkoutstyles.priceLabel}>Tax (18%)</Text>
+                            <Text style={checkoutstyles.priceValue}>₹{tax.toFixed(2)}</Text>
+                        </View>
+                        
+                        <View style={checkoutstyles.divider} />
+                        
+                        <View style={checkoutstyles.totalRow}>
+                            <Text style={checkoutstyles.totalLabel}>Total Amount</Text>
+                            <Text style={checkoutstyles.totalValue}>₹{total.toFixed(2)}</Text>
+                        </View>
+                    </View>
+                </View>
 
-            {/* Fixed Next Button */}
-            <View style={checkoutstyles.fixedButtonContainer}>
-                 <View style={{ gap: responsiveHeight(1) }}>
+                {/* Payment Method Preview */}
+                <View style={checkoutstyles.sectionContainer}>
+                    <View style={checkoutstyles.sectionHeader}>
+                        <MaterialIcons name="payment" size={24} color="#58B9D0" />
+                        <Text style={checkoutstyles.sectionTitle}>Payment Method</Text>
+                    </View>
+                    
                     <TouchableOpacity 
-                      onPress={()=>navigation.navigate('PetMartPaymentMethod')}
+                        style={checkoutstyles.paymentMethodContainer}
+                        onPress={() => navigation.navigate('PetMartPaymentMethod')}
                     >
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            gap: responsiveWidth(2),
-                        }}>
-                        <Image source={Icons.googlepay} />
-                        <Text
-                            style={{
-                                color: '#414141',
-                                fontSize: 11,
-                                fontWeight: '300',
-                                top:responsiveHeight(0.90)
-                            }}>
-                            PAY USING
-                        </Text>
-                        <Image source={Icons.IoIosArrowUp} style={{ top:responsiveHeight(1)}} />
-                    </View>
+                        <View style={checkoutstyles.paymentMethodInfo}>
+                            <Image source={Icons.googlepay} style={checkoutstyles.paymentIcon} />
+                            <View>
+                                <Text style={checkoutstyles.paymentMethodLabel}>Google Pay UPI</Text>
+                                <Text style={checkoutstyles.paymentMethodSubtext}>Pay using UPI</Text>
+                            </View>
+                        </View>
+                        
+                        <MaterialIcons name="keyboard-arrow-right" size={24} color="#666" />
                     </TouchableOpacity>
-                    
-                    <Text
-                        style={{
-                            color: '#303030',
-                            fontSize: 14,
-                            fontWeight: '400',
-                            lineHeight: 18,
-                            letterSpacing: 0,
-                        }}>
-                        Google Pay UPI
-                    </Text>
                 </View>
+            </ScrollView>
+
+            {/* Fixed Bottom Payment Button */}
+            <View style={checkoutstyles.bottomButtonContainer}>
+                <View style={checkoutstyles.totalSummary}>
+                    <Text style={checkoutstyles.totalSummaryLabel}>Total: ₹{total.toFixed(2)}</Text>
+                    <Text style={checkoutstyles.totalSummarySubtext}>Inclusive of all taxes</Text>
+                </View>
+                
                 <TouchableOpacity
-                    // onPress={() => navigation.navigate('CheckOut')}
-                    style={checkoutstyles.nextBtnContainer}>
-                    <Text style={checkoutstyles.nextBtnText}>Make Payment</Text>
+                    onPress={() => navigation.navigate('PetMartPaymentMethod')}
+                    style={checkoutstyles.paymentButton}
+                >
+                    <Text style={checkoutstyles.paymentButtonText}>Make Payment</Text>
+                    <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
         </View>

@@ -45,6 +45,7 @@ import {
   LogIn,
   AddVaccination,
   BookBoarder,
+  BoardingSuccess,
   BoardingPaymentmethod,
   NGO,
   NGOUser,
@@ -165,6 +166,7 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="ServiceProviderform" component={ServiceProviderform}/>
             <Stack.Screen name="AddVaccination" component={AddVaccination}/>
             <Stack.Screen name="BookBoarder" component={BookBoarder}/>
+            <Stack.Screen name="BoardingSuccess" component={BoardingSuccess}/>
             <Stack.Screen name="BoardingPaymentmethod" component={BoardingPaymentmethod}/>
             <Stack.Screen name="NGO" component={NGO}/>
             <Stack.Screen name="NGOUser" component={NGOUser}/>

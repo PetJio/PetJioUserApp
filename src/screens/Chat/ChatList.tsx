@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   Image,
   FlatList,
   StatusBar,
+  RefreshControl,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {
   responsiveWidth,
@@ -16,16 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TextInput } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles';
-
-interface ChatUser {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-}
+import { chatService, ChatUser } from '../../services/chatService';
 
 type ChatStackParamList = {
   ChatList: undefined;
@@ -36,55 +30,46 @@ type NavigationProp = NativeStackNavigationProp<ChatStackParamList, 'ChatList'>;
 
 const ChatList: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const [users, setUsers] = useState<ChatUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string>('');
 
-  // Mock data for chat users
-  const chatUsers: ChatUser[] = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Wilson',
-      avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face',
-      lastMessage: 'Your pet\'s vaccination is due next week',
-      timestamp: '2m ago',
-      unreadCount: 2,
-      isOnline: true,
-    },
-    {
-      id: '2',
-      name: 'Pet Groomer Jake',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      lastMessage: 'Thanks for booking the grooming session!',
-      timestamp: '1h ago',
-      unreadCount: 0,
-      isOnline: false,
-    },
-    {
-      id: '3',
-      name: 'Walker Emma',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5c5?w=150&h=150&fit=crop&crop=face',
-      lastMessage: 'I\'ll be there at 3 PM for the walk',
-      timestamp: '3h ago',
-      unreadCount: 1,
-      isOnline: true,
-    },
-    {
-      id: '4',
-      name: 'Trainer Mark',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      lastMessage: 'Great progress in today\'s training session!',
-      timestamp: '1d ago',
-      unreadCount: 0,
-      isOnline: false,
-    },
-    {
-      id: '5',
-      name: 'Pet Sitter Anna',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      lastMessage: 'Your pet is doing great during boarding',
-      timestamp: '2d ago',
-      unreadCount: 3,
-      isOnline: true,
-    },
-  ];
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const fetchedUsers = await chatService.getAllUsers();
+      setUsers(fetchedUsers);
+      if (fetchedUsers.length === 0) {
+        setError('No users found');
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+      setError('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadUsers();
+    setRefreshing(false);
+  };
+
+  // Filter users based on search query
+  const filteredUsers = users.filter(user =>
+    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.role?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const navigateToChat = (user: ChatUser) => {
     navigation.navigate('Chat', { user });
@@ -162,7 +147,7 @@ const ChatList: React.FC = () => {
 
       {/* Chat List */}
       <FlatList
-        data={chatUsers}
+        data={filteredUsers}
         renderItem={renderChatItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}

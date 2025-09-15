@@ -4,14 +4,266 @@ import {
     responsiveWidth,
     responsiveHeight,
 } from 'react-native-responsive-dimensions';
+
 const bookboarderstyles = StyleSheet.create({
     container: {
-        gap: responsiveHeight(2),
-        width: responsiveWidth(100),
-        height: responsiveHeight(100),
-        backgroundColor: '#FFFFFF',
-        position: 'relative',
+        flex: 1,
+        backgroundColor: '#f8f9fa',
+        paddingBottom: 100,
     },
+    
+    // Content Sections
+    scrollContainer: {
+        flex: 1,
+    },
+    content: {
+        padding: 16,
+    },
+    section: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#f1f3f4',
+    },
+    sectionHeader: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f3f4',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#2c3e50',
+    },
+    sectionContent: {
+        padding: 16,
+    },
+
+    // Service Details
+    serviceRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f3f4',
+    },
+    serviceRowLast: {
+        borderBottomWidth: 0,
+    },
+    serviceLabel: {
+        fontSize: 15,
+        color: '#495057',
+        fontWeight: '500',
+    },
+    serviceValue: {
+        fontSize: 15,
+        color: '#2c3e50',
+        fontWeight: '600',
+    },
+
+    // Pet Information
+    petCard: {
+        backgroundColor: '#e3f2fd',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#58B9D0',
+    },
+    petHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    petIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#58B9D0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    petName: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#2c3e50',
+    },
+    petDetails: {
+        gap: 8,
+    },
+    petDetailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    petDetailLabel: {
+        fontSize: 14,
+        color: '#6c757d',
+    },
+    petDetailValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#2c3e50',
+    },
+
+    // Price Breakdown
+    priceSection: {
+        backgroundColor: '#f8f9fa',
+        padding: 16,
+        borderRadius: 8,
+        marginTop: 16,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 8,
+    },
+    priceLabel: {
+        fontSize: 15,
+        color: '#495057',
+    },
+    priceValue: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#343a40',
+    },
+    priceDescription: {
+        fontSize: 12,
+        color: '#6c757d',
+        marginLeft: 4,
+    },
+    totalRow: {
+        borderTopWidth: 1,
+        borderTopColor: '#dee2e6',
+        marginTop: 8,
+        paddingTop: 12,
+    },
+    totalLabel: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#2c3e50',
+    },
+    totalValue: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#27ae60',
+    },
+
+    // Payment Section
+    paymentContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        padding: 20,
+        paddingTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#e9ecef',
+    },
+    paymentSectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#2c3e50',
+        marginBottom: 16,
+    },
+    paymentOptionsContainer: {
+        marginBottom: 16,
+    },
+    paymentMethodContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+        marginBottom: 12,
+    },
+    selectedPaymentMethod: {
+        backgroundColor: '#e3f2fd',
+        borderColor: '#58B9D0',
+        borderWidth: 2,
+    },
+    paymentMethodIcon: {
+        width: 40,
+        height: 40,
+        marginRight: 12,
+        borderRadius: 8,
+    },
+    paymentMethodText: {
+        flex: 1,
+    },
+    paymentMethodLabel: {
+        fontSize: 12,
+        color: '#6c757d',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 2,
+    },
+    paymentMethodName: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#2c3e50',
+    },
+    changePaymentButton: {
+        padding: 8,
+        borderRadius: 6,
+        backgroundColor: '#e9ecef',
+    },
+    upiOptionsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+        paddingHorizontal: 4,
+    },
+    upiOption: {
+        width: '23%',
+        aspectRatio: 1,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    selectedUpiOption: {
+        backgroundColor: '#e3f2fd',
+        borderColor: '#58B9D0',
+        borderWidth: 2,
+    },
+    upiOptionIcon: {
+        width: 32,
+        height: 32,
+        resizeMode: 'contain',
+    },
+    upiOptionText: {
+        fontSize: 10,
+        color: '#495057',
+        textAlign: 'center',
+        marginTop: 4,
+        fontWeight: '500',
+    },
+    paymentButton: {
+        backgroundColor: '#58B9D0',
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    paymentButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+
+    // Legacy styles for compatibility
     containerchild: {
         width: responsiveWidth(100),
         padding: responsiveWidth(4),
@@ -24,15 +276,10 @@ const bookboarderstyles = StyleSheet.create({
         flexDirection: 'row',
         gap: responsiveWidth(2.1),
     },
-    downArrowIcon: {
-        tintColor: '#000000',
-        top: responsiveHeight(0.25),
-    },
     leftarrowicon: {
         tintColor: '#000000',
         top: responsiveHeight(0.5),
     },
-
     checkoutText: {
         fontSize: 18,
         fontWeight: '600',
@@ -245,6 +492,13 @@ const bookboarderstyles = StyleSheet.create({
         alignItems: 'center',
         gap: responsiveWidth(2),
     },
+    
+    upiIcon: {
+        width: responsiveWidth(8),
+        height: responsiveWidth(8),
+        resizeMode: 'contain',
+    },
+    
     payUsingText: {
         color: '#414141',
         fontSize: 11,

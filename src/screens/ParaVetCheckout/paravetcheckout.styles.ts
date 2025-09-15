@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import {
     responsiveWidth,
     responsiveHeight,
@@ -6,11 +6,230 @@ import {
 
 const paravetcheckoutstyles = StyleSheet.create({
     container: {
-        gap: responsiveHeight(2),
-        width: responsiveWidth(100),
-        height: responsiveHeight(100),
-        backgroundColor: '#FFFFFF',
+        flex: 1,
+        backgroundColor: '#F8F9FB',
     },
+
+    // Header Styles
+    header: {
+        backgroundColor: '#F8F9FB',
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E8EBF0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+
+    backButtonContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#E6F3F7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#D1E7DD',
+    },
+
+    headerTitleContainer: {
+        flex: 1,
+    },
+
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#1A1D29',
+        marginBottom: 2,
+    },
+
+    headerSubtitle: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+    },
+
+    headerPlaceholder: {
+        width: 44,
+    },
+
+    // Scroll Container
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: '#F8F9FB',
+    },
+
+    scrollContentContainer: {
+        paddingHorizontal: 16,
+        paddingTop: 20,
+        paddingBottom: 140,
+    },
+
+    // Section Styles
+    sectionContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E8EBF0',
+    },
+
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#1A1D29',
+        marginLeft: 8,
+    },
+
+    // Form Input Styles
+    inputContainer: {
+        marginBottom: 16,
+    },
+
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1A1D29',
+        marginBottom: 8,
+    },
+
+    textInput: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#E8EBF0',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        fontSize: 16,
+        color: '#1A1D29',
+        fontWeight: '400',
+        minHeight: 54,
+    },
+
+    // Appointment Card Styles
+    appointmentCard: {
+        backgroundColor: '#E6F3F7',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#58B9D0',
+        marginBottom: 16,
+    },
+
+    appointmentHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+
+    appointmentTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1A1D29',
+        marginLeft: 8,
+    },
+
+    appointmentDetails: {
+        gap: 8,
+    },
+
+    appointmentRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    appointmentLabel: {
+        fontSize: 14,
+        color: '#666',
+    },
+
+    appointmentValue: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1A1D29',
+    },
+
+    // Time Picker Styles
+    timePickerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+
+    timePickerButton: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#E8EBF0',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        alignItems: 'center',
+    },
+
+    timePickerText: {
+        fontSize: 16,
+        color: '#1A1D29',
+        fontWeight: '400',
+    },
+
+    // Bottom Button Styles
+    bottomButtonContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: 16,
+        paddingVertical: 20,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+        borderTopWidth: 1,
+        borderTopColor: '#E8EBF0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 10,
+    },
+
+    confirmButton: {
+        backgroundColor: '#58B9D0',
+        borderRadius: 12,
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#58B9D0',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+
+    confirmButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginRight: 8,
+    },
+
+    // Legacy styles for compatibility
     containerchild: {
         width: responsiveWidth(100),
         padding: responsiveWidth(4),
@@ -38,13 +257,6 @@ const paravetcheckoutstyles = StyleSheet.create({
         paddingHorizontal: responsiveWidth(0.4),
         backgroundColor: '#fff',
     },
-    textInput: {
-        flex: 1,
-        fontSize: 16,
-        color: '#333',
-        height: responsiveHeight(5),
-        marginLeft: responsiveWidth(1),
-    },
     checkoutText: {
         fontSize: 18,
         fontWeight: '600',
@@ -52,71 +264,8 @@ const paravetcheckoutstyles = StyleSheet.create({
         color: '#000000',
         top: responsiveHeight(1),
     },
-    imageposition: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative',
-        top: responsiveHeight(3),
-    },
-    imagesize: {
-        width: responsiveWidth(20),
-        height: responsiveHeight(9),
-        borderRadius: responsiveWidth(2.5),
-    },
-    dogtitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        lineHeight: 17,
-        color: '#FFFFFF',
-        position: 'absolute',
-        top: responsiveHeight(6.5),
-    },
-    gapandheightcontainer: {
-        gap: responsiveWidth(4.5),
-      
-    },
-    flexposition: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: responsiveHeight(2),
-    },
 
-    inputtext:{
-        width:responsiveWidth(90),
-        height:responsiveHeight(6.9),
-        borderRadius:responsiveWidth(1.5),
-        backgroundColor:'#FFFFFF',
-        justifyContent:'center',
-        alignItems:'center',
-        marginLeft:responsiveWidth(4),
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 4 }, 
-        shadowOpacity: 0.3, 
-        shadowRadius: 4, 
-        elevation: 5,  
-    },
-    dropdown: {
-        height: responsiveHeight(5),
-        width: responsiveWidth(40),
-        backgroundColor: '#FFFFFF',
-        borderRadius: 4,
-        paddingHorizontal: responsiveWidth(4),
-        shadowColor: '#000', // Shadow color
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    imageStyle: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-    },
-    placeholderStyle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#686868',
-    },
+    // Additional legacy styles for compatibility
     selectedTextStyle: {
         fontSize: 16,
         marginLeft: 8,
@@ -125,23 +274,23 @@ const paravetcheckoutstyles = StyleSheet.create({
         width: 20,
         height: 20,
     },
-    setTextAmountflex:{
-        flexDirection:'row',
-        justifyContent:'space-between',
+    setTextAmountflex: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
-    chargeText:{
-        fontSize:12,
-        fontWeight:'500',
-        lineHeight:17,
-        letterSpacing:0,
-        color:'#303030'
+    chargeText: {
+        fontSize: 12,
+        fontWeight: '500',
+        lineHeight: 17,
+        letterSpacing: 0,
+        color: '#303030'
     },
-    amountText:{
-        fontSize:12,
-        fontWeight:'500',
-        lineHeight:17,
-        letterSpacing:0,
-        color:'#303030'
+    amountText: {
+        fontSize: 12,
+        fontWeight: '500',
+        lineHeight: 17,
+        letterSpacing: 0,
+        color: '#303030'
     }
 });
 

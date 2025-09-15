@@ -546,6 +546,13 @@ const boardinguserstyles = StyleSheet.create({
         borderLeftColor: '#58B9D0',
     },
     
+    scheduleItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: responsiveWidth(2),
+        marginBottom: responsiveHeight(0.3),
+    },
+    
     scheduleText: {
         fontSize: 13,
         color: '#1A1D29',

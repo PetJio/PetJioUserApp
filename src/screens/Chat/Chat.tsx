@@ -9,6 +9,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import {
   responsiveWidth,
@@ -18,6 +19,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import chatStyles from './chatStyles';
+import { chatService, ChatUser } from '../../services/chatService';
 
 interface Message {
   id: string;
@@ -25,13 +27,6 @@ interface Message {
   timestamp: string;
   isMe: boolean;
   status?: 'sent' | 'delivered' | 'read';
-}
-
-interface ChatUser {
-  id: string;
-  name: string;
-  avatar: string;
-  isOnline: boolean;
 }
 
 type ChatStackParamList = {
@@ -87,16 +82,18 @@ const Chat: React.FC = () => {
 
   const flatListRef = useRef<FlatList>(null);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (message.trim()) {
+      const messageText = message.trim();
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: message.trim(),
+        text: messageText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isMe: true,
         status: 'sent',
       };
       
+      // Add message optimistically
       setMessages(prev => [...prev, newMessage]);
       setMessage('');
       
@@ -104,6 +101,37 @@ const Chat: React.FC = () => {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
+
+      try {
+        // Send message via API
+        const success = await chatService.sendMessage(user.id, messageText);
+        
+        if (success) {
+          // Update message status to delivered
+          setMessages(prev => prev.map(msg => 
+            msg.id === newMessage.id 
+              ? { ...msg, status: 'delivered' }
+              : msg
+          ));
+        } else {
+          // Handle send failure - show retry option
+          setMessages(prev => prev.map(msg => 
+            msg.id === newMessage.id 
+              ? { ...msg, status: 'sent', text: `${msg.text} (Failed to send - tap to retry)` }
+              : msg
+          ));
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        Alert.alert(
+          'Message Failed', 
+          'Failed to send message. Please try again.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Retry', onPress: () => sendMessage() }
+          ]
+        );
+      }
     }
   };
 
@@ -161,7 +189,12 @@ const Chat: React.FC = () => {
         </TouchableOpacity>
         
         <View style={chatStyles.userInfo}>
-          <Image source={{ uri: user.avatar }} style={chatStyles.headerAvatar} />
+          <Image 
+            source={{ 
+              uri: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=58B9D0&color=fff`
+            }} 
+            style={chatStyles.headerAvatar} 
+          />
           <View style={chatStyles.userDetails}>
             <Text style={chatStyles.headerUserName}>{user.name}</Text>
             <Text style={chatStyles.onlineStatus}>

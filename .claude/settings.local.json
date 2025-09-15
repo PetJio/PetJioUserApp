@@ -37,7 +37,10 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(cat:*)",
-      "Bash(del test-boarding.js)"
+      "Bash(del test-boarding.js)",
+      "Bash(timeout 30 adb logcat:*)",
+      "Bash(adb:*)",
+      "Bash(timeout 10 adb logcat:*)"
     ],
     "deny": [],
     "ask": [],

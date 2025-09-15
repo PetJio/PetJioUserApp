@@ -5,20 +5,14 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  StyleSheet,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import LinearGradient from 'react-native-linear-gradient';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images'; 
 import Icons from '../../../assets/icons';
 import loginstyles from './login.styles';
-import profileStyles from '../Profile/profileStyles';
 import { loginUser, LoginRequest } from '../../services/authService';
 import googleSignInService, { GoogleSignInResponse } from '../../services/googleSignInService';
 import { RootStackParamList } from '../../types/navigation';
@@ -47,15 +41,14 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
     const [isLoginLoading, setIsLoginLoading] = useState<boolean>(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
-    const scrollY = new Animated.Value(0);
 
     const validateForm = (): boolean => {
       const newErrors: ValidationErrors = {};
 
       if (!emailPhone.trim()) {
-        newErrors.emailPhone = 'Email or phone number is required';
+        newErrors.emailPhone = 'Email is required';
       } else if (emailPhone.trim().length < 3) {
-        newErrors.emailPhone = 'Please enter a valid email or phone number';
+        newErrors.emailPhone = 'Please enter a valid email';
       }
 
       if (!password.trim()) {
@@ -161,207 +154,120 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
 
   return (
     <View style={loginstyles.container}>
-      {/* Sticky Header */}
-      <View style={loginstyles.stickyHeader}>
-        <TouchableOpacity 
-          style={loginstyles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
-        </TouchableOpacity>
-        <View style={loginstyles.headerTitleContainer}>
-          <Text style={loginstyles.headerTitle}>Sign In</Text>
-          <Text style={loginstyles.headerSubtitle}>Welcome back to your account</Text>
+     <View style={loginstyles.setLeftIconposition}>
+          <Image source={images.signupImage} style={loginstyles.topImage} />
+         <TouchableOpacity onPress={()=>navigation.navigate("SignIn")} style={loginstyles.arrowIconPosition}>
+          <View>
+               <Image source={Icons.LeftArrow} style={loginstyles.leftArrowIconSize}/>
+          </View>
+         </TouchableOpacity>
+     </View>
+
+      <View style={loginstyles.formContainer}>
+        <View style={{alignItems:'center'}}>
+            <Text style={loginstyles.heading}>Log In</Text>
         </View>
-        <View style={loginstyles.headerPlaceholder} />
+        
+        {message && (
+          <View style={[
+            loginstyles.messageContainer,
+            message.type === 'success' ? loginstyles.successMessage : loginstyles.errorMessage
+          ]}>
+            <Text style={loginstyles.messageText}>{message.text}</Text>
+          </View>
+        )}
+
+        <View style={loginstyles.inputContainer}>
+        <TextInput
+          mode="outlined"
+          label="Email"
+          placeholder="Enter your email"
+          value={emailPhone}
+          onChangeText={(value) => {
+            setEmailPhone(value);
+            clearFieldError('emailPhone');
+          }}
+          theme={{ 
+            roundness: 12,
+            colors: { primary: '#58B9D0', outline: errors.emailPhone ? '#FF6B6B' : '#E2E2E2' }
+          }}
+          error={!!errors.emailPhone}
+        />
+        {errors.emailPhone && <Text style={loginstyles.errorText}>{errors.emailPhone}</Text>}
+        
+        <View style={{ position: 'relative' }}>
+        <TextInput
+          mode="outlined"
+          label="Password"
+          placeholder="Enter your password"
+          value={password}
+          onChangeText={(value) => {
+            setPassword(value);
+            clearFieldError('password');
+          }}
+          secureTextEntry={!showPassword}
+          theme={{ 
+            roundness: 12,
+            colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E2E2E2' }
+          }}
+          error={!!errors.password}
+          right={
+            <TextInput.Icon
+              icon={showPassword ? Icons.eyeInvisible : Icons.eyeInvisible}
+              onPress={() => setShowPassword(!showPassword)}
+            />
+          }
+        />
+        {errors.password && <Text style={loginstyles.errorText}>{errors.password}</Text>}
       </View>
 
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <Animated.ScrollView 
-          contentContainerStyle={loginstyles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
-          scrollEventThrottle={16}
-        >
-          <View style={loginstyles.contentContainer}>
-            <View style={loginstyles.welcomeSection}>
-              <Text style={loginstyles.welcomeText}>Welcome back!</Text>
-              <Text style={loginstyles.subtitle}>Sign in to continue to your account</Text>
-            </View>
-
-          {message && (
-            <View style={[
-              loginstyles.messageContainer,
-              message.type === 'success' ? loginstyles.successMessage : loginstyles.errorMessage
-            ]}>
-              <Text style={loginstyles.messageText}>{message.text}</Text>
-            </View>
-          )}
-
-          <View style={loginstyles.formSection}>
-            <View style={loginstyles.inputGroup}>
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Email or Phone Number"
-                  placeholder="Enter your email or phone number"
-                  value={emailPhone}
-                  onChangeText={(value) => {
-                    setEmailPhone(value);
-                    clearFieldError('emailPhone');
-                  }}
-                  theme={{ 
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.emailPhone ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.emailPhone && loginstyles.inputError
-                  ]}
-                  keyboardType="default"
-                  autoCapitalize="none"
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name="email" 
-                          size={20} 
-                          color={errors.emailPhone ? '#FF6B6B' : '#666'} 
-                        />
-                      )}
-                    />
-                  }
-                />
-                {errors.emailPhone && <Text style={loginstyles.errorText}>{errors.emailPhone}</Text>}
-              </View>
-              
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={(value) => {
-                    setPassword(value);
-                    clearFieldError('password');
-                  }}
-                  secureTextEntry={!showPassword}
-                  theme={{ 
-                    roundness: 16,
-                    colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E8E8E8' }
-                  }}
-                  style={loginstyles.textInput}
-                  contentStyle={loginstyles.inputContent}
-                  outlineStyle={[
-                    loginstyles.inputOutline,
-                    errors.password && loginstyles.inputError
-                  ]}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name="lock" 
-                          size={20} 
-                          color={errors.password ? '#FF6B6B' : '#666'} 
-                        />
-                      )}
-                    />
-                  }
-                  right={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons 
-                          name={showPassword ? 'visibility-off' : 'visibility'} 
-                          size={20} 
-                          color="#666" 
-                        />
-                      )}
-                      onPress={() => setShowPassword(!showPassword)}
-                    />
-                  }
-                />
-                {errors.password && <Text style={loginstyles.errorText}>{errors.password}</Text>}
-              </View>
-            </View>
-
-            <TouchableOpacity style={loginstyles.forgotPasswordContainer}>
-              <Text style={loginstyles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              onPress={handleLogin}
-              style={[
-                profileStyles.commonButton,
-                profileStyles.commonButtonPrimary,
-                isLoginLoading && profileStyles.loadingButton
-              ]}
-              activeOpacity={0.8}
-              disabled={isLoginLoading || isGoogleLoading}
-            >
-              {isLoginLoading ? (
-                <ActivityIndicator size="small" color="#58B9D0" />
-              ) : (
-                <>
-                  <MaterialIcons name="login" size={20} color="#58B9D0" style={{marginRight: 8}} />
-                  <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextPrimary]}>Sign In</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <View style={loginstyles.dividerContainer}>
-              <View style={loginstyles.dividerLine} />
-              <Text style={loginstyles.dividerText}>Or Sign In with</Text>
-              <View style={loginstyles.dividerLine} />
-            </View>
-
-            <View style={[loginstyles.socialButtonsContainer, {justifyContent: 'center'}]}>
-              <TouchableOpacity 
-                style={[
-                  profileStyles.commonButton,
-                  profileStyles.commonButtonGray,
-                  isGoogleLoading && profileStyles.loadingButton
-                ]} 
-                activeOpacity={0.7}
-                onPress={handleGoogleSignIn}
-                disabled={isLoginLoading || isGoogleLoading}
-              >
-                {isGoogleLoading ? (
-                  <ActivityIndicator size="small" color="#6B7280" />
-                ) : (
-                  <>
-                    <Image source={Icons.googleIcon} style={profileStyles.commonButtonIconSmall} />
-                    <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextGray]}>
-                      {isGoogleLoading ? 'Signing in...' : 'Google'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-           <View style={loginstyles.signupPrompt}>
-              <Text style={loginstyles.signupText}>
-                Don't have an account?{' '}
-                <Text 
-                  style={loginstyles.signupLink}
-                  onPress={() => navigation.navigate("SignUp")}
-                >
-                  Sign Up
-                </Text>
-              </Text>
-            </View>
-          </View>
         </View>
-      </Animated.ScrollView>
-      </KeyboardAvoidingView>
+  
+
+        <TouchableOpacity>
+          <Text style={loginstyles.forgotText}>Forget Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+         onPress={handleLogin}
+         style={[loginstyles.loginButton, isLoginLoading && {opacity: 0.7}]}
+         disabled={isLoginLoading || isGoogleLoading}>
+          {isLoginLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={loginstyles.loginText}>Login</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={loginstyles.orContainer}>
+         <View style={loginstyles.line} />
+         <Text style={loginstyles.orText}>Or login with</Text>
+         <View style={loginstyles.line} />
+        </View>
+
+        <View style={loginstyles.socialButtons}>
+          <TouchableOpacity 
+            style={[loginstyles.socialButton, isGoogleLoading && {opacity: 0.7}]}
+            onPress={handleGoogleSignIn}
+            disabled={isLoginLoading || isGoogleLoading}>
+            {isGoogleLoading ? (
+              <ActivityIndicator size="small" color="#666" />
+            ) : (
+              <Image source={Icons.googleIcon} style={loginstyles.socialIcon} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity style={loginstyles.socialButton}>
+            <Image source={Icons.facebookIcon} style={loginstyles.socialIcon} />
+          </TouchableOpacity>
+        </View>
+
+        <Text style={loginstyles.registerText}>
+          Don't have an account?{' '}
+         <TouchableOpacity onPress={()=>navigation.navigate("SignUp")}>
+          <Text style={loginstyles.registerLink}>Register</Text>
+         </TouchableOpacity>
+        </Text>
+      </View>
     </View>
   );
 };

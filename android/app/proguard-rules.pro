@@ -12,3 +12,15 @@
 # Preserve React Native classes to prevent crashes in release build
 -keep class com.facebook.react.** { *; }
 -dontwarn com.facebook.react.**
+
+# Keep location/geolocation related classes
+-keep class com.google.android.gms.location.** { *; }
+-dontwarn com.google.android.gms.location.**
+
+# Keep community geolocation native modules
+-keep class com.reactnativecommunity.geolocation.** { *; }
+-dontwarn com.reactnativecommunity.geolocation.**
+
+# Keep react-native-geolocation-service classes
+-keep class com.agontuk.RNFusedLocation.** { *; }
+-dontwarn com.agontuk.RNFusedLocation.**
