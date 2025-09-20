@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, Modal, FlatList } from 'react-native';
 import images from '../../../assets/images';
 import Icon from 'react-native-vector-icons/Feather';
 import Icons from '../../../assets/icons';
@@ -30,10 +30,80 @@ interface UserDetailsProps {
 
 const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
     const [show, setShow] = useState<boolean>(true);
+    const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
+    const [selectedCity, setSelectedCity] = useState<string>('Kasba');
+
+    const indianCities = [
+        'Mumbai',
+        'Delhi',
+        'Bangalore',
+        'Hyderabad',
+        'Chennai',
+        'Kolkata',
+        'Pune',
+        'Ahmedabad',
+        'Jaipur',
+        'Surat',
+        'Lucknow',
+        'Kanpur',
+        'Nagpur',
+        'Indore',
+        'Thane',
+        'Bhopal',
+        'Visakhapatnam',
+        'Patna',
+        'Vadodara',
+        'Ludhiana',
+        'Agra',
+        'Nashik',
+        'Gurgaon',
+        'Noida',
+        'Faridabad',
+        'Ghaziabad',
+        'Rajkot',
+        'Meerut',
+        'Varanasi',
+        'Srinagar',
+        'Aurangabad',
+        'Amritsar',
+        'Navi Mumbai',
+        'Ranchi',
+        'Coimbatore',
+        'Vijayawada',
+        'Jodhpur',
+        'Madurai',
+        'Raipur',
+        'Kota',
+        'Guwahati',
+        'Chandigarh',
+        'Mysore',
+        'Bhubaneswar',
+        'Thiruvananthapuram',
+        'Dehradun',
+        'Kochi',
+        'Jamshedpur',
+        'Mangalore',
+        'Udaipur',
+        'Kasba'
+    ];
 
     const handleToggle = () => {
         setShow(!show);
     };
+
+    const handleCitySelect = (city: string) => {
+        setSelectedCity(city);
+        setShowCityDropdown(false);
+    };
+
+    const renderCityItem = ({ item }: { item: string }) => (
+        <TouchableOpacity
+            style={boardinguserstyles.cityItem}
+            onPress={() => handleCitySelect(item)}
+        >
+            <Text style={boardinguserstyles.cityText}>{item}</Text>
+        </TouchableOpacity>
+    );
 
     return (
         <View style={boardinguserstyles.container}>
@@ -44,10 +114,13 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
                             <Text style={boardinguserstyles.groomingText}>Boarding</Text>
                         </View>
                </TouchableOpacity>
-                <View style={boardinguserstyles.locationtext}>
-                    <Text style={boardinguserstyles.locationtextColor}>Kasba, Kolkata</Text>
+                <TouchableOpacity
+                    style={boardinguserstyles.locationtext}
+                    onPress={() => setShowCityDropdown(true)}
+                >
+                    <Text style={boardinguserstyles.locationtextColor}>{selectedCity}</Text>
                     <Image source={Icons.DownArrow} style={boardinguserstyles.downArrowIcon} />
-                </View>
+                </TouchableOpacity>
             </View>
 
             <View style={boardinguserstyles.containersecondsubchild}>
@@ -81,6 +154,35 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
             ) : (
                 <CommercialService />
             )}
+
+            <Modal
+                visible={showCityDropdown}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowCityDropdown(false)}
+            >
+                <TouchableOpacity
+                    style={boardinguserstyles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowCityDropdown(false)}
+                >
+                    <View style={boardinguserstyles.dropdownContainer}>
+                        <View style={boardinguserstyles.dropdownHeader}>
+                            <Text style={boardinguserstyles.dropdownTitle}>Select City</Text>
+                            <TouchableOpacity onPress={() => setShowCityDropdown(false)}>
+                                <Text style={boardinguserstyles.closeButton}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            data={indianCities}
+                            renderItem={renderCityItem}
+                            keyExtractor={(item, index) => index.toString()}
+                            style={boardinguserstyles.cityList}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 };

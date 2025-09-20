@@ -125,6 +125,53 @@ const boardinguserstyles = StyleSheet.create({
         height: responsiveHeight(2)
     },
     iconMargin: { marginRight: responsiveHeight(2) },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dropdownContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        width: responsiveWidth(85),
+        maxHeight: responsiveHeight(60),
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    dropdownHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: responsiveWidth(4),
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+    dropdownTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#000000',
+    },
+    closeButton: {
+        fontSize: 20,
+        color: '#666666',
+        fontWeight: 'bold',
+    },
+    cityList: {
+        maxHeight: responsiveHeight(45),
+    },
+    cityItem: {
+        padding: responsiveWidth(4),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    cityText: {
+        fontSize: 16,
+        color: '#333333',
+    },
 
 });
 
