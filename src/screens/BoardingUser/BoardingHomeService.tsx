@@ -103,7 +103,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
           {getHomeSerData.map(item => (
             <TouchableOpacity
               key={item.id}
-              onPress={() => navigation.navigate('BoardingDetails')}
+              onPress={() => navigation.navigate('BoardingDetails', { boardDetails: item })}
             >
               <View style={boardinghomeservicestyles.containerthirdsubchild}>
                 <View style={boardinghomeservicestyles.shadow}>

@@ -66,6 +66,7 @@ import Icons from '../../../assets/icons';
 import commercialservicestyles from './commercialservice.styles';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
+import { useNavigation } from '@react-navigation/native';
 
 // Define stack params
 type RootStackParamList = {
@@ -81,10 +82,11 @@ type InSiteServiceProps = {
   navigation: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
 };
 
-const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
+const BoardingHomeService: React.FC<InSiteServiceProps> = () => {
   const [getCommercialData, setGetCommercialData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     fetchCommercialDetails();
@@ -162,7 +164,9 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
           {getCommercialData.map(item => (
             <TouchableOpacity
               key={item?.id}
-              onPress={() => navigation.navigate('BoardingDetails')}
+              onPress={() =>
+                navigation.navigate('BoardingDetails', { boardDetails: item })
+              }
             >
               <View style={commercialservicestyles.containerthirdsubchild}>
                 <View style={commercialservicestyles.shadow}>
