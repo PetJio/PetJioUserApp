@@ -18,7 +18,7 @@ const boardingmodalstyles = StyleSheet.create({
 
     setmodalRadious: {
         backgroundColor: 'white',
-        // bottom:-15,
+        bottom:-15,
         padding: 20,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,

@@ -486,7 +486,7 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
             {showStartPicker && (
                 <DateTimePicker
                     value={startDate}
-                    mode="date"
+                    mode="datetime"
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     onChange={handleStartDateChange}
                     minimumDate={new Date()}

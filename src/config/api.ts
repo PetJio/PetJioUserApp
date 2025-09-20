@@ -4,7 +4,7 @@ export const API_CONFIG = {
   TIMEOUT: 30000, // 30 seconds
   HEADERS: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 };
 
@@ -19,7 +19,7 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/api/auth/forgot-password',
     RESET_PASSWORD: '/api/auth/reset-password',
   },
-  
+
   // User Management
   USER: {
     PROFILE: '/api/user/profile',
@@ -27,7 +27,7 @@ export const API_ENDPOINTS = {
     DELETE_ACCOUNT: '/api/user/delete',
     UPLOAD_AVATAR: '/api/user/avatar',
   },
-  
+
   // Services
   SERVICES: {
     LIST: '/api/services',
@@ -44,22 +44,23 @@ export const API_ENDPOINTS = {
     TRAINING: '/api/services/training',
     VETERINARY: '/api/services/veterinary',
     NGO: '/api/services/ngo',
+    SERVICES_BOOKING: '/api/boarding-service-bookings',
   },
-  
+
   // Location Services
   LOCATION: {
     SEARCH: '/api/location/search',
     NEARBY: '/api/location/nearby',
     GEOCODE: '/api/location/geocode',
   },
-  
+
   // Payments
   PAYMENTS: {
     CREATE_ORDER: '/api/payments/create',
     VERIFY: '/api/payments/verify',
     HISTORY: '/api/payments/history',
   },
-  
+
   // Mart/Store
   MART: {
     PRODUCTS: '/api/mart/products',
@@ -71,34 +72,39 @@ export const API_ENDPOINTS = {
 };
 
 // Helper function to build complete URL
-export const buildApiUrl = (endpoint: string, params?: Record<string, string>): string => {
+export const buildApiUrl = (
+  endpoint: string,
+  params?: Record<string, string>,
+): string => {
   let url = `${API_CONFIG.BASE_URL}${endpoint}`;
-  
+
   // Replace path parameters
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url = url.replace(`:${key}`, encodeURIComponent(value));
     });
   }
-  
+
   return url;
 };
 
 // Helper function to build query string
 export const buildQueryString = (params: Record<string, any>): string => {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {
       searchParams.append(key, String(value));
     }
   });
-  
+
   return searchParams.toString();
 };
 
 // Helper function to build query string without encoding colons (for time parameters)
-export const buildQueryStringWithoutEncoding = (params: Record<string, any>): string => {
+export const buildQueryStringWithoutEncoding = (
+  params: Record<string, any>,
+): string => {
   return Object.entries(params)
     .filter(([key, value]) => value !== null && value !== undefined)
     .map(([key, value]) => `${key}=${String(value)}`)
@@ -109,14 +115,14 @@ export const buildQueryStringWithoutEncoding = (params: Record<string, any>): st
 export const apiRequest = async (
   endpoint: string,
   options: RequestInit = {},
-  pathParams?: Record<string, string>
+  pathParams?: Record<string, string>,
 ): Promise<any> => {
   const url = buildApiUrl(endpoint, pathParams);
-  
+
   // Create AbortController for timeout (React Native compatible)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
-  
+
   const config: RequestInit = {
     ...options,
     headers: {
@@ -129,33 +135,40 @@ export const apiRequest = async (
   try {
     const response = await fetch(url, config);
     clearTimeout(timeoutId); // Clear timeout on successful response
-    
+
     // Handle non-JSON responses
     const contentType = response.headers.get('content-type');
     let data;
-    
+
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
       data = await response.text();
     }
-    
+
     if (!response.ok) {
-      throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        data.message || `HTTP ${response.status}: ${response.statusText}`,
+      );
     }
-    
+
     return data;
   } catch (error) {
     clearTimeout(timeoutId); // Clear timeout on error
-    
+
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout. Please check your connection and try again.');
+      throw new Error(
+        'Request timeout. Please check your connection and try again.',
+      );
     }
-    
-    if (error.message?.includes('Network request failed') || error.message?.includes('Failed to fetch')) {
+
+    if (
+      error.message?.includes('Network request failed') ||
+      error.message?.includes('Failed to fetch')
+    ) {
       throw new Error('Network error. Please check your internet connection.');
     }
-    
+
     throw error;
   }
 };
