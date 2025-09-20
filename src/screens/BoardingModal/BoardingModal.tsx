@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { View,Text,Image, FlatList,TouchableOpacity,Modal, Platform, TextInput} from 'react-native';
+import { useState, useEffect } from 'react';
+import { View,Text,Image, FlatList,TouchableOpacity,Modal, Platform, TextInput, ActivityIndicator} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from '../../config/api';
 import { responsiveWidth,responsiveHeight} from 'react-native-responsive-dimensions';
 import boardingmodalstyles from './boardingmodal.styles';
 import images from '../../../assets/images';
@@ -34,6 +36,44 @@ import { StackNavigationProp } from '@react-navigation/stack';
  
 
 
+// Pet interfaces from Home page
+interface PetCategory {
+  id: number;
+  catName: string;
+}
+
+interface PetSize {
+  id: number;
+  size: string;
+}
+
+interface PetGender {
+  id: number;
+  name: string;
+}
+
+interface PetProfile {
+  id: number;
+  petName: string;
+  ageInYears: number | null;
+  ageInMonths: number | null;
+  category: PetCategory;
+  size: PetSize;
+  height: string | null;
+  profileImg: string | null;
+  gender: PetGender;
+  weight: string | null;
+  dailyFeedCount: number | null;
+  treats: string | null;
+  cookie: string | null;
+}
+
+interface PetApiResponse {
+  statusCode: number;
+  message: string;
+  body: PetProfile[];
+}
+
 type ModalComponentProps = {
     modalVisible: boolean;
     setModalVisible: (visible: boolean) => void;
@@ -49,6 +89,12 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
     const [endDate, setEndDate] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
     const [showStartPicker, setShowStartPicker] = useState<boolean>(false);
     const [showEndPicker, setShowEndPicker] = useState<boolean>(false);
+
+    // Pet state
+    const [pets, setPets] = useState<PetProfile[]>([]);
+    const [loadingPets, setLoadingPets] = useState<boolean>(true);
+    const [petsError, setPetsError] = useState<string | null>(null);
+    const [selectedPets, setSelectedPets] = useState<Set<number>>(new Set());
 
     const handleTabPress = (tab: string) => {
         setActiveTab(tab);
@@ -93,6 +139,158 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
             year: 'numeric'
         });
     };
+
+    // Pet API functions (from Home page)
+    const getAuthToken = async () => {
+        const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+
+        for (const key of possibleTokenKeys) {
+            const value = await AsyncStorage.getItem(key);
+            if (value) {
+                try {
+                    return JSON.parse(value);
+                } catch {
+                    return value;
+                }
+            }
+        }
+        return null;
+    };
+
+    const getOwnerIdFromAPI = async () => {
+        try {
+            const token = await getAuthToken();
+            if (!token) {
+                console.error('No authentication token found');
+                return null;
+            }
+
+            const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
+                return null;
+            }
+
+            const responseText = await response.text();
+            const result = JSON.parse(responseText);
+
+            if (result.statusCode === 200) {
+                return result.body.id;
+            } else {
+                console.error('❌ API returned non-200 status:', result.statusCode);
+                return null;
+            }
+        } catch (error) {
+            console.error('🔥 Critical Error in getOwnerIdFromAPI:', error);
+            return null;
+        }
+    };
+
+    const fetchPets = async () => {
+        setLoadingPets(true);
+        setPetsError(null);
+
+        try {
+            console.log('🔍 BOARDING MODAL PETS DEBUG - Starting pets fetch');
+
+            const token = await getAuthToken();
+            if (!token) {
+                console.error('❌ No authentication token found');
+                setPetsError('Authentication token not found. Please login again.');
+                return;
+            }
+
+            const ownerId = await getOwnerIdFromAPI();
+            if (!ownerId) {
+                console.error('❌ No owner ID found');
+                setPetsError('Owner ID not found. Please try refreshing the page.');
+                return;
+            }
+
+            console.log('🚀 FETCHING PETS - Starting pet profiles fetch');
+            console.log('🔑 Using Owner ID:', ownerId);
+            const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/owner/${ownerId}`;
+            console.log('🌐 Pet Profiles Request URL:', apiUrl);
+
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('📥 Pet Profiles Response Status:', response.status);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Pet Profiles API Error:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const responseText = await response.text();
+            console.log('📄 Pet Profiles Raw Response Text:', responseText);
+
+            let result: PetApiResponse;
+            try {
+                result = JSON.parse(responseText);
+                console.log('✅ Pet Profiles Parsed Response:', {
+                    statusCode: result.statusCode,
+                    message: result.message,
+                    petCount: result.body ? result.body.length : 0,
+                    petNames: result.body ? result.body.map(pet => pet.petName) : [],
+                });
+            } catch (parseError) {
+                console.error('❌ Pet Profiles JSON Parse Error:', parseError);
+                throw new Error(`Invalid JSON response: ${responseText}`);
+            }
+
+            if (result.statusCode === 200) {
+                console.log('✅ Pet Profiles Success - Data loaded:', result.body);
+                setPets(result.body || []);
+                // Auto-select all pets by default
+                if (result.body && result.body.length > 0) {
+                    setSelectedPets(new Set(result.body.map(pet => pet.id)));
+                }
+            } else {
+                console.error('❌ Pet Profiles API returned non-200 status:', result.statusCode);
+                throw new Error(result.message || 'Failed to fetch pet profiles');
+            }
+        } catch (error) {
+            console.error('🔥 Critical Error in fetchPets:', error);
+            setPetsError(`Failed to load pets: ${error.message}`);
+        } finally {
+            console.log('🏁 fetchPets completed');
+            setLoadingPets(false);
+        }
+    };
+
+    const togglePetSelection = (petId: number) => {
+        setSelectedPets(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(petId)) {
+                newSet.delete(petId);
+            } else {
+                newSet.add(petId);
+            }
+            return newSet;
+        });
+    };
+
+    // Fetch pets when modal opens
+    useEffect(() => {
+        if (modalVisible) {
+            fetchPets();
+        }
+    }, [modalVisible]);
 
     return (
         <View style={boardingmodalstyles.container}>
@@ -145,103 +343,61 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
 
                         {activeTab === 'NormalWalking' && (
                             <View style={{gap: responsiveWidth(2.5)}}>
-                                <View
-                                    style={boardingmodalstyles.setFlexRow}>
-                                    <View
-                                        style={boardingmodalstyles.setFlexWithGap}>
-                                        <Image
-                                            source={images.germanDog}
-                                            style={boardingmodalstyles.imageSize}
-                                        />
-                                        <View
-                                            style={boardingmodalstyles.center}>
-                                            <View
-                                                style={boardingmodalstyles.flexORGap}>
-                                                <Text
-                                                    style={boardingmodalstyles.daisyText}>
-                                                    Daisy
-                                                </Text>
+                                {loadingPets ? (
+                                    <View style={boardingmodalstyles.loadingContainer}>
+                                        <ActivityIndicator size="large" color="#58B9D0" />
+                                        <Text style={boardingmodalstyles.loadingText}>Loading your pets...</Text>
+                                    </View>
+                                ) : petsError ? (
+                                    <View style={boardingmodalstyles.errorContainer}>
+                                        <Text style={boardingmodalstyles.errorText}>{petsError}</Text>
+                                        <TouchableOpacity
+                                            style={boardingmodalstyles.retryButton}
+                                            onPress={fetchPets}>
+                                            <Text style={boardingmodalstyles.retryButtonText}>Retry</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : pets.length === 0 ? (
+                                    <View style={boardingmodalstyles.noPetsContainer}>
+                                        <Text style={boardingmodalstyles.noPetsText}>No pets found. Please add your pets first.</Text>
+                                    </View>
+                                ) : (
+                                    pets.map((pet) => (
+                                        <TouchableOpacity
+                                            key={pet.id}
+                                            style={boardingmodalstyles.setFlexRow}
+                                            onPress={() => togglePetSelection(pet.id)}>
+                                            <View style={boardingmodalstyles.setFlexWithGap}>
                                                 <Image
-                                                    source={Icons.BiFemaleSign}
+                                                    source={pet.profileImg ? { uri: pet.profileImg } : images.germanDog}
+                                                    style={boardingmodalstyles.imageSize}
+                                                />
+                                                <View style={boardingmodalstyles.center}>
+                                                    <View style={boardingmodalstyles.flexORGap}>
+                                                        <Text style={boardingmodalstyles.daisyText}>
+                                                            {pet.petName}
+                                                        </Text>
+                                                        <Image
+                                                            source={pet.gender.name.toLowerCase() === 'female' ? Icons.BiFemaleSign : Icons.BiFemaleSign}
+                                                        />
+                                                    </View>
+                                                    <Text style={boardingmodalstyles.yearText}>
+                                                        {pet.ageInYears ? `${pet.ageInYears} years` : pet.ageInMonths ? `${pet.ageInMonths} months` : 'Age unknown'}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                            <View style={boardingmodalstyles.topforImage}>
+                                                <Image
+                                                    source={selectedPets.has(pet.id) ? Icons.BiSolidCheckCircle : Icons.CgRadioCheck}
+                                                    style={[
+                                                        boardingmodalstyles.selectionIcon,
+                                                        selectedPets.has(pet.id) && boardingmodalstyles.selectedIcon
+                                                    ]}
                                                 />
                                             </View>
-                                            <Text
-                                                style={boardingmodalstyles.yearText}>
-                                                3 years
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <View style={boardingmodalstyles.topforImage}>
-                                        <Image
-                                            source={Icons.BiSolidCheckCircle}
-                                        />
-                                    </View>
-                                </View>
-                                <View
-                                    style={boardingmodalstyles.setFlexRow}>
-                                    <View
-                                        style={boardingmodalstyles.setFlexWithGap}>
-                                        <Image
-                                            source={images.goldenDog}
-                                            style={boardingmodalstyles.imageSize}
-                                        />
-                                        <View
-                                            style={boardingmodalstyles.center}>
-                                            <View
-                                                style={boardingmodalstyles.flexORGap}>
-                                                <Text
-                                                    style={boardingmodalstyles.daisyText}>
-                                                     Leo
-                                                </Text>
-                                                <Image
-                                                    source={Icons.BiFemaleSign}
-                                                />
-                                            </View>
-                                            <Text
-                                                style={boardingmodalstyles.yearText}>
-                                                3 years
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <View style={boardingmodalstyles.topforImage}>
-                                        <Image
-                                            source={Icons.BiSolidCheckCircle}
-                                        />
-                                    </View>
-                                </View>
-                               
-                                <View
-                                    style={boardingmodalstyles.setFlexRow}>
-                                    <View
-                                        style={boardingmodalstyles.setFlexWithGap}>
-                                        <Image
-                                            source={images.spaneilDog}
-                                            style={boardingmodalstyles.imageSize}
-                                        />
-                                        <View
-                                            style={boardingmodalstyles.center}>
-                                            <View
-                                                style={boardingmodalstyles.flexORGap}>
-                                                <Text
-                                                    style={boardingmodalstyles.daisyText}>
-                                                    Bella
-                                                </Text>
-                                                <Image
-                                                    source={Icons.BiFemaleSign}
-                                                />
-                                            </View>
-                                            <Text
-                                                style={boardingmodalstyles.yearText}>
-                                                3 years
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <View style={boardingmodalstyles.topforImage}>
-                                        <Image
-                                            source={Icons.CgRadioCheck}
-                                        />
-                                    </View>
-                                </View>
+                                        </TouchableOpacity>
+                                    ))
+                                )}
                             </View>
                         )}
 

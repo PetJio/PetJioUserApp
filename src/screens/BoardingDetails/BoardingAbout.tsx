@@ -39,19 +39,20 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
 
       <View style={boardingaboutstyles.languageJobText}>
         <View>
-          <Text style={boardingaboutstyles.text}> Bookings completed </Text>
-          <Text style={boardingaboutstyles.Text}> 20+ Bookings</Text>
+          <Text style={boardingaboutstyles.text}> Why choose us </Text>
+          <Text style={boardingaboutstyles.Text}> {serviceDetails?.whyChooseUs}</Text>
         </View>
+        
 
-        <View>
+        {/* <View>
           <Text style={boardingaboutstyles.text}> Services Offered </Text>
           <Text style={boardingaboutstyles.Text}>
             {' '}
             Pet Boarding & Pet Walking
           </Text>
-        </View>
+        </View> */}
 
-        <View style={boardingaboutstyles.Gap}>
+        {/* <View style={boardingaboutstyles.Gap}>
           <Text style={boardingaboutstyles.text}> {providerName}'s Home </Text>
           <View style={boardingaboutstyles.imageTextGap}>
             <Image source={Icons.PiBuildingApartment} />
@@ -71,7 +72,7 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
               No children present{' '}
             </Text>
           </View>
-        </View>
+        </View> */}
 
         <View style={boardingaboutstyles.facilityGap}>
           <Text style={boardingaboutstyles.text}> Facilities </Text>

@@ -110,8 +110,14 @@ const Home: React.FC = () => {
   }, []);
 
   const getAuthToken = async () => {
-    const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-    
+    const possibleTokenKeys = [
+      'token',
+      'user_token',
+      'authToken',
+      'access_token',
+      'loginToken',
+    ];
+
     for (const key of possibleTokenKeys) {
       const value = await AsyncStorage.getItem(key);
       if (value) {
@@ -138,7 +144,7 @@ const Home: React.FC = () => {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -165,7 +171,7 @@ const Home: React.FC = () => {
         console.error('❌ JSON Parse Error:', parseError);
         return null;
       }
-      
+
       if (data.statusCode === 200 && data.body?.id) {
         console.log('✅ Owner ID found:', data.body.id);
         return data.body.id;
@@ -182,10 +188,10 @@ const Home: React.FC = () => {
   const fetchPets = async () => {
     setLoadingPets(true);
     setPetsError(null);
-    
+
     try {
       console.log('🔍 HOME PAGE PETS DEBUG - Starting pets fetch');
-      
+
       const token = await getAuthToken();
       if (!token) {
         console.error('❌ No authentication token found');
@@ -210,7 +216,7 @@ const Home: React.FC = () => {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -220,7 +226,9 @@ const Home: React.FC = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Pet Profiles API Error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`,
+        );
       }
 
       const responseText = await response.text();
@@ -239,12 +247,15 @@ const Home: React.FC = () => {
         console.error('❌ Pet Profiles JSON Parse Error:', parseError);
         throw new Error(`Invalid JSON response: ${responseText}`);
       }
-      
+
       if (result.statusCode === 200) {
         console.log('✅ Pet Profiles Success - Data loaded:', result.body);
         setPets(result.body || []);
       } else {
-        console.error('❌ Pet Profiles API returned non-200 status:', result.statusCode);
+        console.error(
+          '❌ Pet Profiles API returned non-200 status:',
+          result.statusCode,
+        );
         throw new Error(result.message || 'Failed to fetch pet profiles');
       }
     } catch (error) {
@@ -268,21 +279,21 @@ const Home: React.FC = () => {
     index,
   });
 
-    const Carousel = [
-        { id: '1', name: 'firstwalker', image: images.firstwalker },
-        { id: '2', name: 'secondwalker', image: images.secondwalker },
-        { id: '3', name: 'thirdwalker', image: images.thirdwalker },
-        { id: '4', name: 'thirdwalker', image: images.thirdwalker },
-    ];
+  const Carousel = [
+    { id: '1', name: 'firstwalker', image: images.firstwalker },
+    { id: '2', name: 'secondwalker', image: images.secondwalker },
+    { id: '3', name: 'thirdwalker', image: images.thirdwalker },
+    { id: '4', name: 'thirdwalker', image: images.thirdwalker },
+  ];
 
-    const renderItem = ({
-        item,
-    }: {
-        item: { id: string; name: string; image: any };
-    }) => {
-        return (
-            <View style={{ width: screenWidth }}>
-                {/* <Image
+  const renderItem = ({
+    item,
+  }: {
+    item: { id: string; name: string; image: any };
+  }) => {
+    return (
+      <View style={{ width: screenWidth }}>
+        {/* <Image
                     source={item.image}
                     style={{
                         width: responsiveWidth(90),
@@ -292,61 +303,123 @@ const Home: React.FC = () => {
                     }}
                 /> */}
 
-                <View  style={{flexDirection:'row', justifyContent:'space-between', width:responsiveWidth(90),height:responsiveHeight(18.5),borderRadius:responsiveWidth(1),backgroundColor:'#58B9D0',marginLeft: responsiveWidth(4.8)}}>
-                    <View>
-                    <View style={{flexDirection:'row',paddingVertical:responsiveHeight(2.2),paddingHorizontal:responsiveWidth(4),gap:responsiveWidth(2)}}>
-                          <Image source={Icons.earthIcon}/>
-                          <Text style={{fontSize:12,fontWeight:'500',letterSpacing:0,color:'#FFFFFF',lineHeight:20}}>Law updates</Text>
-                    </View>
-
-                    <View>
-                    <View style={{flexDirection:'row',paddingHorizontal:responsiveWidth(4)}}>
-                            <Text style={{fontSize:20,fontWeight:'500',lineHeight:23,letterSpacing:0,color:'#FFFFFF'}}>+</Text>
-                            <Text style={{fontSize:20,fontWeight:'500',lineHeight:23,letterSpacing:0,color:'#FFFFFF'}}>35</Text>
-                            <Text style={{fontSize:20,fontWeight:'500',lineHeight:23,letterSpacing:0,color:'#FFFFFF',left:responsiveWidth(2)}}>places</Text>
-                     </View>
-                       <Text style={{fontSize:13,fontWeight:'500',lineHeight:16,letterSpacing:0,color:'#FFFFFF',paddingHorizontal:responsiveWidth(4)}}>New vaccination departments for {"\n"} your pet </Text>
-                    </View>
-                    </View>
-                    <View>
-                          <Image source={Icons.IoMdPaw}/>
-                    </View>
-                         
-                </View>
-
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: responsiveWidth(90),
+            height: responsiveHeight(18.5),
+            borderRadius: responsiveWidth(1),
+            backgroundColor: '#58B9D0',
+            marginLeft: responsiveWidth(4.8),
+          }}
+        >
+          <View>
+            <View
+              style={{
+                flexDirection: 'row',
+                paddingVertical: responsiveHeight(2.2),
+                paddingHorizontal: responsiveWidth(4),
+                gap: responsiveWidth(2),
+              }}
+            >
+              <Image source={Icons.earthIcon} />
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: '500',
+                  letterSpacing: 0,
+                  color: '#FFFFFF',
+                  lineHeight: 20,
+                }}
+              >
+                Law updates
+              </Text>
             </View>
-        );
-    };
 
-    const handleScroll = (event: any) => {
-        const scrollPosition = event.nativeEvent.contentOffset.x;
-        const index = Math.round(scrollPosition / screenWidth);
-        if (index !== activeIndex) {
-            setActiveIndex(index);
+            <View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  paddingHorizontal: responsiveWidth(4),
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '500',
+                    lineHeight: 23,
+                    letterSpacing: 0,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  +
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '500',
+                    lineHeight: 23,
+                    letterSpacing: 0,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  35
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '500',
+                    lineHeight: 23,
+                    letterSpacing: 0,
+                    color: '#FFFFFF',
+                    left: responsiveWidth(2),
+                  }}
+                >
+                  places
+                </Text>
+              </View>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '500',
+                  lineHeight: 16,
+                  letterSpacing: 0,
+                  color: '#FFFFFF',
+                  paddingHorizontal: responsiveWidth(4),
+                }}
+              >
+                New vaccination departments for {'\n'} your pet{' '}
+              </Text>
+            </View>
+          </View>
+          <View>
+            <Image source={Icons.IoMdPaw} />
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const handleScroll = (event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / screenWidth);
+    if (index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
+
+  const renderDotIndicators = () => {
+    return Carousel.map(
+      (dot: { id: string; name: string; image: any }, index: number) => {
+        if (activeIndex === index) {
+          return <View key={index} style={styles.green_dot_Indicator} />;
+        } else {
+          return <View key={index} style={styles.white_dot_Indicator} />;
         }
-    };
-
-    const renderDotIndicators = () => {
-        return Carousel.map(
-            (dot: { id: string; name: string; image: any }, index: number) => {
-                if (activeIndex === index) {
-                    return (
-                        <View
-                            key={index}
-                            style={styles.green_dot_Indicator}
-                        />
-                    );
-                } else {
-                    return (
-                        <View
-                            key={index}
-                            style={styles.white_dot_Indicator}
-                        />
-                    );
-                }
-            },
-        );
-    };
+      },
+    );
+  };
   return (
     <View style={styles.container}>
       <View style={styles.subcontainer}>
@@ -354,11 +427,11 @@ const Home: React.FC = () => {
         <View style={styles.subcontainertextwithIcon}>
           <Text style={styles.text}>Hello, {userName}</Text>
           <View style={styles.IconGap}>
-            <Image source={Icons.BlackBiCalendar}/>
+            <Image source={Icons.BlackBiCalendar} />
             <View style={styles.relative}>
-              <Image source={Icons.BiBell}/>
+              <Image source={Icons.BiBell} />
               <View style={styles.positionofAlertIcon}>
-                <Image source={Icons.alertEllipse}/>
+                <Image source={Icons.alertEllipse} />
               </View>
             </View>
           </View>
@@ -377,80 +450,107 @@ const Home: React.FC = () => {
           ) : (
             <>
               {/* First pet slot */}
-              {pets.length > 0 ? (
-                <TouchableOpacity 
+              {/* {pets.length > 0 ? (
+                <TouchableOpacity
                   onPress={() => navigate('EditPet', { pet: pets[0] })}
                   activeOpacity={0.8}
                 >
                   <View>
                     <View style={styles.doctorcontainer}>
                       {pets[0].profileImg && pets[0].profileImg !== 'img' ? (
-                        <Image 
-                          source={{ uri: pets[0].profileImg }} 
+                        <Image
+                          source={{ uri: pets[0].profileImg }}
                           style={styles.ImageSize}
                           defaultSource={images.BellaDog}
                         />
                       ) : (
-                        <Image 
-                          source={images.BellaDog} 
+                        <Image
+                          source={images.BellaDog}
                           style={styles.ImageSize}
                         />
-                      )}   
+                      )}
                     </View>
-                    <Text style={styles.dogname}>{pets[0].petName}</Text> 
+                    <Text style={styles.dogname}>{pets[0].petName}</Text>
                   </View>
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => navigate('AddPet')}
                   activeOpacity={0.7}
                 >
                   <View>
                     <View style={styles.doctorcontainer}>
-                      <Image source={images.BellaDog} style={styles.ImageSize} />    
+                      <Image
+                        source={images.BellaDog}
+                        style={styles.ImageSize}
+                      />
                     </View>
-                    <Text style={styles.dogname}>Add Pet</Text> 
+                    <Text style={styles.dogname}>Add Pet</Text>
                   </View>
                 </TouchableOpacity>
-              )}
+              )} */}
 
               {/* Second pet slot - Always show DaisyDog container */}
-              {pets.length > 1 && (
-                <TouchableOpacity 
+              {/* {pets.length > 1 && (
+                <TouchableOpacity
                   onPress={() => navigate('EditPet', { pet: pets[1] })}
                   activeOpacity={0.8}
                 >
                   <View>
                     <View style={styles.dogcontainer}>
                       {pets[1].profileImg && pets[1].profileImg !== 'img' ? (
-                        <Image 
-                          source={{ uri: pets[1].profileImg }} 
+                        <Image
+                          source={{ uri: pets[1].profileImg }}
                           style={styles.dogimageSize}
                           defaultSource={images.DaisyDog}
                         />
                       ) : (
-                        <Image 
-                          source={images.DaisyDog} 
+                        <Image
+                          source={images.DaisyDog}
                           style={styles.dogimageSize}
                         />
-                      )}   
+                      )}
                     </View>
-                    <Text style={styles.dogname}>{pets[1].petName}</Text> 
+                    <Text style={styles.dogname}>{pets[1].petName}</Text>
                   </View>
                 </TouchableOpacity>
-              ) }
-
+              )} */}
 
               {/* Plus button only shows when no pets */}
-              {pets.length === 0 && (
-                <TouchableOpacity 
-                  style={styles.pluscontainer}
-                  onPress={() => navigate('AddPet')}
+
+              {pets?.map(item => (
+                <TouchableOpacity
+                  key={item?.id}
+                  onPress={() => navigate('EditPet', { pet: item })}
                   activeOpacity={0.8}
                 >
-                  <Image source={Icons.BiPlus}/>
+                  <View>
+                    <View style={styles.doctorcontainer}>
+                      {item.profileImg && item.profileImg !== 'img' ? (
+                        <Image
+                          source={{ uri: item.profileImg }}
+                          style={styles.ImageSize}
+                          defaultSource={images.BellaDog}
+                        />
+                      ) : (
+                        <Image
+                          source={images.BellaDog}
+                          style={styles.ImageSize}
+                        />
+                      )}
+                    </View>
+                    <Text style={styles.dogname}>{item.petName}</Text>
+                  </View>
                 </TouchableOpacity>
-              )}
+              ))}
+
+              <TouchableOpacity
+                style={styles.pluscontainer}
+                onPress={() => navigate('AddPet')}
+                activeOpacity={0.8}
+              >
+                <Image source={Icons.BiPlus} />
+              </TouchableOpacity>
             </>
           )}
         </View>
@@ -466,55 +566,186 @@ const Home: React.FC = () => {
         </View>
       </View>
 
-      <View style={{top:responsiveHeight(5.5),paddingHorizontal:responsiveWidth(5)}}>
-        <View style={{width:responsiveWidth(90),borderRadius:responsiveWidth(2),backgroundColor:'#F0FCFF',flexDirection:'row'}}>
-          <View style={{width:responsiveWidth(0.90),backgroundColor:'#58B9D0',borderTopLeftRadius:responsiveWidth(8),borderBottomLeftRadius:responsiveWidth(8)}}></View>
+      <View
+        style={{
+          top: responsiveHeight(5.5),
+          paddingHorizontal: responsiveWidth(5),
+        }}
+      >
+        <View
+          style={{
+            width: responsiveWidth(90),
+            borderRadius: responsiveWidth(2),
+            backgroundColor: '#F0FCFF',
+            flexDirection: 'row',
+          }}
+        >
+          <View
+            style={{
+              width: responsiveWidth(0.9),
+              backgroundColor: '#58B9D0',
+              borderTopLeftRadius: responsiveWidth(8),
+              borderBottomLeftRadius: responsiveWidth(8),
+            }}
+          ></View>
           <View>
-            <View style={{flexDirection:'row',justifyContent:'space-between', paddingVertical:responsiveHeight(0.90), paddingHorizontal:responsiveWidth(3.2),width:responsiveWidth(90),}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingVertical: responsiveHeight(0.9),
+                paddingHorizontal: responsiveWidth(3.2),
+                width: responsiveWidth(90),
+              }}
+            >
               <View>
-                <Text style={{fontSize:14,fontWeight:'500',lineHeight:17,color:'#3C3C3C'}} >Dr. Samar Halder</Text>
-                <Text style={{fontSize:11,fontWeight:'400',lineHeight:14,letterSpacing:0,color:'#858585'}} >Consultation</Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '500',
+                    lineHeight: 17,
+                    color: '#3C3C3C',
+                  }}
+                >
+                  Dr. Samar Halder
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '400',
+                    lineHeight: 14,
+                    letterSpacing: 0,
+                    color: '#858585',
+                  }}
+                >
+                  Consultation
+                </Text>
               </View>
               <View style={{ flexDirection: 'row', gap: -10 }}>
                 {pets.length > 0 ? (
                   pets.slice(0, 2).map((pet, index) => (
-                    <View key={pet.id} style={index === 0 ? {} : { marginLeft: -10 }}>
+                    <View
+                      key={pet.id}
+                      style={index === 0 ? {} : { marginLeft: -10 }}
+                    >
                       {pet.profileImg && pet.profileImg !== 'img' ? (
-                        <Image 
-                          source={{ uri: pet.profileImg }} 
-                          style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, borderColor: '#fff' }}
+                        <Image
+                          source={{ uri: pet.profileImg }}
+                          style={{
+                            width: 35,
+                            height: 35,
+                            borderRadius: 17.5,
+                            borderWidth: 2,
+                            borderColor: '#fff',
+                          }}
                         />
                       ) : (
-                        <Image 
-                          source={index === 0 ? images.BellaDog : images.DaisyDog}  
-                          style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, borderColor: '#fff' }} 
+                        <Image
+                          source={
+                            index === 0 ? images.BellaDog : images.DaisyDog
+                          }
+                          style={{
+                            width: 35,
+                            height: 35,
+                            borderRadius: 17.5,
+                            borderWidth: 2,
+                            borderColor: '#fff',
+                          }}
                         />
                       )}
                     </View>
                   ))
                 ) : (
                   <>
-                    <Image source={images.BellaDog} style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 2,borderColor: '#fff' }} />
-                    <View style={{ width: 35, height: 35, borderRadius: 17.5, backgroundColor: '#C8F8B1', overflow: 'hidden', marginLeft: -10 }}>
-                      <Image source={images.DaisyDog} style={{ width: 70, height: 70, position: 'absolute', top: -20, left: -15, resizeMode: 'cover', }} />
+                    <Image
+                      source={images.BellaDog}
+                      style={{
+                        width: 35,
+                        height: 35,
+                        borderRadius: 17.5,
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                      }}
+                    />
+                    <View
+                      style={{
+                        width: 35,
+                        height: 35,
+                        borderRadius: 17.5,
+                        backgroundColor: '#C8F8B1',
+                        overflow: 'hidden',
+                        marginLeft: -10,
+                      }}
+                    >
+                      <Image
+                        source={images.DaisyDog}
+                        style={{
+                          width: 70,
+                          height: 70,
+                          position: 'absolute',
+                          top: -20,
+                          left: -15,
+                          resizeMode: 'cover',
+                        }}
+                      />
                     </View>
                   </>
                 )}
               </View>
             </View>
-            <View style={{width:responsiveWidth(83),borderBottomWidth:responsiveWidth(0.20),borderColor:'#E8E8E8',left:responsiveWidth(2.5)}}/>
-            <View style={{paddingVertical:responsiveHeight(1),paddingHorizontal:responsiveWidth(3),gap:responsiveWidth(2.5)}}>
-              <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-                <Image source={Icons.BiMap}/>
-                <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,color:'#858585'}}>32/E-1 M . L . B, Road, Bally, Howrah</Text>
+            <View
+              style={{
+                width: responsiveWidth(83),
+                borderBottomWidth: responsiveWidth(0.2),
+                borderColor: '#E8E8E8',
+                left: responsiveWidth(2.5),
+              }}
+            />
+            <View
+              style={{
+                paddingVertical: responsiveHeight(1),
+                paddingHorizontal: responsiveWidth(3),
+                gap: responsiveWidth(2.5),
+              }}
+            >
+              <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                <Image source={Icons.BiMap} />
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: '400',
+                    lineHeight: 14,
+                    color: '#858585',
+                  }}
+                >
+                  32/E-1 M . L . B, Road, Bally, Howrah
+                </Text>
               </View>
-              <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-                <Image source={Icons.BiCalendar}/>
-                <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,color:'#858585'}}>Wednesday, October 25, 2024</Text>
+              <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                <Image source={Icons.BiCalendar} />
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: '400',
+                    lineHeight: 14,
+                    color: '#858585',
+                  }}
+                >
+                  Wednesday, October 25, 2024
+                </Text>
               </View>
-              <View style={{flexDirection:'row',gap:responsiveWidth(2)}}>
-                <Image source={Icons.BiTimeFive}/>
-                <Text style={{fontSize:10,fontWeight:'400',lineHeight:14,color:'#858585'}}>2:00 PM</Text>
+              <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                <Image source={Icons.BiTimeFive} />
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: '400',
+                    lineHeight: 14,
+                    color: '#858585',
+                  }}
+                >
+                  2:00 PM
+                </Text>
               </View>
             </View>
           </View>
@@ -531,7 +762,7 @@ const Home: React.FC = () => {
         </View>
       </View>
 
-      <View style={{top:responsiveHeight(9)}}>
+      <View style={{ top: responsiveHeight(9) }}>
         <FlatList
           data={Carousel}
           ref={flatListRef}
@@ -550,10 +781,16 @@ const Home: React.FC = () => {
         <View style={styles.bottomparentview}>
           <View style={styles.dots_Indicator}>
             <TouchableOpacity>
-              <Image source={Icons.IoIosArrowBack} style={{bottom:responsiveWidth(0.90)}}/>
+              <Image
+                source={Icons.IoIosArrowBack}
+                style={{ bottom: responsiveWidth(0.9) }}
+              />
             </TouchableOpacity>
             {renderDotIndicators()}
-            <Image source={Icons.IoIosArrowForwardWhite} style={{bottom:responsiveWidth(0.90)}}/>
+            <Image
+              source={Icons.IoIosArrowForwardWhite}
+              style={{ bottom: responsiveWidth(0.9) }}
+            />
           </View>
         </View>
       </View>
@@ -566,24 +803,87 @@ const Home: React.FC = () => {
             <Text style={styles.showallText}>Show All</Text>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.paddingBottom}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.paddingBottom}
+          >
             <View style={styles.GapView}>
               <View style={{ paddingHorizontal: responsiveWidth(3.5) }}>
-                <View style={{ width: responsiveWidth(90), borderRadius: responsiveWidth(2), borderWidth: responsiveWidth(0.3), borderColor: '#EBEBEB', padding: responsiveWidth(2) }}>
-                  <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
-                    <Image source={images.silentDog} style={{ width: responsiveWidth(20), height: responsiveHeight(9), borderRadius: responsiveWidth(1) }} resizeMode="cover" />
+                <View
+                  style={{
+                    width: responsiveWidth(90),
+                    borderRadius: responsiveWidth(2),
+                    borderWidth: responsiveWidth(0.3),
+                    borderColor: '#EBEBEB',
+                    padding: responsiveWidth(2),
+                  }}
+                >
+                  <View
+                    style={{ flexDirection: 'row', gap: responsiveWidth(2) }}
+                  >
+                    <Image
+                      source={images.silentDog}
+                      style={{
+                        width: responsiveWidth(20),
+                        height: responsiveHeight(9),
+                        borderRadius: responsiveWidth(1),
+                      }}
+                      resizeMode="cover"
+                    />
                     <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 12, fontWeight: '600', lineHeight: 14, letterSpacing: 0, color: '#4B4B4B' }} numberOfLines={1}>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '600',
+                          lineHeight: 14,
+                          letterSpacing: 0,
+                          color: '#4B4B4B',
+                        }}
+                        numberOfLines={1}
+                      >
                         How to Calm Dog Anxiety
                       </Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: responsiveHeight(0.5) }}>
-                        <Image source={Icons.ClockCircle} style={{ width: responsiveWidth(2.5), height: responsiveHeight(1.5), marginRight: responsiveWidth(1) }} resizeMode="contain" />
-                        <Text style={{ fontSize: 9, fontWeight: '500', lineHeight: 10, letterSpacing: 0, color: '#7B7B7B' }}>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginVertical: responsiveHeight(0.5),
+                        }}
+                      >
+                        <Image
+                          source={Icons.ClockCircle}
+                          style={{
+                            width: responsiveWidth(2.5),
+                            height: responsiveHeight(1.5),
+                            marginRight: responsiveWidth(1),
+                          }}
+                          resizeMode="contain"
+                        />
+                        <Text
+                          style={{
+                            fontSize: 9,
+                            fontWeight: '500',
+                            lineHeight: 10,
+                            letterSpacing: 0,
+                            color: '#7B7B7B',
+                          }}
+                        >
                           10th October 2024
                         </Text>
                       </View>
-                      <Text style={{ fontSize: 10, lineHeight: 13, fontWeight: '400', letterSpacing: 0, color: '#848484' }} numberOfLines={3}>
-                        All of us have things that scare us, but for our four-legged friends, loud noises, new situations and changes in the{' '}
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          lineHeight: 13,
+                          fontWeight: '400',
+                          letterSpacing: 0,
+                          color: '#848484',
+                        }}
+                        numberOfLines={3}
+                      >
+                        All of us have things that scare us, but for our
+                        four-legged friends, loud noises, new situations and
+                        changes in the{' '}
                         <Text style={{ color: '#4494A8' }}>Read More</Text>
                       </Text>
                     </View>

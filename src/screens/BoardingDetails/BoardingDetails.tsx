@@ -18,6 +18,7 @@ import BoardingReview from './BoardingReview';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
+import boardinguserstyles from '../BoardingUser/boardinguser.styles';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
@@ -187,16 +188,15 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   return (
     <View style={boardingdetailstyles.container}>
       <View style={boardingdetailstyles.containerchild}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('BoardingUser', { section: 'boarding' })
-          }
-        >
+        <TouchableOpacity onPress={() => navigation.goBack('')}>
           <View style={boardingdetailstyles.containerfirstsubchild}>
             <Image
               source={Icons.LeftArrow}
               style={boardingdetailstyles.leftarrowicon}
             />
+            <Text style={boardinguserstyles.groomingText}>
+              Boarding Details
+            </Text>
           </View>
         </TouchableOpacity>
         <View style={boardingdetailstyles.locationtext}>
@@ -269,7 +269,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
                 />
                 <Text style={boardingdetailstyles.setDigitSize}>
                   {' '}
-                   {bookingDetailsData?.regNo ?? ''}{' '}
+                  {bookingDetailsData?.regNo ?? ''}{' '}
                 </Text>
               </View>
 

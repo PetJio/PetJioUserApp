@@ -15,29 +15,7 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
   reviews = 150,
 }) => {
   const [show, setShow] = useState<boolean>(true);
-  const [reviewData, setReviewData] = useState<any[]>([
-    {
-      id: 1,
-      ratings: '4.5',
-      comment: 'Excellent service, my dog loved it!',
-      createdAt: '2025-09-06T01:22:49.528Z',
-      updatedAt: null,
-    },
-    {
-      id: 2,
-      ratings: '4.5',
-      comment: 'Excellent service, my dog loved it!',
-      createdAt: '2025-09-06T01:22:49.528Z',
-      updatedAt: null,
-    },
-    {
-      id: 3,
-      ratings: '4.5',
-      comment: 'Excellent service, my dog loved it!',
-      createdAt: '2025-09-06T01:22:49.528Z',
-      updatedAt: null,
-    },
-  ]);
+  const [reviewData, setReviewData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
@@ -76,7 +54,8 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
         Array.isArray(data.body) &&
         data.body.length > 0
       ) {
-        // setReviewData(data.body); // Get the first boarding from the list
+        console.log('data.body 000', data.body);
+        setReviewData(data.body); // Get the first boarding from the list
       } else {
         // If no API data, use default values to match reference UI
         // setServiceDetails({
@@ -158,7 +137,7 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
                       style={boardingreviewstyles.userImageSize}
                     />
                     <Text style={boardingreviewstyles.ratingSize}>
-                      {rating}
+                      {item?.ratings}
                     </Text>
                   </View>
                   <View>

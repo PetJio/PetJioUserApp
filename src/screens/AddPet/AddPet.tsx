@@ -14,7 +14,11 @@ import { TextInput } from 'react-native-paper';
 import { Dropdown } from 'react-native-element-dropdown';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
+import {
+  responsiveHeight,
+  responsiveWidth,
+  responsiveFontSize,
+} from 'react-native-responsive-dimensions';
 import { API_CONFIG } from '../../config/api';
 import { storageService } from '../../utils/storage';
 import { goBack } from '../../utils/navigationService';
@@ -59,7 +63,10 @@ const AddPet: React.FC = () => {
   const [feedCount, setFeedCount] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   // Data states
   const [petCategories, setPetCategories] = useState<PetCategory[]>([]);
@@ -89,7 +96,11 @@ const AddPet: React.FC = () => {
 
     if (!ageInMonths.trim()) {
       newErrors.ageInMonths = 'Age in months is required';
-    } else if (isNaN(Number(ageInMonths)) || Number(ageInMonths) < 0 || Number(ageInMonths) > 11) {
+    } else if (
+      isNaN(Number(ageInMonths)) ||
+      Number(ageInMonths) < 0 ||
+      Number(ageInMonths) > 11
+    ) {
       newErrors.ageInMonths = 'Please enter months (0-11)';
     }
 
@@ -119,9 +130,12 @@ const AddPet: React.FC = () => {
       }
 
       // Fetch pet categories
-      const categoriesResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-category`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const categoriesResponse = await fetch(
+        `${API_CONFIG.BASE_URL}/api/pet-category`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json();
         setPetCategories(categoriesData.body || []);
@@ -129,7 +143,7 @@ const AddPet: React.FC = () => {
 
       // Fetch pet sizes
       const sizesResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-size`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (sizesResponse.ok) {
         const sizesData = await sizesResponse.json();
@@ -137,14 +151,14 @@ const AddPet: React.FC = () => {
       }
 
       // Fetch pet genders
-      const gendersResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-gender`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const gendersResponse = await fetch(`${API_CONFIG.BASE_URL}/api/gender`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+
       if (gendersResponse.ok) {
         const gendersData = await gendersResponse.json();
         setPetGenders(gendersData.body || []);
       }
-
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
       setMessage({ type: 'error', text: 'Failed to load form data' });
@@ -160,8 +174,11 @@ const AddPet: React.FC = () => {
 
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('userToken');
-      const ownerId = await AsyncStorage.getItem('ownerId');
+      const token = await storageService.getUserToken();
+      // const ownerId = await AsyncStorage.getItem('ownerId');
+      const ownerId = 29;
+
+      console.log('check ===>', token, ownerId);
 
       if (!token || !ownerId) {
         setMessage({ type: 'error', text: 'Authentication data not found' });
@@ -172,34 +189,48 @@ const AddPet: React.FC = () => {
         petName: petName.trim(),
         ageInYears: parseInt(ageInYears),
         ageInMonths: parseInt(ageInMonths),
-        petCatId: category,
-        petSizeId: size,
-        petGenderId: gender,
-        weight: weight.trim() || null,
+        category: category,
+        size: size,
+        gender: gender,
+        weight: 18,
         height: height.trim() || null,
         treats: treats.trim() || null,
-        feedCount: feedCount.trim() || null,
-        medicalHistory: medicalHistory.trim() || null,
-        ownerId: parseInt(ownerId),
+        // medicalHistory: medicalHistory.trim() || null,
+        ownerId: ownerId,
+        profileImg : '',
+        dailyFeedCount : 2,
+        cookie : 'grain',
+        allergies : 'Dairy',
+        disability: 'none',
+
       };
+
+      console.log('petData', petData)
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(petData),
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Pet profile created successfully!' });
+        setMessage({
+          type: 'success',
+          text: 'Pet profile created successfully!',
+        });
         setTimeout(() => {
           goBack();
         }, 1500);
       } else {
         const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.message || 'Failed to create pet profile' });
+        console.log('error', errorData);
+        setMessage({
+          type: 'error',
+          text: errorData.message || 'Failed to create pet profile',
+        });
       }
     } catch (error) {
       console.error('Error creating pet profile:', error);
@@ -224,57 +255,76 @@ const AddPet: React.FC = () => {
 
   if (initialLoading) {
     return (
-      <KeyboardAvoidingView 
-        style={signupstyles.container} 
+      <KeyboardAvoidingView
+        style={signupstyles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
           <ActivityIndicator size="large" color="#58B9D0" />
-          <Text style={{marginTop: 16, color: '#666'}}>Loading form data...</Text>
+          <Text style={{ marginTop: 16, color: '#666' }}>
+            Loading form data...
+          </Text>
         </View>
       </KeyboardAvoidingView>
     );
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={signupstyles.container} 
+    <KeyboardAvoidingView
+      style={signupstyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
-      <ScrollView 
+
+      <ScrollView
         style={signupstyles.scrollContainer}
         contentContainerStyle={signupstyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={signupstyles.formContainer}>
           {/* Back Button */}
-          <View style={{flexDirection: 'row', alignItems: 'center', paddingTop: responsiveHeight(2), marginBottom: responsiveHeight(2)}}>
-            <TouchableOpacity 
-              onPress={goBack} 
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingTop: responsiveHeight(2),
+              marginBottom: responsiveHeight(2),
+            }}
+          >
+            <TouchableOpacity
+              onPress={goBack}
               style={{
                 padding: 8,
                 borderRadius: 8,
-                backgroundColor: '#f0f0f0'
+                backgroundColor: '#f0f0f0',
               }}
             >
               <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
             </TouchableOpacity>
           </View>
-          
-          <View style={{alignItems:'center', paddingTop: responsiveHeight(1)}}>
+
+          <View
+            style={{ alignItems: 'center', paddingTop: responsiveHeight(1) }}
+          >
             <Text style={signupstyles.heading}>Add Pet Profile</Text>
-            <Text style={signupstyles.subheading}>Create a new pet profile</Text>
+            <Text style={signupstyles.subheading}>
+              Create a new pet profile
+            </Text>
           </View>
-          
+
           {/* Messages */}
           {message && (
-            <View style={[
-              signupstyles.messageContainer,
-              message.type === 'success' ? signupstyles.successMessage : signupstyles.errorMessage
-            ]}>
+            <View
+              style={[
+                signupstyles.messageContainer,
+                message.type === 'success'
+                  ? signupstyles.successMessage
+                  : signupstyles.errorMessage,
+              ]}
+            >
               <Text style={signupstyles.messageText}>{message.text}</Text>
             </View>
           )}
@@ -285,62 +335,83 @@ const AddPet: React.FC = () => {
               label="Pet Name"
               placeholder="Enter your pet's name"
               value={petName}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 setPetName(value);
                 clearFieldError('petName');
               }}
-              theme={{ 
+              theme={{
                 roundness: 12,
-                colors: { primary: '#58B9D0', outline: errors.petName ? '#FF6B6B' : '#E2E2E2' }
+                colors: {
+                  primary: '#58B9D0',
+                  outline: errors.petName ? '#FF6B6B' : '#E2E2E2',
+                },
               }}
               error={!!errors.petName}
             />
-            {errors.petName && <Text style={signupstyles.errorText}>{errors.petName}</Text>}
+            {errors.petName && (
+              <Text style={signupstyles.errorText}>{errors.petName}</Text>
+            )}
 
-            <View style={{flexDirection: 'row', gap: 10}}>
-              <View style={{flex: 1}}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flex: 1 }}>
                 <TextInput
                   mode="outlined"
                   label="Age (Years)"
                   placeholder="0"
                   value={ageInYears}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setAgeInYears(value);
                     clearFieldError('ageInYears');
                   }}
                   keyboardType="numeric"
-                  theme={{ 
+                  theme={{
                     roundness: 12,
-                    colors: { primary: '#58B9D0', outline: errors.ageInYears ? '#FF6B6B' : '#E2E2E2' }
+                    colors: {
+                      primary: '#58B9D0',
+                      outline: errors.ageInYears ? '#FF6B6B' : '#E2E2E2',
+                    },
                   }}
                   error={!!errors.ageInYears}
                 />
-                {errors.ageInYears && <Text style={signupstyles.errorText}>{errors.ageInYears}</Text>}
+                {errors.ageInYears && (
+                  <Text style={signupstyles.errorText}>
+                    {errors.ageInYears}
+                  </Text>
+                )}
               </View>
 
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <TextInput
                   mode="outlined"
                   label="Age (Months)"
                   placeholder="0-11"
                   value={ageInMonths}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setAgeInMonths(value);
                     clearFieldError('ageInMonths');
                   }}
                   keyboardType="numeric"
-                  theme={{ 
+                  theme={{
                     roundness: 12,
-                    colors: { primary: '#58B9D0', outline: errors.ageInMonths ? '#FF6B6B' : '#E2E2E2' }
+                    colors: {
+                      primary: '#58B9D0',
+                      outline: errors.ageInMonths ? '#FF6B6B' : '#E2E2E2',
+                    },
                   }}
                   error={!!errors.ageInMonths}
                 />
-                {errors.ageInMonths && <Text style={signupstyles.errorText}>{errors.ageInMonths}</Text>}
+                {errors.ageInMonths && (
+                  <Text style={signupstyles.errorText}>
+                    {errors.ageInMonths}
+                  </Text>
+                )}
               </View>
             </View>
 
             <View>
-              <Text style={{fontSize: 16, color: '#333', marginBottom: 8}}>Category *</Text>
+              <Text style={{ fontSize: 16, color: '#333', marginBottom: 8 }}>
+                Category *
+              </Text>
               <Dropdown
                 style={[
                   {
@@ -349,26 +420,33 @@ const AddPet: React.FC = () => {
                     borderWidth: 1,
                     borderRadius: 12,
                     paddingHorizontal: 16,
-                    backgroundColor: '#fff'
-                  }
+                    backgroundColor: '#fff',
+                  },
                 ]}
-                placeholderStyle={{fontSize: 16, color: '#666'}}
-                selectedTextStyle={{fontSize: 16, color: '#333'}}
-                data={petCategories.map(cat => ({ label: cat.catName, value: cat.id }))}
+                placeholderStyle={{ fontSize: 16, color: '#666' }}
+                selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                data={petCategories.map(cat => ({
+                  label: cat.catName,
+                  value: cat.id,
+                }))}
                 labelField="label"
                 valueField="value"
                 placeholder="Select Category"
                 value={category}
-                onChange={(item) => {
+                onChange={item => {
                   setCategory(item.value);
                   clearFieldError('category');
                 }}
               />
-              {errors.category && <Text style={signupstyles.errorText}>{errors.category}</Text>}
+              {errors.category && (
+                <Text style={signupstyles.errorText}>{errors.category}</Text>
+              )}
             </View>
 
             <View>
-              <Text style={{fontSize: 16, color: '#333', marginBottom: 8}}>Size *</Text>
+              <Text style={{ fontSize: 16, color: '#333', marginBottom: 8 }}>
+                Size *
+              </Text>
               <Dropdown
                 style={[
                   {
@@ -377,26 +455,30 @@ const AddPet: React.FC = () => {
                     borderWidth: 1,
                     borderRadius: 12,
                     paddingHorizontal: 16,
-                    backgroundColor: '#fff'
-                  }
+                    backgroundColor: '#fff',
+                  },
                 ]}
-                placeholderStyle={{fontSize: 16, color: '#666'}}
-                selectedTextStyle={{fontSize: 16, color: '#333'}}
+                placeholderStyle={{ fontSize: 16, color: '#666' }}
+                selectedTextStyle={{ fontSize: 16, color: '#333' }}
                 data={petSizes.map(s => ({ label: s.size, value: s.id }))}
                 labelField="label"
                 valueField="value"
                 placeholder="Select Size"
                 value={size}
-                onChange={(item) => {
+                onChange={item => {
                   setSize(item.value);
                   clearFieldError('size');
                 }}
               />
-              {errors.size && <Text style={signupstyles.errorText}>{errors.size}</Text>}
+              {errors.size && (
+                <Text style={signupstyles.errorText}>{errors.size}</Text>
+              )}
             </View>
 
             <View>
-              <Text style={{fontSize: 16, color: '#333', marginBottom: 8}}>Gender *</Text>
+              <Text style={{ fontSize: 16, color: '#333', marginBottom: 8 }}>
+                Gender *
+              </Text>
               <Dropdown
                 style={[
                   {
@@ -405,26 +487,28 @@ const AddPet: React.FC = () => {
                     borderWidth: 1,
                     borderRadius: 12,
                     paddingHorizontal: 16,
-                    backgroundColor: '#fff'
-                  }
+                    backgroundColor: '#fff',
+                  },
                 ]}
-                placeholderStyle={{fontSize: 16, color: '#666'}}
-                selectedTextStyle={{fontSize: 16, color: '#333'}}
+                placeholderStyle={{ fontSize: 16, color: '#666' }}
+                selectedTextStyle={{ fontSize: 16, color: '#333' }}
                 data={petGenders.map(g => ({ label: g.name, value: g.id }))}
                 labelField="label"
                 valueField="value"
                 placeholder="Select Gender"
                 value={gender}
-                onChange={(item) => {
+                onChange={item => {
                   setGender(item.value);
                   clearFieldError('gender');
                 }}
               />
-              {errors.gender && <Text style={signupstyles.errorText}>{errors.gender}</Text>}
+              {errors.gender && (
+                <Text style={signupstyles.errorText}>{errors.gender}</Text>
+              )}
             </View>
 
-            <View style={{flexDirection: 'row', gap: 10}}>
-              <View style={{flex: 1}}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flex: 1 }}>
                 <TextInput
                   mode="outlined"
                   label="Weight (kg)"
@@ -432,23 +516,23 @@ const AddPet: React.FC = () => {
                   value={weight}
                   onChangeText={setWeight}
                   keyboardType="numeric"
-                  theme={{ 
+                  theme={{
                     roundness: 12,
-                    colors: { primary: '#58B9D0', outline: '#E2E2E2' }
+                    colors: { primary: '#58B9D0', outline: '#E2E2E2' },
                   }}
                 />
               </View>
 
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <TextInput
                   mode="outlined"
                   label="Height"
                   placeholder="e.g. 45cm"
                   value={height}
                   onChangeText={setHeight}
-                  theme={{ 
+                  theme={{
                     roundness: 12,
-                    colors: { primary: '#58B9D0', outline: '#E2E2E2' }
+                    colors: { primary: '#58B9D0', outline: '#E2E2E2' },
                   }}
                 />
               </View>
@@ -462,9 +546,9 @@ const AddPet: React.FC = () => {
               onChangeText={setTreats}
               multiline
               numberOfLines={2}
-              theme={{ 
+              theme={{
                 roundness: 12,
-                colors: { primary: '#58B9D0', outline: '#E2E2E2' }
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
             />
 
@@ -475,9 +559,9 @@ const AddPet: React.FC = () => {
               value={feedCount}
               onChangeText={setFeedCount}
               keyboardType="numeric"
-              theme={{ 
+              theme={{
                 roundness: 12,
-                colors: { primary: '#58B9D0', outline: '#E2E2E2' }
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
             />
 
@@ -489,16 +573,16 @@ const AddPet: React.FC = () => {
               onChangeText={setMedicalHistory}
               multiline
               numberOfLines={3}
-              theme={{ 
+              theme={{
                 roundness: 12,
-                colors: { primary: '#58B9D0', outline: '#E2E2E2' }
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
             />
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleSubmit}
-            style={[signupstyles.loginButton, loading && {opacity: 0.7}]}
+            style={[signupstyles.loginButton, loading && { opacity: 0.7 }]}
             disabled={loading}
           >
             {loading ? (
