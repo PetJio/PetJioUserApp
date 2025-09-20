@@ -16,7 +16,6 @@ type RootStackParamList = {
     UserDetails: undefined;
     CalendarSheet:undefined;
     TrainingLocalAddress:{section: string};
-    Service:{section: string};
     Boarding:{section: string}
     BoardingDetails:undefined
 };
@@ -39,7 +38,7 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
     return (
         <View style={boardinguserstyles.container}>
             <View style={boardinguserstyles.containerchild}>
-               <TouchableOpacity onPress={()=>navigation.navigate('Service',{section:'boarding'})}>
+               <TouchableOpacity onPress={()=>navigation.navigate('Boarding',{section:'boarding'})}>
                     <View style={boardinguserstyles.containerfirstsubchild}>
                             <Image source={Icons.LeftArrow} style={boardinguserstyles.leftarrowicon} />
                             <Text style={boardinguserstyles.groomingText}>Boarding</Text>
@@ -80,12 +79,7 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
             {show ? (
                 <BoardingHomeService navigation={navigation} />
             ) : (
-                <CommercialService
-                    navigation={navigation}
-                    selectedDate={new Date().toISOString().split('T')[0]}
-                    selectedTime="10:00 AM"
-                    city="Bardhaman"
-                />
+                <CommercialService />
             )}
         </View>
     );
