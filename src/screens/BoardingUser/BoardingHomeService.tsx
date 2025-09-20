@@ -21,7 +21,6 @@ type InSiteServiceProps = {
 };
 
 
-
 const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
     return (
         <View style={boardinghomeservicestyles.container}>

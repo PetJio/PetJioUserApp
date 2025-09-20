@@ -34,6 +34,7 @@ export type RootStackParamList = {
   Boarding: undefined;
   BoardingDetails: undefined;
   BoardingUser: undefined;
+  BoardingQuestions: undefined;
   BoardingRegistrationform: undefined;
   BoardingPaymentmethod: undefined;
   BoardingSuccess: undefined;

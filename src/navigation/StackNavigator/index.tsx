@@ -34,6 +34,7 @@ import {
   Boarding,
   BoardingUser,
   BoardingDetails,
+  BoardingQuestions,
   BoardingRegistrationform,
   SignUp,
   SignIn,
@@ -159,6 +160,7 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="Boarding" component={Boarding}/>
             <Stack.Screen name="BoardingUser" component={BoardingUser}/>
             <Stack.Screen name="BoardingDetails" component={BoardingDetails}/>
+            <Stack.Screen name="BoardingQuestions" component={BoardingQuestions}/>
             <Stack.Screen name="BoardingRegistrationform" component={BoardingRegistrationform}/>
             <Stack.Screen name="PetParentform" component={PetParentform}/>
             <Stack.Screen name="PetWarriorform" component={PetWarriorform}/>
