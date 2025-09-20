@@ -1,390 +1,324 @@
-import { StyleSheet, Platform } from 'react-native';
-import { responsiveWidth, responsiveHeight } from 'react-native-responsive-dimensions';
-
+import { StyleSheet } from 'react-native';
+import { responsiveWidth, responsiveHeight,
+} from 'react-native-responsive-dimensions';
 const boardingdetailstyles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#F5F7FA',
-    },
-
-    // Modern Header - Matching Services Page Style
-    servicesStyleHeader: {
-        backgroundColor: '#F8F9FB',
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
-        paddingBottom: 16,
-        paddingHorizontal: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E8EBF0',
-    },
-
-    backButtonContainer: {
-        marginRight: 12,
-    },
-
-    newServicesBackIcon: {
-        tintColor: '#58B9D0',
-        width: responsiveWidth(6),
-        height: responsiveWidth(6),
-    },
-
-    servicesHeaderTitleContainer: {
-        flex: 1,
-    },
-
-    newServicesHeaderTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1A1D29',
-        marginBottom: 2,
-    },
-
-    servicesHeaderSubtitle: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-
-    headerActionsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: responsiveWidth(4),
-    },
-
-    // Provider Card - Modern design without shadows
-    providerCard: {
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: responsiveWidth(5),
-        marginTop: responsiveHeight(2),
-        marginBottom: responsiveHeight(1),
-        borderRadius: 20,
-        padding: responsiveWidth(6),
-        borderWidth: 1,
-        borderColor: '#E8EBF0',
-    },
-
-    // Provider Info Styles
-    gap: {
         gap: responsiveHeight(2),
+        width: responsiveWidth(100),
+        height: responsiveHeight(100),
+        backgroundColor: '#FFFFFF',
     },
-    
+    containerchild: {
+        width: responsiveWidth(100),
+        padding: responsiveWidth(4),
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        top: responsiveHeight(4),
+        paddingHorizontal: responsiveHeight(2.5),
+    },
+    containerfirstsubchild: {
+        flexDirection: 'row',
+        gap: responsiveWidth(1),
+    },
+    downArrowIcon: {
+        tintColor: '#000000',
+        top: responsiveHeight(0.25),
+
+    },
+    leftarrowicon: {
+        tintColor: '#000000',
+        top: responsiveHeight(0.5),
+    },
+    locationtext: {
+        flexDirection: 'row',
+        gap: responsiveWidth(2),
+        top: responsiveHeight(0.5),
+    },
+    locationtextColor: { color: '#000000' },
+    groomingText: {
+        color: '#000000',
+        fontSize: 20,
+        fontWeight: '500',
+        fontFamily: '',
+    },
+
+    containerthirdsubchild: {
+        paddingHorizontal: responsiveWidth(0.3),
+        top: responsiveHeight(0.4),
+    },
+    shadow: {
+        flexDirection: 'row',
+        paddingHorizontal: responsiveHeight(2),
+        paddingVertical: responsiveHeight(2),
+        gap: responsiveWidth(2),
+        width: responsiveWidth(90),
+        height: responsiveHeight(14),
+        backgroundColor: '#FFFFFF',
+    },
+    userimage: {
+        width: responsiveWidth(20),
+        height: responsiveWidth(20),
+        borderRadius: responsiveWidth(20),
+    },
+    onsitetext: {
+        paddingHorizontal: responsiveWidth(5),
+        paddingTop: responsiveHeight(5),
+        paddingBottom: responsiveHeight(1),
+        color: '#AAAAAA',
+        fontSize: 16,
+        fontWeight: '600',
+        lineHeight: 20,
+    },
+    homeservicetext: {
+        paddingHorizontal: responsiveWidth(12),
+        paddingTop: responsiveHeight(5),
+        paddingBottom: responsiveHeight(1),
+        color: '#58B9D0',
+        fontSize: 16,
+        fontWeight: '600',
+        lineHeight: 20,
+        width: responsiveWidth(50),
+        borderBottomWidth: responsiveWidth(0.5),
+        borderColor: '#58B9D0',
+    },
+    gap: { gap: responsiveHeight(1) },
     userTextWidth: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '100%',
+        width: responsiveWidth(68),
     },
-    
     userTextgap: {
         flexDirection: 'row',
-        gap: responsiveWidth(2),
+        gap: responsiveWidth(2.5),
+    },
+    textSize: { fontSize: 16, fontWeight: '800' },
+    borderRadius: {
+        width: responsiveWidth(20.6),
+        height: responsiveHeight(2.8),
+        borderRadius: responsiveWidth(4),
+        borderWidth: 1,
+        borderColor: '#58B9D0',
         alignItems: 'center',
     },
-    
-    textSize: { 
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1A1D29',
-    },
-    
-    ratingGap: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: responsiveWidth(1),
-    },
-    
-    verifyText: {
-        fontSize: 12,
-        color: '#4CAF50',
-        fontWeight: '600',
-    },
-    
-    flex: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    
-    setIconTextGap: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: responsiveWidth(1),
-    },
-    
-    setTextSize: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
-    },
-    
-    ratePointSize: {
-        fontSize: 14,
-        color: '#FFB800',
-        fontWeight: '700',
-    },
-    
-    widthSpace: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '100%',
-    },
-    
-    iconAndTextGap: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: responsiveWidth(1),
-    },
-    
-    price: {
-        fontSize: 16,
+    celebrityText: {
         color: '#58B9D0',
-        fontWeight: '700',
-    },
-    
-    userimage: {
-        width: responsiveWidth(24),
-        height: responsiveWidth(24),
-        borderRadius: responsiveWidth(12),
-        marginBottom: responsiveHeight(2),
-        alignSelf: 'center',
-        borderWidth: 3,
-        borderColor: '#E8EBF0',
+        marginTop: responsiveHeight(0.1),
     },
 
-    // Tab Navigation Styles
+    ratingGap: {
+        flexDirection: 'row',
+        gap: responsiveWidth(1),
+    },
+    verifyText: {
+        fontSize: 8,
+        fontWeight: '500',
+        lineHeight: 10,
+        color: '#FF851B',
+    },
+    ratingHeight: { top: responsiveHeight(0.3) },
+    ratePointSize: {
+        color: '#848484',
+        fontSize: 16,
+        fontWeight: '400',
+    },
+    setIconTextGap: {
+        flexDirection: 'row',
+        gap: responsiveWidth(1),
+    },
+    setImageIconPosition: { top: responsiveHeight(0.3) },
+    setTextSize: {
+        fontSize: responsiveHeight(1.5),
+        lineHeight: responsiveHeight(2),
+        letterSpacing: responsiveWidth(0),
+        color: '#383838',
+    },
+    setDigitSize: {
+        fontSize: responsiveHeight(1.5),
+        lineHeight: responsiveHeight(2),
+        letterSpacing: responsiveWidth(0),
+        color: '#383838',
+    },
+    widthSpace: {
+        flexDirection: 'row',
+        gap: responsiveWidth(2.5),
+        width: responsiveWidth(69),
+        justifyContent: 'space-between',
+    },
+    iconAndTextGap: {
+        flexDirection: 'row',
+        gap: responsiveWidth(2),
+    },
+    iconTextSpace: {
+        flexDirection: 'row',
+
+    },
+    bold: {
+        color: '#DF09A7',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    iconMargin: { marginRight: responsiveHeight(2) },
     menuTitleContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: responsiveWidth(5),
-        marginTop: responsiveHeight(1),
-        borderRadius: 16,
-        padding: responsiveWidth(2),
-        borderWidth: 1,
-        borderColor: '#E8EBF0',
-    },
-    
-    menuTitleAlignment: {
-        alignItems: 'center',
-        paddingVertical: responsiveHeight(1.5),
-        paddingHorizontal: responsiveWidth(4),
-    },
-    
-    serviceText: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '500',
-    },
-    
-    reviewsText: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '500',
-    },
-    
-    commonTextColor: {
-        color: '#58B9D0',
-        fontWeight: '700',
-    },
-    
-    menuBottomBoarder: {
-        height: 3,
-        backgroundColor: '#58B9D0',
-        borderRadius: 2,
-        marginTop: responsiveHeight(0.5),
-        width: responsiveWidth(8),
-    },
-
-    // Book Now Button - Modern style matching other pages
-    center: {
         alignItems: 'center',
         paddingHorizontal: responsiveWidth(5),
-        // paddingVertical: responsiveHeight(2),
-        marginTop: responsiveHeight(2),
     },
-    
-    button: {
-        width: '100%',
-        height: responsiveHeight(6.5),
-        borderRadius: 20,
-        borderWidth: 2,
+    menuTitleAlignment: { alignItems: 'center' },
+    menuBottomBoarder: {
+        borderBottomWidth: responsiveWidth(0.8),
         borderColor: '#58B9D0',
-        backgroundColor: '#E6F3F7',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-    
-    ContinueText: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: '#58B9D0',
-        letterSpacing: 0.5,
+        width: '295%',
         marginLeft: responsiveWidth(2),
+        top: responsiveHeight(1),
     },
-    
-    // Missing styles
-    setDigitSize: {
-        fontSize: 16,
-        color: '#58B9D0',
-        fontWeight: '700',
-    },
-    
-    iconTextSpace: {
+    commonTextColor:{ color: '#58B9D0', fontSize: 16, fontWeight: '600' },
+    serviceText: { color: '#A1A1A1', fontSize: 16, fontWeight: '600' },
+    reviewsText: { color: '#A1A1A1', fontSize: 16, fontWeight: '600' },
+    bioText: { marginLeft: responsiveWidth(3.8) },
+    paragraphText: { marginHorizontal: responsiveWidth(3.5) },
+    languageJobText: {
         flexDirection: 'row',
+        marginLeft: responsiveWidth(3),
+        gap: responsiveHeight(8),
+    },
+    expertiseText: { marginLeft: responsiveWidth(4) },
+    setGap: {
+        flexDirection: 'row',
+        gap: responsiveWidth(2),
+        top: responsiveHeight(0.5),
+    },
+    DigitBorder: {
+        width: responsiveWidth(11.3),
+        height: responsiveHeight(7.5),
+        borderWidth: 1,
+        borderColor: '#D3D3D3',
+        borderRadius: responsiveHeight(0.9),
+        justifyContent: 'center',
         alignItems: 'center',
+        gap: responsiveWidth(1),
+    },
+   selectedDate:{
+    backgroundColor:'#58B9D0',
+    width: responsiveWidth(11.3),
+    height: responsiveHeight(7.5),
+    borderWidth: 1,
+    borderColor: '#D3D3D3',
+    borderRadius: responsiveHeight(0.9),
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: responsiveWidth(1),
+},
+
+    digitText: { color: '#4494A8', fontSize: 16, fontWeight: '600' },
+    catText: { color: '#4494A8', fontSize: 16, fontWeight: '600' },
+    imageContainer: {
+        flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '100%',
+        paddingHorizontal: responsiveWidth(2),
     },
-    
-    bold: {
-        fontWeight: '700',
-        color: '#1A1D29',
-    },
-
-    // Loading and Error States
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: responsiveWidth(5),
-    },
-
-    loadingText: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: responsiveHeight(2),
-        textAlign: 'center',
-    },
-
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: responsiveWidth(5),
-    },
-
-    errorTitle: {
+    servicetext: {
+        marginLeft: responsiveWidth(3.6),
         fontSize: 18,
         fontWeight: '700',
-        color: '#1A1D29',
-        marginTop: responsiveHeight(2),
-        marginBottom: responsiveHeight(1),
-        textAlign: 'center',
+        color: '#000000',
     },
-
-    errorText: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: responsiveHeight(3),
-        lineHeight: 20,
+    smallBreedContainer: {
+        flexDirection: 'row',
+        gap: responsiveWidth(1.5),
+        marginRight: responsiveWidth(4),
     },
-
-    retryButton: {
-        backgroundColor: '#58B9D0',
-        paddingHorizontal: responsiveWidth(8),
-        paddingVertical: responsiveHeight(1.5),
-        borderRadius: 12,
-    },
-
-    retryButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#FFFFFF',
-    },
-
-    // Debug text styles
-    debugContainer: {
-        backgroundColor: '#F0F0F0',
-        margin: responsiveWidth(5),
-        padding: responsiveWidth(3),
-        borderRadius: 8,
-        marginBottom: responsiveHeight(1),
-    },
-
-    debugText: {
-        fontSize: 12,
-        color: '#333',
-        fontFamily: 'monospace',
-    },
-
-    // Booking details section
-    bookingDetailsSection: {
-        backgroundColor: '#F8F9FB',
-        borderRadius: 16,
-        padding: responsiveWidth(4),
-        marginTop: responsiveHeight(1),
-        borderWidth: 1,
-        borderColor: '#E8EBF0',
-    },
-
-    bookingDetailsTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#1A1D29',
-        marginBottom: responsiveHeight(1),
-    },
-
-    bookingDetailItem: {
+    TowerIconImageHeight: { top: responsiveHeight(0.4) },
+    imagecontainer: { gap: responsiveHeight(1.8), bottom: responsiveHeight(1) },
+    imageParent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: responsiveHeight(0.5),
+        paddingHorizontal: responsiveWidth(4),
     },
-
-    bookingDetailLabel: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '500',
+    imageContainerRadius: {
+        width: responsiveWidth(44),
+        borderRadius: responsiveWidth(6),
     },
-
-    bookingDetailValue: {
-        fontSize: 14,
-        color: '#1A1D29',
-        fontWeight: '600',
-    },
-
-    // Floating Button - Matching BookingUser Page Style
-    floatingButtonContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: responsiveWidth(5),
-        paddingVertical: responsiveHeight(2),
-        borderTopWidth: 1,
-        borderTopColor: '#E8EBF0',
-        // Shadow for iOS
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        // Elevation for Android
-        elevation: 8,
-    },
-
-    floatingButton: {
+    imageRadius: {
         width: '100%',
-        height: responsiveHeight(6.5),
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: '#58B9D0',
-        backgroundColor: '#E6F3F7',
+        height: responsiveHeight(16),
+        borderRadius: 10,
+    },
+
+    textIconSection: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        // marginTop: responsiveHeight(1.5),
+        paddingHorizontal: responsiveWidth(2),
+        paddingVertical: responsiveHeight(1),
+    },
+    underimageText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#000',
+    },
+    timeText: {
+        fontSize: 10,
+        color: '#A0A0A0',
+        marginTop: 4,
+    },
+    plusCircleContainer: {
+        width: responsiveWidth(7.5),
+        height: responsiveHeight(3.5),
+        borderRadius: responsiveWidth(10),
+        backgroundColor: '#58B9D0',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    parentGap: { gap: responsiveWidth(3) },
+    parentContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: responsiveWidth(4),
     },
+    imageTextFlex: { flexDirection: 'row', gap: responsiveWidth(2) },
+    dogImageSize: {
+        width: responsiveWidth(12),
+        height: responsiveHeight(5.5),
+        borderRadius: responsiveWidth(20),
+    },
+    textIconHeight: { top: responsiveHeight(0.3) },
+    textIconflex: { flexDirection: 'row', gap: responsiveWidth(2) },
+    textsize: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#000',
+    },
+    DogmarkIconHeight: { top: responsiveHeight(0.5) },
+    yearText: {
+        fontSize: 10,
+        color: '#A0A0A0',
+        marginTop: 4,
+    },
+    center: { justifyContent: 'center', alignItems: 'center' },
+    button: {
+        width: responsiveWidth(95),
+        height: responsiveHeight(5.4),
+        borderRadius: responsiveHeight(0.9),
+        backgroundColor: '#58B9D0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    ContinueText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+    dotPosition: { position: 'relative', alignItems: 'center' },
+    textcolor:{ color: '#FFFFFF' },
+    IconSize:{
+        width:responsiveWidth(4),
+        height:responsiveHeight(1.99),
+        top:responsiveHeight(0.20)
+    },
+    flex:{
+        flexDirection:'row',
+        justifyContent:'space-between'
+    }
 
-    floatingButtonText: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: '#58B9D0',
-        letterSpacing: 0.5,
-        marginLeft: responsiveWidth(2),
-    },
+
 });
 
 export default boardingdetailstyles;

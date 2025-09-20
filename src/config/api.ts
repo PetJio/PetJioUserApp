@@ -37,6 +37,8 @@ export const API_ENDPOINTS = {
     BOARDING_AVAILABILITY: '/api/boarding-service-availibility/by-day',
     BOARDING_DETAILS: '/api/boarding-service/get-service-details/:id',
     BOARDING_REVIEWS: '/api/boarding-reviews/get-by-service/:id',
+    CONSULTATION_TYPE: '/api/consultation-type',
+    SEARCH_BOARDINGS: '/api/boarding/search-boardings',
     GROOMING: '/api/services/grooming',
     WALKING: '/api/services/walking',
     TRAINING: '/api/services/training',

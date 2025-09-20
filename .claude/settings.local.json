@@ -40,7 +40,8 @@
       "Bash(del test-boarding.js)",
       "Bash(timeout 30 adb logcat:*)",
       "Bash(adb:*)",
-      "Bash(timeout 10 adb logcat:*)"
+      "Bash(timeout 10 adb logcat:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": [],

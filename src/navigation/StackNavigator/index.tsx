@@ -217,7 +217,7 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             {/* @ts-ignore - Legacy component with custom props interface */}
             <Stack.Screen name="VeterinaryHomeVisiteDetails" component={VeterinaryHomeVisiteDetails}/>
             <Stack.Screen name="AddPet" component={AddPet}/>
-           
+
         </Stack.Navigator>
     );
 };

@@ -32,7 +32,16 @@ const Mart: React.FC = () => {
   ];
 
   const funcName = (type: { name: string }) => {
-    naviagtion.navigate(type.name as never);
+    // Navigate directly to BoardingUser instead of Boarding (Date and Time page)
+    if (type.name === 'Boarding') {
+      naviagtion.navigate('BoardingUser' as never, {
+        selectedDate: new Date().toISOString().split('T')[0],
+        selectedTime: '10:00:00',
+        city: 'Bardhaman'
+      } as never);
+    } else {
+      naviagtion.navigate(type.name as never);
+    }
   };
 
   return (

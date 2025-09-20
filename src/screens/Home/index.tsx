@@ -415,7 +415,7 @@ const Home: React.FC = () => {
               )}
 
               {/* Second pet slot - Always show DaisyDog container */}
-              {pets.length > 1 ? (
+              {pets.length > 1 && (
                 <TouchableOpacity 
                   onPress={() => navigate('EditPet', { pet: pets[1] })}
                   activeOpacity={0.8}
@@ -438,15 +438,7 @@ const Home: React.FC = () => {
                     <Text style={styles.dogname}>{pets[1].petName}</Text> 
                   </View>
                 </TouchableOpacity>
-              ) :(
-                 <TouchableOpacity 
-                  style={styles.pluscontainer}
-                  onPress={() => navigate('AddPet')}
-                  activeOpacity={0.8}
-                >
-                  <Image source={Icons.BiPlus}/>
-                </TouchableOpacity>
-              )}
+              ) }
 
 
               {/* Plus button only shows when no pets */}

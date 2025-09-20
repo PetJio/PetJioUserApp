@@ -11,6 +11,8 @@ import React, { useState, useEffect } from 'react';
 import { StatusBar, useColorScheme, Platform, ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import { store } from './src/store';
 import StackNavigator from './src/navigation/StackNavigator';
 import colors from './src/styles/colors/index';
 import { storageService } from './src/utils/storage';
@@ -57,25 +59,29 @@ const App = () => {
   // Show loading spinner while checking login status
   if (isLoading) {
     return (
-      <SafeAreaProvider>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white || '#FFFFFF' }}>
-          <ActivityIndicator size="large" color={colors.primary || '#58B9D0'} />
-        </View>
-      </SafeAreaProvider>
+      <Provider store={store}>
+        <SafeAreaProvider>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white || '#FFFFFF' }}>
+            <ActivityIndicator size="large" color={colors.primary || '#58B9D0'} />
+          </View>
+        </SafeAreaProvider>
+      </Provider>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar
-        backgroundColor={statusBarConfig.backgroundColor}
-        barStyle={statusBarConfig.barStyle}
-        translucent={statusBarConfig.translucent}
-      />
-      <NavigationContainer ref={navigationRef}>
-        <StackNavigator initialRouteName={isLoggedIn ? 'Main' : 'SignIn'} />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <StatusBar
+          backgroundColor={statusBarConfig.backgroundColor}
+          barStyle={statusBarConfig.barStyle}
+          translucent={statusBarConfig.translucent}
+        />
+        <NavigationContainer ref={navigationRef}>
+          <StackNavigator initialRouteName={isLoggedIn ? 'Main' : 'SignIn'} />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </Provider>
   );
 };
 

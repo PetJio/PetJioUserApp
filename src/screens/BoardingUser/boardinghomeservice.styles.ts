@@ -238,6 +238,13 @@ const boardinghomeservicestyles = StyleSheet.create({
         fontSize: responsiveWidth(3.5),
         fontWeight: '600',
     },
+    fallbackContainer: {
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
 });
 
 export default boardinghomeservicestyles;

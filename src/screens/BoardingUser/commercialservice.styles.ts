@@ -421,6 +421,13 @@ const commercialservicestyles = StyleSheet.create({
         width: responsiveWidth(5),
         height: responsiveHeight(2),
     },
+    fallbackContainer: {
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
 });
 
 export default commercialservicestyles;

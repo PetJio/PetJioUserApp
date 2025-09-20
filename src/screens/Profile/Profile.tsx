@@ -121,13 +121,33 @@ const Profile: React.FC = () => {
   const fetchUserProfile = async () => {
     try {
       setIsLoading(true);
-      const token = await AsyncStorage.getItem('userToken');
-      
+
+      // First try to load user data from storage
+      const userData = await storageService.getUserData();
+
+      if (userData) {
+        console.log('Loading profile from storage:', userData);
+        setPetOwner(userData);
+        setFirstName(userData.firstName || '');
+        setLastName(userData.lastName || '');
+        setEmail(userData.email || '');
+        setPhoneNumber(userData.phoneNumber || userData.mobile || '');
+        setAddress(userData.address || '');
+        setCity(userData.city || '');
+        setState(userData.state || '');
+        setZipCode(userData.zipCode || userData.pinCode || '');
+        return;
+      }
+
+      // If no user data in storage, try to fetch from API
+      const token = await storageService.getUserToken();
+
       if (!token) {
         setMessage({type: 'error', text: 'Authentication token not found'});
         return;
       }
 
+      console.log('Fetching profile from API...');
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/user/profile`, {
         method: 'GET',
         headers: {
@@ -138,19 +158,25 @@ const Profile: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Profile API response:', data);
         const profile = data.user || data.body || data;
-        
+
+        // Store the fetched data for future use
+        await storageService.setUserData(profile);
+
         setPetOwner(profile);
         setFirstName(profile.firstName || '');
         setLastName(profile.lastName || '');
         setEmail(profile.email || '');
-        setPhoneNumber(profile.phoneNumber || '');
+        setPhoneNumber(profile.phoneNumber || profile.mobile || '');
         setAddress(profile.address || '');
         setCity(profile.city || '');
         setState(profile.state || '');
-        setZipCode(profile.zipCode || '');
+        setZipCode(profile.zipCode || profile.pinCode || '');
       } else {
-        setMessage({type: 'error', text: 'Failed to load profile'});
+        const errorText = await response.text();
+        console.error('Profile API error:', response.status, errorText);
+        setMessage({type: 'error', text: `Failed to load profile: ${response.status}`});
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -163,13 +189,34 @@ const Profile: React.FC = () => {
   const fetchPetProfiles = async () => {
     try {
       setLoadingPets(true);
-      const token = await AsyncStorage.getItem('userToken');
-      const ownerId = await AsyncStorage.getItem('ownerId');
-      
-      if (!token || !ownerId) {
-        setMessage({type: 'error', text: 'Authentication data not found'});
+      const token = await storageService.getUserToken();
+
+      if (!token) {
+        setMessage({type: 'error', text: 'Authentication token not found'});
         return;
       }
+
+      // First get the owner ID by calling the pet-owner API
+      const ownerResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!ownerResponse.ok) {
+        setMessage({type: 'error', text: 'Failed to get owner information'});
+        return;
+      }
+
+      const ownerData = await ownerResponse.json();
+      if (ownerData.statusCode !== 200 || !ownerData.body?.id) {
+        setMessage({type: 'error', text: 'Owner ID not found'});
+        return;
+      }
+
+      const ownerId = ownerData.body.id;
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile/owner/${ownerId}`, {
         method: 'GET',
@@ -258,7 +305,7 @@ const Profile: React.FC = () => {
           onPress: async () => {
             try {
               setIsLoggingOut(true);
-              await storageService.clearAuthData();
+              await storageService.logout();
               await googleSignInService.signOut();
               reset('SignIn');
             } catch (error) {

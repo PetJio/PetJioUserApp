@@ -4,30 +4,15 @@ import { responsiveWidth, responsiveHeight} from 'react-native-responsive-dimens
 const boardingaboutstyles = StyleSheet.create({
     container: {
         flex: 1,
-        gap: responsiveHeight(2.5),
-        marginTop: responsiveHeight(2),
-        paddingHorizontal: responsiveWidth(4),
-        paddingBottom: responsiveHeight(2),
-    },
-    bioText: { 
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#1A1D29',
-        marginBottom: responsiveHeight(1),
-    },
-    paragraphText: { 
-        fontSize: 14,
-        fontWeight: '400',
-        lineHeight: 20,
-        color: '#6C6B6B',
-    },
-    languageJobText: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: responsiveWidth(4),
         gap: responsiveHeight(2),
-        borderWidth: 1,
-        borderColor: '#E8EBF0',
+        top: responsiveHeight(2),
+    },
+
+    bioText: { marginLeft: responsiveWidth(3.8) },
+    paragraphText: { marginHorizontal: responsiveWidth(3.5),color:'#6C6B6B' },
+    languageJobText: {
+        marginLeft: responsiveWidth(3),
+        gap: responsiveHeight(1.8),
     },
     expertiseText: { marginLeft: responsiveWidth(4) },
     setGap: {
@@ -57,18 +42,20 @@ const boardingaboutstyles = StyleSheet.create({
         gap: responsiveWidth(1),
     },
 
-    text:{ 
-        fontSize: 14, 
-        fontWeight: '600', 
-        color: '#1A1D29',
-        marginBottom: responsiveHeight(0.5),
+    text:{
+        fontSize: 13,
+        fontWeight: '600',
+        lineHeight: 14,
+        letterSpacing: 0,
+        color:'#343434'
     },
 
-    Text:{ 
-        fontSize: 13, 
-        fontWeight: '500', 
-        color: '#58B9D0',
+    Text:{
+        fontSize: 12,
+        fontWeight: '400',
         lineHeight: 18,
+        letterSpacing: 0,
+        color:'#6C6B6B'
     },
  
    commonText:{
@@ -88,27 +75,20 @@ mealCareOutSide:{
 },
 
 Gap:{
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: responsiveWidth(4),
-    gap: responsiveHeight(1.5),
-    borderWidth: 1,
-    borderColor: '#E8EBF0',
+    gap:responsiveHeight(1)
 },
 imageTextGap:{
     flexDirection:'row',
-    alignItems: 'center',
-    gap: responsiveWidth(3),
-    paddingVertical: responsiveHeight(0.5),
+    gap:responsiveWidth(2),
+    left:responsiveWidth(0.90)
 },
 viewGap:{
     flexDirection:'row',
-    justifyContent: 'space-around',
-    gap: responsiveWidth(2),
+    gap:responsiveHeight(2)
 },
 mealCareOutsideImageTextGap:{
-    alignItems: 'center',
-    gap: responsiveHeight(0.5),
+         gap:responsiveWidth(1),
+         left:responsiveWidth(0.90)
 },
 
      // Fixed Button
@@ -145,12 +125,7 @@ nextBtnText: {
     color: '#FFFFFF',
 },
 facilityGap:{
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: responsiveWidth(4),
-    gap: responsiveHeight(1.5),
-    borderWidth: 1,
-    borderColor: '#E8EBF0',
+    gap:responsiveHeight(1)
 }
    
 });
