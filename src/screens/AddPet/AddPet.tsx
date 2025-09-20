@@ -111,7 +111,8 @@ const AddPet: React.FC = () => {
 
   const fetchDropdownData = async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await storageService.getUserToken();
+      console.log('this is token', token);
       if (!token) {
         setMessage({ type: 'error', text: 'Authentication token not found' });
         return;
