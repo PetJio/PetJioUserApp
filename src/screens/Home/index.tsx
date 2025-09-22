@@ -422,6 +422,7 @@ const Home: React.FC = () => {
   };
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
       <View style={styles.subcontainer}>
         {/* Header Section - Reference Project Style */}
         <View style={styles.subcontainertextwithIcon}>
@@ -440,8 +441,19 @@ const Home: React.FC = () => {
         {/* Pets Section - Reference Project Style */}
         <View style={styles.doctoranddogimagecontainer}>
           {loadingPets ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#58B9D0" />
+            <View style={[styles.loadingContainer, {
+              justifyContent: 'center',
+              alignItems: 'center',
+              flex: 1,
+              minHeight: 100
+            }]}>
+              <ActivityIndicator size="large" color="#58B9D0" />
+              <Text style={{
+                marginTop: 8,
+                fontSize: 14,
+                color: '#666',
+                textAlign: 'center'
+              }}>Loading your pets...</Text>
             </View>
           ) : petsError ? (
             <View style={styles.errorContainer}>
@@ -456,19 +468,12 @@ const Home: React.FC = () => {
                   activeOpacity={0.8}
                 >
                   <View>
-                    <View style={styles.doctorcontainer}>
-                      {pets[0].profileImg && pets[0].profileImg !== 'img' ? (
-                        <Image
-                          source={{ uri: pets[0].profileImg }}
-                          style={styles.ImageSize}
-                          defaultSource={images.BellaDog}
-                        />
-                      ) : (
-                        <Image
-                          source={images.BellaDog}
-                          style={styles.ImageSize}
-                        />
-                      )}
+                    <View style={[styles.doctorcontainer, {
+                      backgroundColor: '#58B9D0',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }]}>
+                      <MaterialIcons name="pets" size={24} color="#FFFFFF" />
                     </View>
                     <Text style={styles.dogname}>{pets[0].petName}</Text>
                   </View>
@@ -480,10 +485,18 @@ const Home: React.FC = () => {
                 >
                   <View>
                     <View style={styles.doctorcontainer}>
-                      <Image
-                        source={images.BellaDog}
-                        style={styles.ImageSize}
-                      />
+                      <View
+                        style={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: 30,
+                          backgroundColor: '#58B9D0',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <MaterialIcons name="pets" size={24} color="#FFFFFF" />
+                      </View>
                     </View>
                     <Text style={styles.dogname}>Add Pet</Text>
                   </View>
@@ -497,19 +510,12 @@ const Home: React.FC = () => {
                   activeOpacity={0.8}
                 >
                   <View>
-                    <View style={styles.dogcontainer}>
-                      {pets[1].profileImg && pets[1].profileImg !== 'img' ? (
-                        <Image
-                          source={{ uri: pets[1].profileImg }}
-                          style={styles.dogimageSize}
-                          defaultSource={images.DaisyDog}
-                        />
-                      ) : (
-                        <Image
-                          source={images.DaisyDog}
-                          style={styles.dogimageSize}
-                        />
-                      )}
+                    <View style={[styles.dogcontainer, {
+                      backgroundColor: '#58B9D0',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }]}>
+                      <MaterialIcons name="pets" size={24} color="#FFFFFF" />
                     </View>
                     <Text style={styles.dogname}>{pets[1].petName}</Text>
                   </View>
@@ -525,19 +531,12 @@ const Home: React.FC = () => {
                   activeOpacity={0.8}
                 >
                   <View>
-                    <View style={styles.doctorcontainer}>
-                      {item.profileImg && item.profileImg !== 'img' ? (
-                        <Image
-                          source={{ uri: item.profileImg }}
-                          style={styles.ImageSize}
-                          defaultSource={images.BellaDog}
-                        />
-                      ) : (
-                        <Image
-                          source={images.BellaDog}
-                          style={styles.ImageSize}
-                        />
-                      )}
+                    <View style={[styles.doctorcontainer, {
+                      backgroundColor: '#58B9D0',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }]}>
+                      <MaterialIcons name="pets" size={24} color="#FFFFFF" />
                     </View>
                     <Text style={styles.dogname}>{item.petName}</Text>
                   </View>
@@ -628,66 +627,51 @@ const Home: React.FC = () => {
                       key={pet.id}
                       style={index === 0 ? {} : { marginLeft: -10 }}
                     >
-                      {pet.profileImg && pet.profileImg !== 'img' ? (
-                        <Image
-                          source={{ uri: pet.profileImg }}
-                          style={{
-                            width: 35,
-                            height: 35,
-                            borderRadius: 17.5,
-                            borderWidth: 2,
-                            borderColor: '#fff',
-                          }}
-                        />
-                      ) : (
-                        <Image
-                          source={
-                            index === 0 ? images.BellaDog : images.DaisyDog
-                          }
-                          style={{
-                            width: 35,
-                            height: 35,
-                            borderRadius: 17.5,
-                            borderWidth: 2,
-                            borderColor: '#fff',
-                          }}
-                        />
-                      )}
+                      <View
+                        style={{
+                          width: 35,
+                          height: 35,
+                          borderRadius: 17.5,
+                          borderWidth: 2,
+                          borderColor: '#fff',
+                          backgroundColor: '#58B9D0',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <MaterialIcons name="pets" size={16} color="#FFFFFF" />
+                      </View>
                     </View>
                   ))
                 ) : (
                   <>
-                    <Image
-                      source={images.BellaDog}
+                    <View
                       style={{
                         width: 35,
                         height: 35,
                         borderRadius: 17.5,
                         borderWidth: 2,
                         borderColor: '#fff',
+                        backgroundColor: '#58B9D0',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                    />
+                    >
+                      <MaterialIcons name="pets" size={16} color="#FFFFFF" />
+                    </View>
                     <View
                       style={{
                         width: 35,
                         height: 35,
                         borderRadius: 17.5,
-                        backgroundColor: '#C8F8B1',
+                        backgroundColor: '#58B9D0',
                         overflow: 'hidden',
                         marginLeft: -10,
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      <Image
-                        source={images.DaisyDog}
-                        style={{
-                          width: 70,
-                          height: 70,
-                          position: 'absolute',
-                          top: -20,
-                          left: -15,
-                          resizeMode: 'cover',
-                        }}
-                      />
+                      <MaterialIcons name="pets" size={16} color="#FFFFFF" />
                     </View>
                   </>
                 )}
@@ -821,15 +805,18 @@ const Home: React.FC = () => {
                   <View
                     style={{ flexDirection: 'row', gap: responsiveWidth(2) }}
                   >
-                    <Image
-                      source={images.silentDog}
+                    <View
                       style={{
                         width: responsiveWidth(20),
                         height: responsiveHeight(9),
                         borderRadius: responsiveWidth(1),
+                        backgroundColor: '#58B9D0',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                      resizeMode="cover"
-                    />
+                    >
+                      <MaterialIcons name="pets" size={32} color="#FFFFFF" />
+                    </View>
                     <View style={{ flex: 1, justifyContent: 'space-between' }}>
                       <Text
                         style={{

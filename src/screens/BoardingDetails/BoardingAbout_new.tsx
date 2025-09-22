@@ -10,14 +10,16 @@ interface BoardingAboutProps {
     providerName?: string;
     facilityName?: string;
     experience?: number;
+    mode?: number;
 }
 
-const BoardingAbout: React.FC<BoardingAboutProps> = ({ 
+const BoardingAbout: React.FC<BoardingAboutProps> = ({
     serviceDetails,
     description = "Professional boarding service for your beloved pets",
     providerName = "Service Provider",
     facilityName = "Pet Boarding Facility",
-    experience = 3
+    experience = 3,
+    mode
 }) => {
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     
@@ -132,7 +134,7 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({
                 </View>
             </View>
            
-            <BoardingModal modalVisible={modalVisible} setModalVisible={setModalVisible}/>
+            <BoardingModal modalVisible={modalVisible} setModalVisible={setModalVisible} mode={mode}/>
             <View style={boardingaboutstyles.fixedButtonContainer}>
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}

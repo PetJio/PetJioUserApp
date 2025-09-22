@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import boardingQuestionStyles from './boardingquestions.styles';
 import Icons from '../../../assets/icons';
 import { storageService } from '../../utils';
@@ -17,9 +17,17 @@ import { API_CONFIG } from '../../config/api';
 type RootStackParamList = {
   BoardingSuccess: undefined;
   BoardingModal: undefined;
+  BoardingQuestions: {
+    startTime?: string;
+    endTime?: string;
+    mode?: number;
+    selectedPetIds?: number[];
+    petOwnerId?: number | null;
+    boardingId?: number;
+    serviceIds?: number[];
+    serviceBookings?: number[];
+  };
 };
-
-type BoardingQuestionsNavigationProp = StackNavigationProp<RootStackParamList>;
 
 interface Question {
   id: number;
@@ -28,10 +36,42 @@ interface Question {
 }
 
 const BoardingQuestions: React.FC = () => {
-  const navigation = useNavigation<BoardingQuestionsNavigationProp>();
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+
+  // Get the dates, mode, and dynamic IDs from navigation params
+  const { startTime, endTime, mode, selectedPetIds, petOwnerId, boardingId, serviceIds, serviceBookings } = route.params || {};
+
+  // Log the received merged dates and dynamic IDs for debugging
+  console.log('BoardingQuestions received params:', {
+    startTime,
+    endTime,
+    mode,
+    selectedPetIds,
+    petOwnerId,
+    boardingId,
+    serviceIds,
+    serviceBookings,
+    startTimeFormatted: startTime ? new Date(startTime).toLocaleString() : 'Not set',
+    endTimeFormatted: endTime ? new Date(endTime).toLocaleString() : 'Not set',
+    serviceType: mode === 9 ? 'Home Service' : mode === 10 ? 'Commercial Service' : 'Unknown'
+  });
+
+  // Validate that serviceIds and serviceBookings have the same count
+  if (selectedPetIds && serviceBookings) {
+    console.log('🔍 Array count validation:');
+    console.log('selectedPetIds count:', selectedPetIds.length);
+    console.log('serviceBookings count:', serviceBookings.length);
+    console.log('Arrays match:', selectedPetIds.length === serviceBookings.length);
+    
+    // Log the mapping
+    selectedPetIds.forEach((petId, index) => {
+      console.log(`Pet ID ${petId} → Service Booking ${serviceBookings[index]}`);
+    });
+  }
 
   const [questions, setQuestions] = useState<Question[]>([
     {
@@ -81,26 +121,39 @@ const BoardingQuestions: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
+      // Use the dates and mode passed from BoardingModal, or fallback to default values
+      // Map question answers to API fields
+      const questionAnswers = questions.reduce((acc, question) => {
+        acc[question.id] = question.answer;
+        return acc;
+      }, {} as Record<number, boolean | null>);
+
       const bookingData = {
-        // questions: questions,
-        // timestamp: new Date().toISOString(),
-        // userId: 'user123', // This would come from user context
-        // serviceType: 'boarding'
-        startTime: '2025-09-15T09:00:00Z',
-        endTime: '2025-09-20T17:00:00Z',
-        mode: 1,
-        serviceBookings: [9, 13],
-        petOwnerId: 28,
-        boardingId: 680,
-        serviceIds: [1, 3],
+        startTime: startTime,
+        endTime: endTime,
+        mode: mode,
+        serviceBookings:  selectedPetIds,
+        petOwnerId: petOwnerId,
+        boardingId: boardingId,
+        serviceIds: serviceBookings,
         foodType: 2,
-        possessions: true,
-        backUpFood: false,
-        shaveAndTrimming: true,
-        groomingBeforeDischarge: true,
+        possessions: questionAnswers[2] ?? true,
+        backUpFood: questionAnswers[1] ?? false,
+        shaveAndTrimming: questionAnswers[3] ?? true,
+        groomingBeforeDischarge: questionAnswers[4] ?? true,
       };
+
+      console.log('📦 Booking data being sent to API:', bookingData);
       const token = await storageService.getUserToken();
+
+      // Generate CURL command for debugging
+      const curlCommand = `curl -X POST '${API_CONFIG.BASE_URL}/api/boarding-service-bookings' \\
+  -H 'Authorization: Bearer ${token}' \\
+  -H 'Content-Type: application/json' \\
+  -d '${JSON.stringify(bookingData, null, 2)}'`;
+
+      console.log('🔧 CURL command for API call:');
+      console.log(curlCommand);
 
       // Replace this URL with your actual API endpoint
       const response = await fetch(

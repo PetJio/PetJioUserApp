@@ -1,64 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
-// import React from 'react';
-// import { View, Text,Image } from 'react-native';
-// import images from '../../../assets/images';
-// import Icons from '../../../assets/icons';
-// import commercialservicestyles from './commercialservice.styles';
-
-// const CommercialService: React.FC = () => {
-//     return (
-//         <View style={commercialservicestyles.container}>
-//            <View style={commercialservicestyles.containerthirdsubchild}>
-//                 <View
-//                     style={commercialservicestyles.shadow}>
-//                     <Image source={images.UserImage} style={commercialservicestyles.userimage}/>
-//                     <View style={commercialservicestyles.gap}>
-//                         <View
-//                             style={commercialservicestyles.userTextWidth}>
-//                             <View
-//                                 style={commercialservicestyles.userTextgap}>
-//                                 <Text style={commercialservicestyles.textSize}> Souvic Das </Text>
-//                                 <View style={commercialservicestyles.borderRadius}>
-//                                     <Text style={commercialservicestyles.celebrityText}> Celebrity  </Text>
-//                                 </View>
-//                             </View>
-//                             <View style={commercialservicestyles.ratingGap}>
-//                                 <Image source={Icons.StarIcon} style={commercialservicestyles.ratingHeight} />
-//                                 <Text style={commercialservicestyles.ratePointSize}> 4.8</Text>
-//                             </View>
-//                         </View>
-
-//                         <View
-//                             style={commercialservicestyles.setIconTextGap}>
-//                             <Image source={Icons.Vector} style={commercialservicestyles.setImageIconPosition}/>
-//                             <Text style={commercialservicestyles.setTextSize}> 3 years experience </Text>
-//                         </View>
-
-//                         <View style={commercialservicestyles.widthSpace}>
-//                             <View
-//                                 style={commercialservicestyles.iconAndTextGap}>
-//                                 <Image
-//                                     source={Icons.Location}
-//                                     style={commercialservicestyles.setImageIconPosition}
-//                                 />
-//                                 <Text style={commercialservicestyles.setDigitSize}> 2.2km Away  </Text>
-//                             </View>
-
-//                             <View style={commercialservicestyles.iconTextSpace}>
-//                                 <Image source={Icons.StarIcon} style={commercialservicestyles.setImageIconPosition}
-//                                 />
-//                                 <Text  style={commercialservicestyles.bold}>  7000 </Text>
-//                             </View>
-//                         </View>
-//                     </View>
-//                 </View>
-//             </View>
-//         </View>
-//     );
-// };
-
-// export default CommercialService;
-
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import images from '../../../assets/images';
@@ -79,10 +18,11 @@ type RootStackParamList = {
 
 // Define prop types
 type InSiteServiceProps = {
-  navigation: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
+  navigation?: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
+  mode?: number;
 };
 
-const BoardingHomeService: React.FC<InSiteServiceProps> = () => {
+const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
   const [getCommercialData, setGetCommercialData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -94,11 +34,6 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = () => {
 
   const fetchCommercialDetails = async () => {
     try {
-      // setLoading(true);
-      // setError('');
-
-      // console.log('Fetching boarding details for providerId:', providerId);
-
       const response = await fetch(
         `${API_CONFIG.BASE_URL}${
           API_ENDPOINTS.SERVICES.SEARCH_BOARDINGS
@@ -155,666 +90,173 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = () => {
     }
   };
   return (
-    <View style={commercialservicestyles.container}>
+    <View
+      style={[
+        commercialservicestyles.container,
+        { height: undefined, flex: 1 },
+      ]}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={commercialservicestyles.contentContainerStyle}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 80,
+          flexGrow: 1,
+        }}
+        style={{ flex: 1 }}
       >
-        <View style={commercialservicestyles.viewGap}>
+        <View style={{ gap: 0 }}>
           {getCommercialData.map(item => (
             <TouchableOpacity
               key={item?.id}
               onPress={() =>
-                navigation.navigate('BoardingDetails', { boardDetails: item })
+                navigation.navigate('BoardingDetails', { boardDetails: item, mode: mode || 10 })
               }
             >
-              <View style={commercialservicestyles.containerthirdsubchild}>
-                <View style={commercialservicestyles.shadow}>
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 12,
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                  padding: 12,
+                  elevation: 0,
+                  shadowOpacity: 0,
+                }}
+              >
+                <View style={{ flexDirection: 'row', gap: 12 }}>
                   <Image
-                    source={images.petJiocrecheImage}
-                    style={commercialservicestyles.userimage}
+                    source={
+                      item?.profileImg
+                        ? { uri: item.profileImg }
+                        : images.petJiocrecheImage
+                    }
+                    style={{
+                      width: 70,
+                      height: 70,
+                      borderRadius: 10,
+                      backgroundColor: '#F3F4F6',
+                    }}
                   />
-                  <View style={commercialservicestyles.gap}>
-                    <View style={commercialservicestyles.userTextWidth}>
-                      <View style={commercialservicestyles.userTextgap}>
-                        <Text style={commercialservicestyles.textSize}>
-                          {' '}
-                          {item?.facilityName}{' '}
-                        </Text>
-                        <View style={commercialservicestyles.verified}>
-                          <Image source={Icons.Ellipse} />
-                          <Text
-                            style={{
-                              fontSize: 9,
-                              fontWeight: '600',
-                              lineHeight: 10,
-                              letterSpacing: 0,
-                              color: '#299F4D',
-                            }}
-                          >
-                            Open
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={commercialservicestyles.verified}>
-                        <Image source={Icons.MdVerifiedUser} />
-                        <Text style={commercialservicestyles.verifyText}>
-                          Verified
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={commercialservicestyles.viewFlex}>
-                      <View style={commercialservicestyles.setIconTextGap}>
-                        <Image
-                          source={Icons.BiTimeFive}
-                          style={commercialservicestyles.setImageIconPosition}
-                        />
-                        <Text style={commercialservicestyles.setTextSize}>
-                          {' '}
-                          {item?.checkinTime} am - {item?.checkoutTime} am{' '}
-                        </Text>
-                      </View>
-
-                      <View style={commercialservicestyles.ratingGap}>
+                  <View style={{ flex: 1 }}>
+                    {/* Facility Name */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 4,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: '600',
+                          color: '#1F2937',
+                          marginBottom: 2,
+                        }}
+                      >
+                        {item?.facilityName || 'Facility Name Not Available'}
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}
+                      >
                         <Image
                           source={Icons.StarIcon}
-                          style={commercialservicestyles.ratingHeight}
+                          style={{ width: 12, height: 12 }}
                         />
-                        <Text style={commercialservicestyles.ratePointSize}>
-                          {' '}
-                          {item?.reviewCount}
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#F59E0B',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {item?.reviewAvg ? item.reviewAvg.toFixed(1) : '0.0'}{' '}
+                          ({item?.reviewCount || 0})
                         </Text>
                       </View>
                     </View>
 
-                    <View style={commercialservicestyles.widthSpace}>
-                      <View style={commercialservicestyles.iconAndTextGap}>
+                    {/* Experience and Registration */}
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: '#6B7280',
+                        fontWeight: '500',
+                        marginBottom: 6,
+                      }}
+                    >
+                      {item?.experience
+                        ? `${item.experience} years experience`
+                        : 'Experience not specified'}{' '}
+                      • Reg: {item?.regNo || 'Not provided'}
+                    </Text>
+
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 2
+                      }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
                         <Image
                           source={Icons.RiPinDistanceLine}
-                          style={commercialservicestyles.setImageIconPosition}
+                          style={{
+                            width: 12,
+                            height: 12,
+                            tintColor: '#6B7280',
+                          }}
                         />
-                        <Text style={commercialservicestyles.setDigitSize}>
-                          {item?.regNo}
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#6B7280',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {item?.city || 'Location not specified'}
                         </Text>
                       </View>
 
-                      <View style={commercialservicestyles.iconTextSpace}>
-                        <Text style={commercialservicestyles.bold}>
-                          {' '}
-                          ₹ 200{' '}
-                          <Text style={commercialservicestyles.weekText}>
-                            /week
-                          </Text>{' '}
-                        </Text>
-                      </View>
+          
                     </View>
+
+                    {/* Description */}
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: '#4B5563',
+                        lineHeight: 16,
+                        marginBottom: 8,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {item?.description || 'No description available'}
+                    </Text>
+
+                  
+
+                
                   </View>
                 </View>
               </View>
             </TouchableOpacity>
           ))}
-
-          {/* <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche{' '}
-                    </Text>
-                    <View style={commercialservicestyles.verified}>
-                      <Image source={Icons.Ellipse} />
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          fontWeight: '600',
-                          lineHeight: 10,
-                          letterSpacing: 0,
-                          color: '#299F4D',
-                        }}
-                      >
-                        Open
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={commercialservicestyles.verified}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View> */}
-          {/* <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche{' '}
-                    </Text>
-                    <View style={commercialservicestyles.verified}>
-                      <Image source={Icons.Ellipse} />
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          fontWeight: '600',
-                          lineHeight: 10,
-                          letterSpacing: 0,
-                          color: '#299F4D',
-                        }}
-                      >
-                        Open
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={commercialservicestyles.verified}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche{' '}
-                    </Text>
-                    <View style={commercialservicestyles.verified}>
-                      <Image source={Icons.Ellipse} />
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          fontWeight: '600',
-                          lineHeight: 10,
-                          letterSpacing: 0,
-                          color: '#299F4D',
-                        }}
-                      >
-                        Open
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={commercialservicestyles.verified}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche{' '}
-                    </Text>
-                  </View>
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche{' '}
-                    </Text>
-                    <View style={commercialservicestyles.verified}>
-                      <Image source={Icons.Ellipse} />
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          fontWeight: '600',
-                          lineHeight: 10,
-                          letterSpacing: 0,
-                          color: '#299F4D',
-                        }}
-                      >
-                        Open
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={commercialservicestyles.verified}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche
-                    </Text>
-                  </View>
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View style={commercialservicestyles.containerthirdsubchild}>
-            <View style={commercialservicestyles.shadow}>
-              <Image
-                source={images.petJiocrecheImage}
-                style={commercialservicestyles.userimage}
-              />
-              <View style={commercialservicestyles.gap}>
-                <View style={commercialservicestyles.userTextWidth}>
-                  <View style={commercialservicestyles.userTextgap}>
-                    <Text style={commercialservicestyles.textSize}>
-                      {' '}
-                      PetJio Creche{' '}
-                    </Text>
-                    <View style={commercialservicestyles.verified}>
-                      <Image source={Icons.Ellipse} />
-                      <Text
-                        style={{
-                          fontSize: 9,
-                          fontWeight: '600',
-                          lineHeight: 10,
-                          letterSpacing: 0,
-                          color: '#299F4D',
-                        }}
-                      >
-                        Open
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={commercialservicestyles.verified}>
-                    <Image source={Icons.MdVerifiedUser} />
-                    <Text style={commercialservicestyles.verifyText}>
-                      Verified
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.viewFlex}>
-                  <View style={commercialservicestyles.setIconTextGap}>
-                    <Image
-                      source={Icons.BiTimeFive}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setTextSize}>
-                      {' '}
-                      10:00 am - 09:00 pm{' '}
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.ratingGap}>
-                    <Image
-                      source={Icons.StarIcon}
-                      style={commercialservicestyles.ratingHeight}
-                    />
-                    <Text style={commercialservicestyles.ratePointSize}>
-                      {' '}
-                      4.8
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={commercialservicestyles.widthSpace}>
-                  <View style={commercialservicestyles.iconAndTextGap}>
-                    <Image
-                      source={Icons.RiPinDistanceLine}
-                      style={commercialservicestyles.setImageIconPosition}
-                    />
-                    <Text style={commercialservicestyles.setDigitSize}>
-                      2.2km Away
-                    </Text>
-                  </View>
-
-                  <View style={commercialservicestyles.iconTextSpace}>
-                    <Text style={commercialservicestyles.bold}>
-                      {' '}
-                      ₹ 200{' '}
-                      <Text style={commercialservicestyles.weekText}>
-                        /week
-                      </Text>{' '}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View> */}
         </View>
       </ScrollView>
     </View>

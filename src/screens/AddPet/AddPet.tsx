@@ -7,8 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
-  Platform,
-  KeyboardAvoidingView,
+  Image,
 } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -24,6 +23,9 @@ import { storageService } from '../../utils/storage';
 import { goBack } from '../../utils/navigationService';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
+import boardingstyles from '../Boarding/boarding.styles';
+import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
+import serviceStyles from '../Service/styles';
 
 interface PetCategory {
   id: number;
@@ -62,6 +64,9 @@ const AddPet: React.FC = () => {
   const [treats, setTreats] = useState('');
   const [feedCount, setFeedCount] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
+  const [cookie, setCookie] = useState('');
+  const [allergies, setAllergies] = useState('');
+  const [disability, setDisability] = useState('');
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -74,6 +79,9 @@ const AddPet: React.FC = () => {
   const [petGenders, setPetGenders] = useState<PetGender[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  console.log(petGenders, petSizes, 'petGenderspetGenders');
+  
 
   const clearFieldError = (field: keyof ValidationErrors) => {
     if (errors[field]) {
@@ -192,17 +200,15 @@ const AddPet: React.FC = () => {
         category: category,
         size: size,
         gender: gender,
-        weight: 18,
+        weight: weight.trim() ? parseFloat(weight) : null,
         height: height.trim() || null,
         treats: treats.trim() || null,
-        // medicalHistory: medicalHistory.trim() || null,
         ownerId: ownerId,
-        profileImg : '',
-        dailyFeedCount : 2,
-        cookie : 'grain',
-        allergies : 'Dairy',
-        disability: 'none',
-
+        profileImg: '',
+        dailyFeedCount: feedCount.trim() ? parseInt(feedCount) : null,
+        cookie: cookie.trim() || null,
+        allergies: allergies.trim() || null,
+        disability: disability.trim() || null,
       };
 
       console.log('petData', petData)
@@ -255,65 +261,81 @@ const AddPet: React.FC = () => {
 
   if (initialLoading) {
     return (
-      <KeyboardAvoidingView
-        style={signupstyles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        <View
-          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-        >
-          <ActivityIndicator size="large" color="#58B9D0" />
-          <Text style={{ marginTop: 16, color: '#666' }}>
-            Loading form data...
-          </Text>
+      <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+        <View style={{ flex: 1 }}>
+          {/* Header Section matching Services page */}
+          <View style={serviceStyles.stickyHeader}>
+            <TouchableOpacity onPress={goBack} style={{ marginRight: 16 }}>
+              <Image
+                source={Icons.LeftArrow}
+                style={{ tintColor: '#000000', width: 20, height: 20 }}
+              />
+            </TouchableOpacity>
+            <View style={serviceStyles.headerTitleContainer}>
+              <Text style={serviceStyles.stickyHeaderTitle}>
+                Add Pet Profile
+              </Text>
+              <Text style={serviceStyles.stickyHeaderSubtitle}>
+                Create a new pet profile
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <ActivityIndicator size="large" color="#58B9D0" />
+            <Text style={{ marginTop: 16, color: '#666' }}>
+              Loading form data...
+            </Text>
+          </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={signupstyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
-      <ScrollView
-        style={signupstyles.scrollContainer}
-        contentContainerStyle={signupstyles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={signupstyles.formContainer}>
-          {/* Back Button */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingTop: responsiveHeight(2),
-              marginBottom: responsiveHeight(2),
-            }}
-          >
-            <TouchableOpacity
-              onPress={goBack}
-              style={{
-                padding: 8,
-                borderRadius: 8,
-                backgroundColor: '#f0f0f0',
-              }}
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
-            </TouchableOpacity>
-          </View>
-
-          <View
-            style={{ alignItems: 'center', paddingTop: responsiveHeight(1) }}
-          >
-            <Text style={signupstyles.heading}>Add Pet Profile</Text>
-            <Text style={signupstyles.subheading}>
+    <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+      <View style={{ flex: 1 }}>
+        {/* Header Section matching Services page */}
+        <View style={serviceStyles.stickyHeader}>
+          <TouchableOpacity onPress={goBack} style={{ marginRight: 16 }}>
+            <Image
+              source={Icons.LeftArrow}
+              style={{ tintColor: '#000000', width: 20, height: 20 }}
+            />
+          </TouchableOpacity>
+          <View style={serviceStyles.headerTitleContainer}>
+            <Text style={serviceStyles.stickyHeaderTitle}>
+              Add Pet Profile
+            </Text>
+            <Text style={serviceStyles.stickyHeaderSubtitle}>
               Create a new pet profile
             </Text>
           </View>
+        </View>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{
+            flex: 1,
+            backgroundColor: '#F8F9FB',
+            paddingHorizontal: responsiveWidth(4),
+          }}
+          contentContainerStyle={{
+            paddingTop: responsiveHeight(2),
+            paddingBottom: responsiveHeight(4),
+          }}
+        >
+          {/* Subtitle section */}
+          {/* <View style={boardingQuestionStyles.header}>
+            <Text style={boardingQuestionStyles.subtitle}>
+              Create a new pet profile
+            </Text>
+          </View> */}
+
+          <View style={{ gap: responsiveHeight(2) }}>
 
           {/* Messages */}
           {message && (
@@ -409,9 +431,6 @@ const AddPet: React.FC = () => {
             </View>
 
             <View>
-              <Text style={{ fontSize: 16, color: '#333', marginBottom: 8 }}>
-                Category *
-              </Text>
               <Dropdown
                 style={[
                   {
@@ -425,6 +444,19 @@ const AddPet: React.FC = () => {
                 ]}
                 placeholderStyle={{ fontSize: 16, color: '#666' }}
                 selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                itemTextStyle={{ fontSize: 16, color: '#333' }}
+                containerStyle={{ 
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  marginTop: 5,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: '#fff',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F0F0F0',
+                }}
                 data={petCategories.map(cat => ({
                   label: cat.catName,
                   value: cat.id,
@@ -444,9 +476,6 @@ const AddPet: React.FC = () => {
             </View>
 
             <View>
-              <Text style={{ fontSize: 16, color: '#333', marginBottom: 8 }}>
-                Size *
-              </Text>
               <Dropdown
                 style={[
                   {
@@ -460,6 +489,19 @@ const AddPet: React.FC = () => {
                 ]}
                 placeholderStyle={{ fontSize: 16, color: '#666' }}
                 selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                itemTextStyle={{ fontSize: 16, color: '#333' }}
+                containerStyle={{ 
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  marginTop: 5,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: '#fff',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F0F0F0',
+                }}
                 data={petSizes.map(s => ({ label: s.size, value: s.id }))}
                 labelField="label"
                 valueField="value"
@@ -476,9 +518,6 @@ const AddPet: React.FC = () => {
             </View>
 
             <View>
-              <Text style={{ fontSize: 16, color: '#333', marginBottom: 8 }}>
-                Gender *
-              </Text>
               <Dropdown
                 style={[
                   {
@@ -492,6 +531,19 @@ const AddPet: React.FC = () => {
                 ]}
                 placeholderStyle={{ fontSize: 16, color: '#666' }}
                 selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                itemTextStyle={{ fontSize: 16, color: '#333' }}
+                containerStyle={{ 
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  marginTop: 5,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: '#fff',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F0F0F0',
+                }}
                 data={petGenders.map(g => ({ label: g.name, value: g.id }))}
                 labelField="label"
                 valueField="value"
@@ -540,10 +592,35 @@ const AddPet: React.FC = () => {
 
             <TextInput
               mode="outlined"
-              label="Favorite Treats"
-              placeholder="e.g. Chicken jerky, Carrots"
-              value={treats}
-              onChangeText={setTreats}
+              label="Daily Feed Count"
+              placeholder="e.g. 2"
+              value={feedCount}
+              onChangeText={setFeedCount}
+              keyboardType="numeric"
+              theme={{
+                roundness: 12,
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+              }}
+            />
+
+            <TextInput
+              mode="outlined"
+              label="Cookie/Food Type"
+              placeholder="e.g. grain, meat-based"
+              value={cookie}
+              onChangeText={setCookie}
+              theme={{
+                roundness: 12,
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+              }}
+            />
+
+            <TextInput
+              mode="outlined"
+              label="Allergies"
+              placeholder="e.g. Dairy, Nuts"
+              value={allergies}
+              onChangeText={setAllergies}
               multiline
               numberOfLines={2}
               theme={{
@@ -554,11 +631,26 @@ const AddPet: React.FC = () => {
 
             <TextInput
               mode="outlined"
-              label="Feed Count (per day)"
-              placeholder="e.g. 3"
-              value={feedCount}
-              onChangeText={setFeedCount}
-              keyboardType="numeric"
+              label="Disability/Special Needs"
+              placeholder="e.g. none, mobility issues"
+              value={disability}
+              onChangeText={setDisability}
+              multiline
+              numberOfLines={2}
+              theme={{
+                roundness: 12,
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+              }}
+            />
+
+            <TextInput
+              mode="outlined"
+              label="Favorite Treats"
+              placeholder="e.g. Chicken jerky, Carrots"
+              value={treats}
+              onChangeText={setTreats}
+              multiline
+              numberOfLines={2}
               theme={{
                 roundness: 12,
                 colors: { primary: '#58B9D0', outline: '#E2E2E2' },
@@ -579,22 +671,27 @@ const AddPet: React.FC = () => {
               }}
             />
           </View>
-
+          </View>
+            
+          {/* Submit Button inside ScrollView */}
           <TouchableOpacity
-            onPress={handleSubmit}
-            style={[signupstyles.loginButton, loading && { opacity: 0.7 }]}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={signupstyles.loginText}>Add Pet Profile</Text>
-            )}
-          </TouchableOpacity>
+              onPress={handleSubmit}
+              style={[
+                boardingQuestionStyles.bookButton,
+                loading && boardingQuestionStyles.disabledButton
+              ]}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={boardingQuestionStyles.bookButtonText}>Add Pet Profile</Text>
+              )}
+            </TouchableOpacity>
+          </ScrollView>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
-};
+      </View>
+    );
+  };
 
 export default AddPet;

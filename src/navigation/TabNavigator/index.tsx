@@ -12,6 +12,7 @@ import styles from './styles';
 import colors from '../../styles/colors/index';
 import ServiceStackNavigator from '../ServiceStackNavigator';
 import ChatStackNavigator from '../ChatStackNavigator';
+import History from '../../screens/History/History';
 
 
 
@@ -20,6 +21,7 @@ type TabParamList = {
     // Mart: undefined;
     // Visits: undefined;
     Service: undefined;
+    History: undefined;
     Chats: undefined;
     Profile: undefined;
 };
@@ -39,6 +41,8 @@ const TabNavigator: React.FC = () => {
                 return <MaterialIcons name="home" size={size} color={color} />;
             case 'Service':
                 return <MaterialIcons name="medical-services" size={size} color={color} />;
+            case 'History':
+                return <MaterialIcons name="history" size={size} color={color} />;
             case 'Chats':
                 return <MaterialIcons name="chat" size={size} color={color} />;
             case 'Profile':
@@ -81,18 +85,26 @@ const TabNavigator: React.FC = () => {
                     tabBarLabel: 'Home'
                 }} 
             />
-            <Tab.Screen 
-                name="Service" 
-                component={ServiceStackNavigator} 
-                options={{ 
+            <Tab.Screen
+                name="Service"
+                component={ServiceStackNavigator}
+                options={{
                     headerShown: false,
                     tabBarLabel: 'Services'
                 }}
             />
-            <Tab.Screen 
-                name="Chats" 
-                component={ChatStackNavigator} 
-                options={{ 
+            <Tab.Screen
+                name="History"
+                component={History}
+                options={{
+                    headerShown: false,
+                    tabBarLabel: 'History'
+                }}
+            />
+            <Tab.Screen
+                name="Chats"
+                component={ChatStackNavigator}
+                options={{
                     headerShown: false,
                     tabBarLabel: 'Chats'
                 }}

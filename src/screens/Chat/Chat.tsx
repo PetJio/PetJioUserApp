@@ -179,37 +179,21 @@ const Chat: React.FC = () => {
     >
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* Header */}
-      <View style={chatStyles.header}>
-        <TouchableOpacity 
-          style={chatStyles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
-        </TouchableOpacity>
-        
-        <View style={chatStyles.userInfo}>
-          <Image 
-            source={{ 
-              uri: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=58B9D0&color=fff`
-            }} 
-            style={chatStyles.headerAvatar} 
-          />
-          <View style={chatStyles.userDetails}>
-            <Text style={chatStyles.headerUserName}>{user.name}</Text>
-            <Text style={chatStyles.onlineStatus}>
-              {user.isOnline ? 'Online' : 'Last seen recently'}
-            </Text>
+      {/* Header - Matching Service Page Style */}
+      <View style={chatStyles.serviceStyleHeader}>
+        <View style={chatStyles.serviceHeaderContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={chatStyles.serviceHeaderLeft}
+          >
+            <MaterialIcons name="arrow-back-ios" size={20} color="#000000" />
+            <Text style={chatStyles.serviceHeaderTitle}>Chat</Text>
+          </TouchableOpacity>
+
+          <View style={chatStyles.serviceHeaderRight}>
+            <Text style={chatStyles.serviceHeaderSubtitle}>{user.name}</Text>
+            <MaterialIcons name="keyboard-arrow-down" size={20} color="#000000" />
           </View>
-        </View>
-        
-        <View style={chatStyles.headerActions}>
-          <TouchableOpacity style={chatStyles.actionButton}>
-            <MaterialIcons name="videocam" size={22} color="#58B9D0" />
-          </TouchableOpacity>
-          <TouchableOpacity style={chatStyles.actionButton}>
-            <MaterialIcons name="call" size={20} color="#58B9D0" />
-          </TouchableOpacity>
         </View>
       </View>
 

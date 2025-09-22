@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View,Text,Image, FlatList,TouchableOpacity,Modal, Platform, TextInput, ActivityIndicator} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { API_CONFIG } from '../../config/api';
 import { responsiveWidth,responsiveHeight} from 'react-native-responsive-dimensions';
 import boardingmodalstyles from './boardingmodal.styles';
@@ -23,11 +24,15 @@ import { StackNavigationProp } from '@react-navigation/stack';
      BoardingDetails:undefined;
      AddVaccination:undefined;
      BoardingRegistrationform:undefined;
-     BoardingQuestions:undefined;
+     BoardingQuestions: {
+        startTime?: string;
+        endTime?: string;
+        mode?: number;
+     };
  };
  
  // Define the navigation prop type
- type BoardingModalScreenNavigationProp = StackNavigationProp<RootStackParamList, 'BoardingRegistrationform'>;
+ type BoardingModalScreenNavigationProp = any;
  
  // Define props interface for the component
 //  interface BoardingModalProps {
@@ -74,27 +79,71 @@ interface PetApiResponse {
   body: PetProfile[];
 }
 
+// Boarding service interfaces
+interface BoardingServiceBreed {
+  id: number;
+  size: string;
+}
+
+interface BoardingService {
+  id: number;
+  breed: BoardingServiceBreed;
+  price: number;
+  mealPrice: number;
+  discount: number;
+  backupFoodChange: string;
+  extraServiceCharge: string;
+}
+
+interface BoardingServiceApiResponse {
+  statusCode: number;
+  message: string;
+  body: BoardingService[];
+}
+
 type ModalComponentProps = {
     modalVisible: boolean;
     setModalVisible: (visible: boolean) => void;
+    mode?: number;
+    boardingId?: number;
+    bordingUserId?: number;
 };
 
 
 
-const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modalVisible,setModalVisible}) => {
+const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modalVisible,setModalVisible, mode, boardingId, bordingUserId}) => {
    const navigation = useNavigation<BoardingModalScreenNavigationProp>();
     const [activeTab, setActiveTab] = useState<string>('NormalWalking');
     const [showDateModal, setShowDateModal] = useState<boolean>(false);
+    
+    // Separate date and time states
     const [startDate, setStartDate] = useState<Date>(new Date());
+    const [startTime, setStartTime] = useState<Date>(new Date());
     const [endDate, setEndDate] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
-    const [showStartPicker, setShowStartPicker] = useState<boolean>(false);
-    const [showEndPicker, setShowEndPicker] = useState<boolean>(false);
+    const [endTime, setEndTime] = useState<Date>(new Date());
+    
+    // Separate picker states for date and time
+    const [showStartDatePicker, setShowStartDatePicker] = useState<boolean>(false);
+    const [showStartTimePicker, setShowStartTimePicker] = useState<boolean>(false);
+    const [showEndDatePicker, setShowEndDatePicker] = useState<boolean>(false);
+    const [showEndTimePicker, setShowEndTimePicker] = useState<boolean>(false);
 
     // Pet state
     const [pets, setPets] = useState<PetProfile[]>([]);
     const [loadingPets, setLoadingPets] = useState<boolean>(true);
     const [petsError, setPetsError] = useState<string | null>(null);
     const [selectedPets, setSelectedPets] = useState<Set<number>>(new Set());
+    
+    // Dynamic IDs state
+    const [ownerId, setOwnerId] = useState<number | null>(null);
+    const [serviceIds, setServiceIds] = useState<number[]>([]);
+    
+    // Boarding services state
+    const [boardingServices, setBoardingServices] = useState<BoardingService[]>([]);
+    const [loadingServices, setLoadingServices] = useState<boolean>(true);
+    const [servicesError, setServicesError] = useState<string | null>(null);
+
+    console.log(pets, 'petspets')
 
     const handleTabPress = (tab: string) => {
         setActiveTab(tab);
@@ -106,29 +155,137 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
     };
 
     const handleDateConfirm = () => {
+        // Validate required data before proceeding
+        if (selectedPets.size === 0) {
+            alert('Please select at least one pet before proceeding.');
+            return;
+        }
+        
+        if (!ownerId) {
+            alert('Unable to retrieve owner information. Please try again.');
+            return;
+        }
+        
         setShowDateModal(false);
-        navigation.navigate('BoardingQuestions');
+        // Merge date and time to create full datetime ISO strings
+        const mergedStartDateTime = mergeDateTime(startDate, startTime);
+        const mergedEndDateTime = mergeDateTime(endDate, endTime);
+        
+        // Convert selected pets Set to array
+        const selectedPetIds = Array.from(selectedPets);
+        
+        // Calculate serviceBookings based on selected pets' sizes
+        // Each pet gets one service ID, so serviceBookings will have same count as selectedPetIds
+        const serviceBookings: number[] = [];
+        selectedPetIds.forEach(petId => {
+            const pet = pets.find(p => p.id === petId);
+            if (pet) {
+                const serviceIdsForPet = getServiceIdsForPetSize(pet.size.size);
+                // Take the first available service ID for this pet's size
+                if (serviceIdsForPet.length > 0) {
+                    serviceBookings.push(serviceIdsForPet[0]);
+                } else {
+                    // Fallback if no service found for this pet size
+                    serviceBookings.push(mode || 9);
+                }
+            } else {
+                // Fallback if pet not found
+                serviceBookings.push(mode || 9);
+            }
+        });
+
+        console.log('🎯 Selected pets and their service mappings:');
+        selectedPetIds.forEach((petId, index) => {
+            const pet = pets.find(p => p.id === petId);
+            console.log(`Pet ${petId} (${pet?.petName}, ${pet?.size.size}) → Service ${serviceBookings[index]}`);
+        });
+        console.log('📊 Arrays count - selectedPetIds:', selectedPetIds.length, 'serviceBookings:', serviceBookings.length);
+        
+        // Pass the merged dates, selected pets, and dynamic IDs to BoardingQuestions
+        navigation.navigate('BoardingQuestions', {
+            startTime: mergedStartDateTime,
+            endTime: mergedEndDateTime,
+            mode: mode || 9, // Pass the mode, default to 9 (Home Service) if not provided
+            selectedPetIds: selectedPetIds,
+            petOwnerId: ownerId,
+            boardingId: bordingUserId,
+            serviceIds: serviceIds.length > 0 ? serviceIds : [mode || 9], // Use serviceIds if available, otherwise use mode
+            serviceBookings: serviceBookings.length > 0 ? serviceBookings : [mode || 9], // Use calculated serviceBookings
+        });
     };
 
     const handleDateCancel = () => {
         setShowDateModal(false);
     };
 
+    // Function to merge separate date and time into one datetime
+    const mergeDateTime = (date: Date, time: Date) => {
+        const combined = new Date(date);
+        combined.setHours(time.getHours());
+        combined.setMinutes(time.getMinutes());
+        combined.setSeconds(0);
+        combined.setMilliseconds(0);
+        return combined.toISOString();
+    };
+
+    // Separate handlers for date and time pickers
     const handleStartDateChange = (event: any, selectedDate?: Date) => {
-        setShowStartPicker(false);
+        if (Platform.OS === 'android') {
+            setShowStartDatePicker(false);
+        }
+
+        if (event?.type === 'dismissed') {
+            setShowStartDatePicker(false);
+            return;
+        }
+
         if (selectedDate) {
             setStartDate(selectedDate);
-            // Ensure end date is after start date
-            if (selectedDate >= endDate) {
-                setEndDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000));
-            }
+        }
+    };
+
+    const handleStartTimeChange = (event: any, selectedTime?: Date) => {
+        if (Platform.OS === 'android') {
+            setShowStartTimePicker(false);
+        }
+
+        if (event?.type === 'dismissed') {
+            setShowStartTimePicker(false);
+            return;
+        }
+
+        if (selectedTime) {
+            setStartTime(selectedTime);
         }
     };
 
     const handleEndDateChange = (event: any, selectedDate?: Date) => {
-        setShowEndPicker(false);
+        if (Platform.OS === 'android') {
+            setShowEndDatePicker(false);
+        }
+
+        if (event?.type === 'dismissed') {
+            setShowEndDatePicker(false);
+            return;
+        }
+
         if (selectedDate && selectedDate > startDate) {
             setEndDate(selectedDate);
+        }
+    };
+
+    const handleEndTimeChange = (event: any, selectedTime?: Date) => {
+        if (Platform.OS === 'android') {
+            setShowEndTimePicker(false);
+        }
+
+        if (event?.type === 'dismissed') {
+            setShowEndTimePicker(false);
+            return;
+        }
+
+        if (selectedTime) {
+            setEndTime(selectedTime);
         }
     };
 
@@ -137,6 +294,14 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
+        });
+    };
+
+    const formatTime = (time: Date) => {
+        return time.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
         });
     };
 
@@ -256,10 +421,7 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
             if (result.statusCode === 200) {
                 console.log('✅ Pet Profiles Success - Data loaded:', result.body);
                 setPets(result.body || []);
-                // Auto-select all pets by default
-                if (result.body && result.body.length > 0) {
-                    setSelectedPets(new Set(result.body.map(pet => pet.id)));
-                }
+                // Don't auto-select pets - let user choose manually
             } else {
                 console.error('❌ Pet Profiles API returned non-200 status:', result.statusCode);
                 throw new Error(result.message || 'Failed to fetch pet profiles');
@@ -273,7 +435,89 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
         }
     };
 
+    const fetchBoardingServices = async () => {
+        if (!boardingId) {
+            console.warn('⚠️ No boardingId provided for fetching services');
+            setLoadingServices(false);
+            return;
+        }
+
+        try {
+            setLoadingServices(true);
+            setServicesError(null);
+            
+            const token = await getAuthToken();
+            if (!token) {
+                setServicesError('No authentication token found');
+                return;
+            }
+
+            console.log('🔍 Fetching boarding services for boardingId:', boardingId);
+            const apiUrl = `http://13.204.155.197/api/boarding-service/${boardingId}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
+                setServicesError('Failed to fetch boarding services');
+                return;
+            }
+
+            const responseText = await response.text();
+            const result: BoardingServiceApiResponse = JSON.parse(responseText);
+
+            if (result.statusCode === 200) {
+                console.log('✅ Boarding services fetched successfully:', result.body);
+                setBoardingServices(result.body);
+                
+                // Extract service IDs for the serviceBookings
+                const serviceIdsList = result.body.map(service => service.id);
+                setServiceIds(serviceIdsList);
+                console.log('📋 Service IDs extracted:', serviceIdsList);
+            } else {
+                console.error('❌ API returned non-200 status:', result.statusCode);
+                setServicesError('Failed to fetch boarding services');
+            }
+        } catch (error: any) {
+            console.error('🔥 Critical Error in fetchBoardingServices:', error);
+            setServicesError(`Failed to load boarding services: ${error.message}`);
+        } finally {
+            console.log('🏁 fetchBoardingServices completed');
+            setLoadingServices(false);
+        }
+    };
+
+    // Helper function to check if a pet's size is supported by boarding services
+    const isPetSizeSupported = (petSize: string): boolean => {
+        return boardingServices.some(service => 
+            service.breed.size.toLowerCase() === petSize.toLowerCase()
+        );
+    };
+
+    // Helper function to get available service IDs for a specific pet size
+    const getServiceIdsForPetSize = (petSize: string): number[] => {
+        return boardingServices
+            .filter(service => service.breed.size.toLowerCase() === petSize.toLowerCase())
+            .map(service => service.id);
+    };
+
     const togglePetSelection = (petId: number) => {
+        const pet = pets.find(p => p.id === petId);
+        if (!pet) return;
+
+        // Check if pet's size is supported by the boarding service
+        if (!isPetSizeSupported(pet.size.size)) {
+            alert(`Sorry, ${pet.petName} cannot be selected. This boarding service does not support ${pet.size.size} sized pets.`);
+            return;
+        }
+
         setSelectedPets(prev => {
             const newSet = new Set(prev);
             if (newSet.has(petId)) {
@@ -285,12 +529,28 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
         });
     };
 
-    // Fetch pets when modal opens
+    // Fetch pets and boarding services when modal opens
     useEffect(() => {
         if (modalVisible) {
+            // Reset selected pets when modal opens to ensure they start unchecked
+            setSelectedPets(new Set());
             fetchPets();
+            if (boardingId) {
+                fetchBoardingServices();
+            }
         }
-    }, [modalVisible]);
+    }, [modalVisible, boardingId]);
+
+    // Fetch owner ID when component mounts
+    useEffect(() => {
+        const fetchOwnerData = async () => {
+            const ownerIdFromAPI = await getOwnerIdFromAPI();
+            if (ownerIdFromAPI) {
+                setOwnerId(ownerIdFromAPI);
+            }
+        };
+        fetchOwnerData();
+    }, []);
 
     return (
         <View style={boardingmodalstyles.container}>
@@ -299,114 +559,273 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                 transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}>
-                <View style={boardingmodalstyles.subcontainer}>
-                    <View style={boardingmodalstyles.setmodalRadious}>
-                        <View
-                            style={
-                                boardingmodalstyles.paddingOfNormalWalkingGroupWalking
-                            }>
-                            {/* <TouchableOpacity
-                                onPress={() => handleTabPress('NormalWalking')}>
-                                <View
-                                    style={[
-                                        activeTab === 'NormalWalking' &&
-                                            boardingmodalstyles.menuBottomBoarder,
-                                    ]}>
-                                    <Text
-                                        style={[
-                                            boardingmodalstyles.unselectText,
-                                            activeTab === 'NormalWalking' &&
-                                                boardingmodalstyles.selectText,
-                                        ]}>
-                                        Normal Walking
-                                    </Text>
-                                </View>
-                            </TouchableOpacity> */}
-                            {/* <TouchableOpacity
-                                onPress={() => handleTabPress('GroupWalking')}>
-                                <View
-                                    style={[
-                                        activeTab === 'GroupWalking' &&
-                                            boardingmodalstyles.menuBottomBoarder,
-                                    ]}>
-                                    <Text
-                                        style={[
-                                            boardingmodalstyles.unselectText,
-                                            activeTab === 'GroupWalking' &&
-                                                boardingmodalstyles.selectText,
-                                        ]}>
-                                        Group Walking
-                                    </Text>
-                                </View>
-                            </TouchableOpacity> */}
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    justifyContent: 'flex-end',
+                }}>
+                    <View style={{
+                        backgroundColor: '#FFFFFF',
+                        borderTopLeftRadius: responsiveWidth(6),
+                        borderTopRightRadius: responsiveWidth(6),
+                        paddingHorizontal: responsiveWidth(4),
+                        paddingBottom: 0,
+                        maxHeight: responsiveHeight(70),
+                        elevation: 20,
+                        shadowColor: 'rgba(88, 185, 208, 0.4)',
+                        shadowOffset: { width: 0, height: -8 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 16,
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                    }}>
+                        {/* Bottom Sheet Handle */}
+                        <View style={{
+                            width: responsiveWidth(10),
+                            height: responsiveHeight(0.4),
+                            backgroundColor: 'rgba(88, 185, 208, 0.3)',
+                            borderRadius: responsiveHeight(0.2),
+                            alignSelf: 'center',
+                            marginTop: responsiveHeight(1),
+                            marginBottom: responsiveHeight(0.5),
+                        }} />
+
+                        {/* Header */}
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingVertical: responsiveHeight(1.5),
+                            borderBottomWidth: 1,
+                            borderBottomColor: 'rgba(88, 185, 208, 0.1)',
+                            marginBottom: responsiveHeight(2),
+                        }}>
+                            <Text style={{
+                                fontSize: 18,
+                                fontWeight: '600',
+                                color: '#1A1D29',
+                                letterSpacing: -0.3,
+                            }}>Select Your Pets</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                <Text style={{
+                                    fontSize: 20,
+                                    color: '#666',
+                                    fontWeight: 'bold',
+                                }}>✕</Text>
+                            </TouchableOpacity>
                         </View>
 
-                        {activeTab === 'NormalWalking' && (
-                            <View style={{gap: responsiveWidth(2.5)}}>
-                                {loadingPets ? (
-                                    <View style={boardingmodalstyles.loadingContainer}>
-                                        <ActivityIndicator size="large" color="#58B9D0" />
-                                        <Text style={boardingmodalstyles.loadingText}>Loading your pets...</Text>
-                                    </View>
-                                ) : petsError ? (
-                                    <View style={boardingmodalstyles.errorContainer}>
-                                        <Text style={boardingmodalstyles.errorText}>{petsError}</Text>
-                                        <TouchableOpacity
-                                            style={boardingmodalstyles.retryButton}
-                                            onPress={fetchPets}>
-                                            <Text style={boardingmodalstyles.retryButtonText}>Retry</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                ) : pets.length === 0 ? (
-                                    <View style={boardingmodalstyles.noPetsContainer}>
-                                        <Text style={boardingmodalstyles.noPetsText}>No pets found. Please add your pets first.</Text>
-                                    </View>
-                                ) : (
-                                    pets.map((pet) => (
-                                        <TouchableOpacity
-                                            key={pet.id}
-                                            style={boardingmodalstyles.setFlexRow}
-                                            onPress={() => togglePetSelection(pet.id)}>
-                                            <View style={boardingmodalstyles.setFlexWithGap}>
-                                                <Image
-                                                    source={pet.profileImg ? { uri: pet.profileImg } : images.germanDog}
-                                                    style={boardingmodalstyles.imageSize}
-                                                />
-                                                <View style={boardingmodalstyles.center}>
-                                                    <View style={boardingmodalstyles.flexORGap}>
-                                                        <Text style={boardingmodalstyles.daisyText}>
+                        {/* Pet List Content */}
+                        <View style={{ flex: 1, marginBottom: responsiveHeight(2) }}>
+                            {(loadingPets || loadingServices) ? (
+                                <View style={{
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    paddingVertical: responsiveHeight(4)
+                                }}>
+                                    <ActivityIndicator size="large" color="#58B9D0" />
+                                    <Text style={{
+                                        marginTop: 16,
+                                        fontSize: 14,
+                                        color: '#666',
+                                        textAlign: 'center'
+                                    }}>
+                                        {loadingPets && loadingServices ? 'Loading pets and services...' :
+                                         loadingPets ? 'Loading your pets...' :
+                                         'Loading boarding services...'}
+                                    </Text>
+                                </View>
+                            ) : (petsError || servicesError) ? (
+                                <View style={{
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    paddingVertical: responsiveHeight(4)
+                                }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        color: '#E74C3C',
+                                        textAlign: 'center',
+                                        marginBottom: 16
+                                    }}>
+                                        {petsError || servicesError}
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#58B9D0',
+                                            paddingHorizontal: 20,
+                                            paddingVertical: 10,
+                                            borderRadius: 8
+                                        }}
+                                        onPress={() => {
+                                            if (petsError) fetchPets();
+                                            if (servicesError && boardingId) fetchBoardingServices();
+                                        }}>
+                                        <Text style={{
+                                            color: '#FFFFFF',
+                                            fontWeight: '500'
+                                        }}>Retry</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : pets.length === 0 ? (
+                                <View style={{
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    paddingVertical: responsiveHeight(4)
+                                }}>
+                                    <MaterialIcons name="pets" size={48} color="#CCCCCC" />
+                                    <Text style={{
+                                        fontSize: 16,
+                                        color: '#666',
+                                        textAlign: 'center',
+                                        marginTop: 16
+                                    }}>No pets found</Text>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        color: '#999',
+                                        textAlign: 'center',
+                                        marginTop: 8
+                                    }}>Please add your pets first.</Text>
+                                </View>
+                            ) : (
+                                <FlatList
+                                    data={pets}
+                                    showsVerticalScrollIndicator={false}
+                                    keyExtractor={(pet) => pet.id.toString()}
+                                    contentContainerStyle={{ paddingBottom: 16 }}
+                                    renderItem={({ item: pet }) => {
+                                        const isSupported = loadingServices || isPetSizeSupported(pet.size.size);
+                                        const isDisabled = !loadingServices && !isSupported;
+                                        const isSelected = selectedPets.has(pet.id);
+
+                                        return (
+                                            <TouchableOpacity
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    backgroundColor: isSelected ? 'rgba(88, 185, 208, 0.1)' : '#FFFFFF',
+                                                    paddingHorizontal: 16,
+                                                    paddingVertical: 16,
+                                                    marginVertical: 4,
+                                                    borderRadius: 12,
+                                                    borderWidth: 1,
+                                                    borderColor: isSelected ? '#58B9D0' : 'rgba(88, 185, 208, 0.2)',
+                                                    opacity: isDisabled ? 0.5 : 1,
+                                                    elevation: isSelected ? 2 : 0,
+                                                    shadowColor: isSelected ? '#58B9D0' : 'transparent',
+                                                    shadowOffset: { width: 0, height: 1 },
+                                                    shadowOpacity: 0.2,
+                                                    shadowRadius: 3,
+                                                }}
+                                                onPress={() => togglePetSelection(pet.id)}
+                                                disabled={isDisabled}>
+
+                                                {/* Pet Avatar */}
+                                                <View style={{
+                                                    width: 50,
+                                                    height: 50,
+                                                    borderRadius: 25,
+                                                    backgroundColor: isSelected ? '#58B9D0' : (isDisabled ? '#CCCCCC' : 'rgba(88, 185, 208, 0.8)'),
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    marginRight: 16,
+                                                }}>
+                                                    <MaterialIcons
+                                                        name="pets"
+                                                        size={24}
+                                                        color="#FFFFFF"
+                                                    />
+                                                </View>
+
+                                                {/* Pet Info */}
+                                                <View style={{ flex: 1 }}>
+                                                    <View style={{
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        marginBottom: 4
+                                                    }}>
+                                                        <Text style={{
+                                                            fontSize: 16,
+                                                            fontWeight: '600',
+                                                            color: isDisabled ? '#999999' : '#1A1D29',
+                                                            marginRight: 8
+                                                        }}>
                                                             {pet.petName}
                                                         </Text>
-                                                        <Image
-                                                            source={pet.gender.name.toLowerCase() === 'female' ? Icons.BiFemaleSign : Icons.BiFemaleSign}
+                                                        <MaterialIcons
+                                                            name={pet.gender.name.toLowerCase() === 'female' ? 'female' : 'male'}
+                                                            size={16}
+                                                            color={pet.gender.name.toLowerCase() === 'female' ? '#E91E63' : '#2196F3'}
                                                         />
                                                     </View>
-                                                    <Text style={boardingmodalstyles.yearText}>
-                                                        {pet.ageInYears ? `${pet.ageInYears} years` : pet.ageInMonths ? `${pet.ageInMonths} months` : 'Age unknown'}
+                                                    <Text style={{
+                                                        fontSize: 12,
+                                                        color: isDisabled ? '#999999' : '#666',
+                                                        lineHeight: 16
+                                                    }}>
+                                                        {pet.ageInYears ? `${pet.ageInYears} years` : pet.ageInMonths ? `${pet.ageInMonths} months` : 'Age unknown'} • {pet.size.size}
                                                     </Text>
+                                                    {isDisabled && (
+                                                        <Text style={{
+                                                            fontSize: 11,
+                                                            color: '#E74C3C',
+                                                            marginTop: 2,
+                                                            fontStyle: 'italic'
+                                                        }}>
+                                                            Size not supported
+                                                        </Text>
+                                                    )}
                                                 </View>
-                                            </View>
-                                            <View style={boardingmodalstyles.topforImage}>
-                                                <Image
-                                                    source={selectedPets.has(pet.id) ? Icons.BiSolidCheckCircle : Icons.CgRadioCheck}
-                                                    style={[
-                                                        boardingmodalstyles.selectionIcon,
-                                                        selectedPets.has(pet.id) && boardingmodalstyles.selectedIcon
-                                                    ]}
-                                                />
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))
-                                )}
-                            </View>
-                        )}
 
-                        <View style={boardingmodalstyles.fixedButtonContainer}>
+                                                {/* Selection Indicator */}
+                                                <View style={{
+                                                    width: 24,
+                                                    height: 24,
+                                                    borderRadius: 12,
+                                                    borderWidth: 2,
+                                                    borderColor: isSelected ? '#58B9D0' : '#CCCCCC',
+                                                    backgroundColor: isSelected ? '#58B9D0' : 'transparent',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    {isSelected && (
+                                                        <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                                                    )}
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    }}
+                                />
+                            )}
+                        </View>
+
+                        {/* Action Button */}
+                        <View style={{
+                            paddingBottom: Platform.OS === 'ios' ? responsiveHeight(4) : responsiveHeight(2),
+                            paddingTop: responsiveHeight(2),
+                            borderTopWidth: 1,
+                            borderTopColor: 'rgba(88, 185, 208, 0.1)',
+                        }}>
                             <TouchableOpacity
+                                style={{
+                                    backgroundColor: selectedPets.size > 0 ? '#58B9D0' : '#CCCCCC',
+                                    paddingVertical: responsiveHeight(1.8),
+                                    borderRadius: 8,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
                                 onPress={handleConfirm}
-                                style={boardingmodalstyles.nextBtnContainer}>
-                                <Text style={boardingmodalstyles.nextBtnText}>
-                                    Confirm
+                                disabled={selectedPets.size === 0}>
+                                <Text style={{
+                                    color: '#FFFFFF',
+                                    fontWeight: '600',
+                                    fontSize: 16,
+                                }}>
+                                    Continue with {selectedPets.size} pet{selectedPets.size !== 1 ? 's' : ''}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -414,68 +833,157 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                 </View>
             </Modal>
 
-            {/* Date Selection Modal */}
             <Modal
                 animationType="slide"
                 transparent={true}
                 visible={showDateModal}
                 onRequestClose={handleDateCancel}>
-                <View style={boardingmodalstyles.dateModalOverlay}>
-                    <View style={boardingmodalstyles.dateModalContainer}>
-                        <View style={boardingmodalstyles.dateModalHeader}>
-                            <Text style={boardingmodalstyles.dateModalTitle}>
-                                Select Boarding Dates
-                            </Text>
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    justifyContent: 'flex-end',
+                }}>
+                    <View style={{
+                        backgroundColor: '#FFFFFF',
+                        borderTopLeftRadius: responsiveWidth(6),
+                        borderTopRightRadius: responsiveWidth(6),
+                        paddingHorizontal: responsiveWidth(4),
+                        paddingBottom: 0,
+                        maxHeight: responsiveHeight(60),
+                        elevation: 20,
+                        shadowColor: 'rgba(88, 185, 208, 0.4)',
+                        shadowOffset: { width: 0, height: -8 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 16,
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        // zIndex: 1000,
+                    }}>
+                        {/* Bottom Sheet Handle */}
+                        <View style={{
+                            width: responsiveWidth(10),
+                            height: responsiveHeight(0.4),
+                            backgroundColor: 'rgba(88, 185, 208, 0.3)',
+                            borderRadius: responsiveHeight(0.2),
+                            alignSelf: 'center',
+                            marginTop: responsiveHeight(1),
+                            marginBottom: responsiveHeight(0.5),
+                        }} />
+
+                        {/* Header */}
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingVertical: responsiveHeight(1.5),
+                            borderBottomWidth: 1,
+                            borderBottomColor: 'rgba(88, 185, 208, 0.1)',
+                            marginBottom: responsiveHeight(2),
+                        }}>
+                            <Text style={{
+                                fontSize: 18,
+                                fontWeight: '600',
+                                color: '#1A1D29',
+                                letterSpacing: -0.3,
+                            }}>Select Boarding Dates</Text>
                             <TouchableOpacity onPress={handleDateCancel}>
-                                <Text style={boardingmodalstyles.dateModalClose}>✕</Text>
+                                <Text style={{
+                                    fontSize: 20,
+                                    color: '#666',
+                                    fontWeight: 'bold',
+                                }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <View style={boardingmodalstyles.dateInputsContainer}>
-                            {/* Start Date Input */}
-                            <View style={boardingmodalstyles.dateInputGroup}>
-                                <Text style={boardingmodalstyles.dateLabel}>Start Date</Text>
-                                <TouchableOpacity
-                                    style={boardingmodalstyles.dateInput}
-                                    onPress={() => setShowStartPicker(true)}>
-                                    <Text style={boardingmodalstyles.dateInputText}>
-                                        {formatDate(startDate)}
-                                    </Text>
-                                    <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
-                                </TouchableOpacity>
+                        {/* Date and Time Inputs */}
+                        <View style={{ gap: responsiveHeight(2), marginBottom: responsiveHeight(3) }}>
+                            {/* Start Date and Time */}
+                            <View>
+                                <Text style={boardingmodalstyles.dateLabel}>Start Date & Time</Text>
+                                <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                                    <TouchableOpacity
+                                        style={[boardingmodalstyles.dateInput, { flex: 1 }]}
+                                        onPress={() => setShowStartDatePicker(true)}>
+                                        <Text style={boardingmodalstyles.dateInputText}>
+                                            {formatDate(startDate)}
+                                        </Text>
+                                        <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[boardingmodalstyles.dateInput, { flex: 1 }]}
+                                        onPress={() => setShowStartTimePicker(true)}>
+                                        <Text style={boardingmodalstyles.dateInputText}>
+                                            {formatTime(startTime)}
+                                        </Text>
+                                        <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
 
-                            {/* End Date Input */}
-                            <View style={boardingmodalstyles.dateInputGroup}>
-                                <Text style={boardingmodalstyles.dateLabel}>End Date</Text>
-                                <TouchableOpacity
-                                    style={boardingmodalstyles.dateInput}
-                                    onPress={() => setShowEndPicker(true)}>
-                                    <Text style={boardingmodalstyles.dateInputText}>
-                                        {formatDate(endDate)}
-                                    </Text>
-                                    <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Duration Display */}
-                            <View style={boardingmodalstyles.durationContainer}>
-                                <Text style={boardingmodalstyles.durationText}>
-                                    Duration: {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
-                                </Text>
+                            {/* End Date and Time */}
+                            <View>
+                                <Text style={boardingmodalstyles.dateLabel}>End Date & Time</Text>
+                                <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                                    <TouchableOpacity
+                                        style={[boardingmodalstyles.dateInput, { flex: 1 }]}
+                                        onPress={() => setShowEndDatePicker(true)}>
+                                        <Text style={boardingmodalstyles.dateInputText}>
+                                            {formatDate(endDate)}
+                                        </Text>
+                                        <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[boardingmodalstyles.dateInput, { flex: 1 }]}
+                                        onPress={() => setShowEndTimePicker(true)}>
+                                        <Text style={boardingmodalstyles.dateInputText}>
+                                            {formatTime(endTime)}
+                                        </Text>
+                                        <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
 
-                        <View style={boardingmodalstyles.dateModalButtons}>
+                        {/* Action Buttons */}
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            gap: responsiveWidth(3),
+                            paddingBottom: Platform.OS === 'ios' ? responsiveHeight(4) : responsiveHeight(2),
+                            paddingTop: responsiveHeight(2),
+                        }}>
                             <TouchableOpacity
-                                style={boardingmodalstyles.dateCancelBtn}
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: responsiveHeight(1.5),
+                                    borderRadius: 8,
+                                    borderWidth: 1,
+                                    borderColor: '#58B9D0',
+                                    alignItems: 'center',
+                                }}
                                 onPress={handleDateCancel}>
-                                <Text style={boardingmodalstyles.dateCancelText}>Cancel</Text>
+                                <Text style={{
+                                    color: '#58B9D0',
+                                    fontWeight: '500',
+                                    fontSize: 16,
+                                }}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={boardingmodalstyles.dateConfirmBtn}
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: responsiveHeight(1.5),
+                                    borderRadius: 8,
+                                    backgroundColor: '#58B9D0',
+                                    alignItems: 'center',
+                                }}
                                 onPress={handleDateConfirm}>
-                                <Text style={boardingmodalstyles.dateConfirmText}>Confirm</Text>
+                                <Text style={{
+                                    color: '#FFFFFF',
+                                    fontWeight: '500',
+                                    fontSize: 16,
+                                }}>Confirm</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -483,25 +991,125 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
             </Modal>
 
             {/* Start Date Picker */}
-            {showStartPicker && (
-                <DateTimePicker
-                    value={startDate}
-                    mode="datetime"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleStartDateChange}
-                    minimumDate={new Date()}
-                />
+            {showStartDatePicker && (
+                <>
+                    <DateTimePicker
+                        value={startDate}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleStartDateChange}
+                        minimumDate={new Date()}
+                    />
+                    {Platform.OS === 'ios' && (
+                        <View style={{
+                            backgroundColor: 'white',
+                            padding: responsiveWidth(4),
+                            alignItems: 'flex-end'
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => setShowStartDatePicker(false)}
+                                style={{
+                                    backgroundColor: '#58B9D0',
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 10,
+                                    borderRadius: 8
+                                }}>
+                                <Text style={{ color: 'white', fontWeight: '500' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </>
+            )}
+
+            {/* Start Time Picker */}
+            {showStartTimePicker && (
+                <>
+                    <DateTimePicker
+                        value={startTime}
+                        mode="time"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleStartTimeChange}
+                    />
+                    {Platform.OS === 'ios' && (
+                        <View style={{
+                            backgroundColor: 'white',
+                            padding: responsiveWidth(4),
+                            alignItems: 'flex-end'
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => setShowStartTimePicker(false)}
+                                style={{
+                                    backgroundColor: '#58B9D0',
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 10,
+                                    borderRadius: 8
+                                }}>
+                                <Text style={{ color: 'white', fontWeight: '500' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </>
             )}
 
             {/* End Date Picker */}
-            {showEndPicker && (
-                <DateTimePicker
-                    value={endDate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleEndDateChange}
-                    minimumDate={new Date(startDate.getTime() + 24 * 60 * 60 * 1000)}
-                />
+            {showEndDatePicker && (
+                <>
+                    <DateTimePicker
+                        value={endDate}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleEndDateChange}
+                        minimumDate={new Date(startDate.getTime() + 24 * 60 * 60 * 1000)}
+                    />
+                    {Platform.OS === 'ios' && (
+                        <View style={{
+                            backgroundColor: 'white',
+                            padding: responsiveWidth(4),
+                            alignItems: 'flex-end'
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => setShowEndDatePicker(false)}
+                                style={{
+                                    backgroundColor: '#58B9D0',
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 10,
+                                    borderRadius: 8
+                                }}>
+                                <Text style={{ color: 'white', fontWeight: '500' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </>
+            )}
+
+            {/* End Time Picker */}
+            {showEndTimePicker && (
+                <>
+                    <DateTimePicker
+                        value={endTime}
+                        mode="time"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleEndTimeChange}
+                    />
+                    {Platform.OS === 'ios' && (
+                        <View style={{
+                            backgroundColor: 'white',
+                            padding: responsiveWidth(4),
+                            alignItems: 'flex-end'
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => setShowEndTimePicker(false)}
+                                style={{
+                                    backgroundColor: '#58B9D0',
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 10,
+                                    borderRadius: 8
+                                }}>
+                                <Text style={{ color: 'white', fontWeight: '500' }}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </>
             )}
         </View>
     );

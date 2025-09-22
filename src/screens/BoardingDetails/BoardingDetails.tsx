@@ -8,17 +8,25 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import {
+  responsiveHeight,
+  responsiveWidth,
+} from 'react-native-responsive-dimensions';
 import boardingdetailstyles from './boardingdetails.styles';
 import BoardingAbout from './BoardingAbout';
 import BoardingReview from './BoardingReview';
+import BoardingModal from '../BoardingModal/BoardingModal';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
 import boardinguserstyles from '../BoardingUser/boardinguser.styles';
+import serviceStyles from '../Service/styles';
+import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
@@ -40,6 +48,8 @@ type RootStackParamList = {
     selectedDate: string;
     selectedTime: string;
     city: string;
+    boardDetails?: any;
+    mode?: number;
   };
   BoardingReview: undefined;
   BoardingRegistrationform: undefined;
@@ -69,91 +79,36 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   const [serviceDetails, setServiceDetails] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [bookingDetailsData, setBookingDetailsData] = useState<any[]>([]);
+  const [bookingDetailsData, setBookingDetailsData] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const { height: screenHeight } = Dimensions.get('window');
 
   // Get route params with defaults
+  const routeParams = route?.params as any;
   const {
     providerId = 1,
     selectedDate,
     selectedTime,
     city,
-  } = route.params || {
+    boardDetails,
+  } = routeParams || {
     providerId: 1,
     selectedDate: new Date().toISOString().split('T')[0],
     selectedTime: '10:00 AM',
     city: 'Kolkata',
+    boardDetails: null,
   };
-
-  const { boardDetails } = route?.params;
 
   useEffect(() => {
-    console.log('details ==> ', boardDetails);
+    const routeParams = route?.params as any;
+    const boardDetailsData = routeParams?.boardDetails;
+    console.log('details ==> ', boardDetailsData);
     // fetchBoardingDetails();
-    setBookingDetailsData(boardDetails);
-  }, [boardDetails]);
-
-  const fetchBoardingDetails = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      console.log('Fetching boarding details for providerId:', boardId);
-
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}${API_ENDPOINTS.SERVICES.BOARDING_DETAILS}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('Com Details 009 ==>', data);
-
-      if (
-        data &&
-        data.body &&
-        Array.isArray(data.body) &&
-        data.body.length > 0
-      ) {
-        setServiceDetails(data.body[0]); // Get the first boarding from the list
-      } else {
-        // If no API data, use default values to match reference UI
-        setServiceDetails({
-          user: { firstName: 'Kiara', lastName: 'Das' },
-          reviewAvg: 4.8,
-          profileImg: null,
-          description:
-            'Hi Pet Parents !!!! I am a proficient grooming partner with pgroomy have an experience of 7+ years, can work efficiently with both dogs and cats. Also experienced with different breeds of pets in terms of styling and grooming.',
-          experience: 7,
-          facilityName: "Kiara's Boarding",
-        });
-      }
-    } catch (error: any) {
-      console.error('Error fetching boarding details:', error);
-      setError(error.message || 'Failed to fetch boarding details');
-
-      // Set default data to match reference even on error
-      setServiceDetails({
-        user: { firstName: 'Kiara', lastName: 'Das' },
-        reviewAvg: 4.8,
-        profileImg: null,
-        description:
-          'Hi Pet Parents !!!! I am a proficient grooming partner with pgroomy have an experience of 7+ years, can work efficiently with both dogs and cats. Also experienced with different breeds of pets in terms of styling and grooming.',
-        experience: 7,
-        facilityName: "Kiara's Boarding",
-      });
-    } finally {
-      setLoading(false);
+    if (boardDetailsData) {
+      setBookingDetailsData(boardDetailsData);
     }
-  };
+  }, [route?.params]);
 
   const handleTabPress = (tab: string, screen?: keyof RootStackParamList) => {
     setActiveTab(tab);
@@ -176,158 +131,287 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   }
 
   // Extract data from API response or use defaults
-  const providerName = serviceDetails?.user
-    ? `${serviceDetails.user.firstName || ''} ${
-        serviceDetails.user.lastName || ''
-      }`.trim() || 'Kiara Das'
-    : 'Kiara Das';
-
-  const rating = serviceDetails?.reviewAvg?.toFixed(1) || '4.8';
-  const profileImage = serviceDetails?.profileImg;
+  const providerName = bookingDetailsData?.facilityName || 'Facility Name Not Available';
+  const rating = bookingDetailsData?.reviewAvg ? bookingDetailsData.reviewAvg.toFixed(1) : '0.0';
+  const profileImage = bookingDetailsData?.profileImg;
 
   return (
-    <View style={boardingdetailstyles.container}>
-      <View style={boardingdetailstyles.containerchild}>
-        <TouchableOpacity onPress={() => navigation.goBack('')}>
-          <View style={boardingdetailstyles.containerfirstsubchild}>
-            <Image
-              source={Icons.LeftArrow}
-              style={boardingdetailstyles.leftarrowicon}
-            />
-            <Text style={boardinguserstyles.groomingText}>
-              Boarding Details
-            </Text>
-          </View>
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF', minHeight: screenHeight }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+
+      {/* Header Section matching AddPet page */}
+      <View style={[serviceStyles.stickyHeader, { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
+          <Image
+            source={Icons.LeftArrow}
+            style={{ tintColor: '#000000', width: 20, height: 20 }}
+          />
         </TouchableOpacity>
-        <View style={boardingdetailstyles.locationtext}>
+        <View style={serviceStyles.headerTitleContainer}>
+          <Text style={serviceStyles.stickyHeaderTitle}>
+            Boarding Details
+          </Text>
+          <Text style={serviceStyles.stickyHeaderSubtitle}>
+            {bookingDetailsData?.facilityName || 'Facility information'}
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
           <Image
             source={Icons.MdOutlineCall}
-            style={boardingdetailstyles.IconSize}
+            style={{ width: 24, height: 24, tintColor: '#58B9D0' }}
           />
           <Image
             source={Icons.LoveIcon}
-            style={boardingdetailstyles.downArrowIcon}
+            style={{ width: 24, height: 24, tintColor: '#E74C3C' }}
           />
         </View>
       </View>
 
-      <View style={boardingdetailstyles.containerthirdsubchild}>
-        <View style={boardingdetailstyles.shadow}>
-          {profileImage ? (
+      
+      <View style={{ flex: 39, height: responsiveHeight(100) }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: responsiveWidth(4),
+            paddingTop: responsiveHeight(2),
+            paddingBottom: 20,
+          }}
+        >
+          {/* Facility Card */}
+        <View style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 20,
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+        }}>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
             <Image
-              source={{ uri: profileImage }}
-              style={boardingdetailstyles.userimage}
+              source={
+                bookingDetailsData?.profileImg
+                  ? { uri: bookingDetailsData.profileImg }
+                  : images.walkinguserimage
+              }
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 12,
+                backgroundColor: '#F3F4F6',
+              }}
             />
-          ) : (
-            <Image
-              source={images.walkinguserimage}
-              style={boardingdetailstyles.userimage}
-            />
-          )}
-          <View style={boardingdetailstyles.gap}>
-            <View style={boardingdetailstyles.userTextWidth}>
-              <View style={boardingdetailstyles.userTextgap}>
-                <Text style={boardingdetailstyles.textSize}>
-                  {' '}
-                  {bookingDetailsData?.facilityName ?? ''}{' '}
+            <View style={{ flex: 1 }}>
+              {/* Facility Name and Rating */}
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: 8,
+              }}>
+                <Text style={{
+                  fontSize: 18,
+                  fontWeight: '600',
+                  color: '#1F2937',
+                  flex: 1,
+                  marginRight: 8,
+                }}>
+                  {bookingDetailsData?.facilityName || 'Facility Name Not Available'}
+                </Text>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  backgroundColor: '#FEF3C7',
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                }}>
+                  <Image
+                    source={Icons.StarIcon}
+                    style={{ width: 14, height: 14 }}
+                  />
+                  <Text style={{
+                    fontSize: 12,
+                    color: '#F59E0B',
+                    fontWeight: '600',
+                  }}>
+                    {bookingDetailsData?.reviewAvg ? bookingDetailsData.reviewAvg.toFixed(1) : '0.0'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Verified Badge */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                marginBottom: 8,
+              }}>
+                <Image source={Icons.MdVerifiedUser} style={{ width: 16, height: 16 }} />
+                <Text style={{
+                  fontSize: 12,
+                  color: '#10B981',
+                  fontWeight: '500',
+                }}>
+                  Verified • {bookingDetailsData?.experience ? `${bookingDetailsData.experience} years exp` : 'New provider'}
                 </Text>
               </View>
-              <View style={boardingdetailstyles.ratingGap}>
-                <Image source={Icons.MdVerifiedUser} />
-                <Text style={boardingdetailstyles.verifyText}>Verified</Text>
-              </View>
-            </View>
 
-            <View style={boardingdetailstyles.flex}>
-              <View style={boardingdetailstyles.setIconTextGap}>
+              {/* Time */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                marginBottom: 8,
+              }}>
                 <Image
                   source={Icons.BiTimeFive}
-                  style={boardingdetailstyles.setImageIconPosition}
+                  style={{ width: 14, height: 14, tintColor: '#6B7280' }}
                 />
-                <Text style={boardingdetailstyles.setTextSize}>
-                  {' '}
-                  {bookingDetailsData?.checkinTime} am -{' '}
-                  {bookingDetailsData?.checkoutTime} am{' '}
-                </Text>
-              </View>
-              <View style={boardingdetailstyles.ratingGap}>
-                <Image
-                  source={Icons.StarIcon}
-                  style={boardingdetailstyles.ratingHeight}
-                />
-                <Text style={boardingdetailstyles.ratePointSize}>
-                  {' '}
-                  {bookingDetailsData?.reviewCount ?? ''}
-                </Text>
-              </View>
-            </View>
-            <View style={boardingdetailstyles.widthSpace}>
-              <View style={boardingdetailstyles.iconAndTextGap}>
-                <Image
-                  source={Icons.locationposition}
-                  style={boardingdetailstyles.setImageIconPosition}
-                />
-                <Text style={boardingdetailstyles.setDigitSize}>
-                  {' '}
-                  {bookingDetailsData?.regNo ?? ''}{' '}
+                <Text style={{
+                  fontSize: 12,
+                  color: '#6B7280',
+                  fontWeight: '500',
+                }}>
+                  {bookingDetailsData?.checkinTime && bookingDetailsData?.checkoutTime 
+                    ? `${bookingDetailsData.checkinTime}:00 am - ${bookingDetailsData.checkoutTime}:00 pm`
+                    : 'Hours not specified'
+                  }
                 </Text>
               </View>
 
-              <View style={boardingdetailstyles.iconTextSpace}>
-                <Text style={boardingdetailstyles.bold}> ₹ 200 </Text>
-                <Text>/Day</Text>
+              {/* Location and Registration */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+              }}>
+                <Image
+                  source={Icons.locationposition}
+                  style={{ width: 14, height: 14, tintColor: '#6B7280' }}
+                />
+                <Text style={{
+                  fontSize: 12,
+                  color: '#6B7280',
+                  fontWeight: '500',
+                  flex: 1,
+                }}>
+                  {bookingDetailsData?.city || 'Location not specified'} • Reg: {bookingDetailsData?.regNo || 'Not provided'}
+                </Text>
               </View>
             </View>
           </View>
         </View>
 
-        <View style={boardingdetailstyles.menuTitleContainer}>
+        {/* Tab Navigation */}
+        <View style={{
+          flexDirection: 'row',
+          backgroundColor: '#F8F9FB',
+          borderRadius: 12,
+          padding: 4,
+          marginBottom: 20,
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+        }}>
           <TouchableOpacity
-            onPress={() => handleTabPress('about', 'UserAbout')}
+            onPress={() => setActiveTab('about')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              alignItems: 'center',
+              backgroundColor: activeTab === 'about' ? '#58B9D0' : 'transparent',
+              borderRadius: 8,
+            }}
           >
-            <View style={boardingdetailstyles.menuTitleAlignment}>
-              <Text
-                style={[
-                  boardingdetailstyles.serviceText,
-                  activeTab === 'about' && boardingdetailstyles.commonTextColor,
-                ]}
-              >
-                About
-              </Text>
-              {activeTab === 'about' && (
-                <View style={boardingdetailstyles.menuBottomBoarder} />
-              )}
-            </View>
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: activeTab === 'about' ? '#FFFFFF' : '#6B7280',
+            }}>
+              About
+            </Text>
           </TouchableOpacity>
-
+          
           <TouchableOpacity
-            onPress={() => handleTabPress('reviews', 'Reviews')}
+            onPress={() => setActiveTab('reviews')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              alignItems: 'center',
+              backgroundColor: activeTab === 'reviews' ? '#58B9D0' : 'transparent',
+              borderRadius: 8,
+            }}
           >
-            <View style={boardingdetailstyles.menuTitleAlignment}>
-              <Text
-                style={[
-                  boardingdetailstyles.reviewsText,
-                  activeTab === 'reviews' && boardingdetailstyles.reviewsText,
-                ]}
-              >
-                Reviews
-              </Text>
-              {activeTab === 'reviews' && (
-                <View style={boardingdetailstyles.menuBottomBoarder} />
-              )}
-            </View>
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: activeTab === 'reviews' ? '#FFFFFF' : '#6B7280',
+            }}>
+              Reviews ({bookingDetailsData?.reviewCount || 0})
+            </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Tab Content */}
+        <View style={{ flex: 1 }}>
+          {activeTab === 'about' && (
+            <BoardingAbout serviceDetails={bookingDetailsData} />
+          )}
+          {activeTab === 'reviews' && (
+            <BoardingReview
+              rating={bookingDetailsData?.reviewAvg ? parseFloat(bookingDetailsData.reviewAvg) : 0}
+              reviews={bookingDetailsData?.reviewCount || 0}
+            />
+          )}
+        </View>
+        </ScrollView>
+
+        {/* Book Now Button - Fixed at bottom */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: responsiveWidth(4),
+        paddingTop: 16,
+        paddingBottom: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#58B9D0',
+            paddingVertical: 16,
+            borderRadius: 8,
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            minHeight: 50,
+          }}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#FFFFFF',
+          }}>
+            Book Now
+          </Text>
+        </TouchableOpacity>
+        </View>
       </View>
-      {activeTab === 'about' && (
-        <BoardingAbout serviceDetails={bookingDetailsData} />
-      )}
-      {activeTab === 'reviews' && (
-        <BoardingReview
-          rating={parseFloat(rating)}
-          reviews={serviceDetails?.reviewCount || 150}
-        />
-      )}
+
+      {/* Boarding Modal */}
+      <BoardingModal
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        boardingId={bookingDetailsData?.id}
+        bordingUserId={bookingDetailsData?.userId}
+      />
     </View>
   );
 };

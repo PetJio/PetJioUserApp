@@ -19,9 +19,13 @@ type RootStackParamList = {
 // Define prop types
 type InSiteServiceProps = {
   navigation: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
+  mode?: number;
 };
 
-const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
+const BoardingHomeService: React.FC<InSiteServiceProps> = ({
+  navigation,
+  mode,
+}) => {
   const [getHomeSerData, setGetHomeSerData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -63,6 +67,8 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
         Array.isArray(data.body) &&
         data.body.length > 0
       ) {
+        console.log('📋 Boarding Service Items:', data.body);
+        console.log('📋 First item facilityName:', data.body[0]?.facilityName);
         setGetHomeSerData(data.body); // Get the first boarding from the list
       } else {
         // If no API data, use default values to match reference UI
@@ -94,468 +100,183 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={boardinghomeservicestyles.container}>
+    <View
+      style={[
+        boardinghomeservicestyles.container,
+        { height: undefined, flex: 1 },
+      ]}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={boardinghomeservicestyles.contentContainerStyle}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 80,
+          flexGrow: 1,
+        }}
+        style={{ flex: 1 }}
       >
-        <View style={boardinghomeservicestyles.viewGap}>
+        <View style={{ gap: 0 }}>
           {getHomeSerData.map(item => (
             <TouchableOpacity
               key={item.id}
-              onPress={() => navigation.navigate('BoardingDetails', { boardDetails: item })}
+              onPress={() =>
+                navigation.navigate('BoardingDetails', {
+                  boardDetails: item,
+                  mode: mode,
+                })
+              }
             >
-              <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                <View style={boardinghomeservicestyles.shadow}>
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 12,
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                  padding: 12,
+                  elevation: 0,
+                  shadowOpacity: 0,
+                }}
+              >
+                <View style={{ flexDirection: 'row', gap: 12 }}>
                   <Image
-                    source={images.walkinguserimage}
-                    style={boardinghomeservicestyles.userimage}
+                    source={
+                      item?.profileImg
+                        ? { uri: item.profileImg }
+                        : images.walkinguserimage
+                    }
+                    style={{
+                      width: 70,
+                      height: 70,
+                      borderRadius: 10,
+                      backgroundColor: '#F3F4F6',
+                    }}
                   />
-                  <View style={boardinghomeservicestyles.gap}>
-                    <View style={boardinghomeservicestyles.userTextWidth}>
-                      <View style={boardinghomeservicestyles.userTextgap}>
-                        <Text style={boardinghomeservicestyles.textSize}>
-                          {' '}
-                          {item?.facilityName}{' '}
-                        </Text>
-                        <View style={boardinghomeservicestyles.verified}>
-                          <Image source={Icons.Ellipse} />
-                          <Text
-                            style={{
-                              fontSize: 9,
-                              fontWeight: '600',
-                              lineHeight: 10,
-                              letterSpacing: 0,
-                              color: '#299F4D',
-                            }}
-                          >
-                            Open
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={boardinghomeservicestyles.verified}>
-                        <Image source={Icons.MdVerifiedUser} />
-                        <Text style={boardinghomeservicestyles.verifyText}>
-                          Verified
-                        </Text>
-                      </View>
-                    </View>
+                  <View style={{ flex: 1 }}>
+                    {/* Facility Name */}
 
-                    <View style={boardinghomeservicestyles.viewFlex}>
-                      <View style={boardinghomeservicestyles.setIconTextGap}>
-                        <Image
-                          source={Icons.BiTimeFive}
-                          style={boardinghomeservicestyles.setImageIconPosition}
-                        />
-                        <Text style={boardinghomeservicestyles.setTextSize}>
-                          {' '}
-                          {item?.checkinTime} am - {item?.checkoutTime} am{' '}
-                        </Text>
-                      </View>
-
-                      <View style={boardinghomeservicestyles.ratingGap}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 4,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: '600',
+                          color: '#1F2937',
+                          marginBottom: 2,
+                        }}
+                      >
+                        {item?.facilityName || 'Facility Name Not Available'}
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}
+                      >
                         <Image
                           source={Icons.StarIcon}
-                          style={boardinghomeservicestyles.ratingHeight}
+                          style={{ width: 12, height: 12 }}
                         />
-                        <Text style={boardinghomeservicestyles.ratePointSize}>
-                          {' '}
-                           {item?.reviewCount}
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#F59E0B',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {item?.reviewAvg ? item.reviewAvg.toFixed(1) : '0.0'}{' '}
+                          ({item?.reviewCount || 0})
                         </Text>
                       </View>
                     </View>
 
-                    <View style={boardinghomeservicestyles.widthSpace}>
-                      <View style={boardinghomeservicestyles.iconAndTextGap}>
+                    {/* Experience and Registration */}
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: '#6B7280',
+                        fontWeight: '500',
+                        marginBottom: 6,
+                      }}
+                    >
+                      {item?.experience
+                        ? `${item.experience} years experience`
+                        : 'Experience not specified'}{' '}
+                      • Reg: {item?.regNo || 'Not provided'}
+                    </Text>
+
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 2
+                      }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
                         <Image
                           source={Icons.RiPinDistanceLine}
-                          style={boardinghomeservicestyles.setImageIconPosition}
+                          style={{
+                            width: 12,
+                            height: 12,
+                            tintColor: '#6B7280',
+                          }}
                         />
-                        <Text style={boardinghomeservicestyles.setDigitSize}>
-                           {item?.regNo}
-                        </Text>
-                      </View>
-
-                      <View style={boardinghomeservicestyles.iconTextSpace}>
-                        <Text style={boardinghomeservicestyles.bold}>
-                          {' '}
-                          ₹ 200{' '}
-                          <Text style={boardinghomeservicestyles.weekText}>
-                            /week
-                          </Text>{' '}
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#6B7280',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {item?.city || 'Location not specified'}
                         </Text>
                       </View>
                     </View>
+
+                    {/* Description */}
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: '#4B5563',
+                        lineHeight: 16,
+                        marginBottom: 8,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {item?.description || 'No description available'}
+                    </Text>
+
+                    {/* Time and Rating Row */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 6,
+                      }}
+                    ></View>
+
+                    {/* Location and Features */}
                   </View>
                 </View>
               </View>
             </TouchableOpacity>
           ))}
-
-          {/* <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das </Text>
-                                     <View style={boardinghomeservicestyles.verified}>
-                                         <Image source={Icons.Ellipse}/>
-                                    <Text style={{fontSize:9,fontWeight:'600',lineHeight:10,letterSpacing:0,color:'#299F4D'}}>Open</Text>
-                                     </View>
-                                </View>
-                                <View style={boardinghomeservicestyles.verified}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View> */}
-
-          {/* <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das </Text>
-                                     <View style={boardinghomeservicestyles.verified}>
-                                         <Image source={Icons.Ellipse}/>
-                                    <Text style={{fontSize:9,fontWeight:'600',lineHeight:10,letterSpacing:0,color:'#299F4D'}}>Open</Text>
-                                     </View>
-                                </View>
-                                <View style={boardinghomeservicestyles.verified}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                 <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das </Text>
-                                     <View style={boardinghomeservicestyles.verified}>
-                                         <Image source={Icons.Ellipse}/>
-                                    <Text style={{fontSize:9,fontWeight:'600',lineHeight:10,letterSpacing:0,color:'#299F4D'}}>Open</Text>
-                                     </View>
-                                </View>
-                                <View style={boardinghomeservicestyles.verified}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das </Text>
-                                </View>
-                                <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                 <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das</Text>
-                                     <View style={boardinghomeservicestyles.verified}>
-                                         <Image source={Icons.Ellipse}/>
-                                    <Text style={{fontSize:9,fontWeight:'600',lineHeight:10,letterSpacing:0,color:'#299F4D'}}>Open</Text>
-                                     </View>
-                                </View>
-                                <View style={boardinghomeservicestyles.verified}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                 <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das </Text>
-                                </View>
-                                <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                <View style={boardinghomeservicestyles.containerthirdsubchild}>
-                    <View
-                        style={boardinghomeservicestyles.shadow}>
-                        <Image source={images.walkinguserimage} style={boardinghomeservicestyles.userimage}/>
-                        <View style={boardinghomeservicestyles.gap}>
-                            <View
-                                style={boardinghomeservicestyles.userTextWidth}>
-                                <View
-                                    style={boardinghomeservicestyles.userTextgap}>
-                                    <Text style={boardinghomeservicestyles.textSize}> Kiara Das </Text>
-                                     <View style={boardinghomeservicestyles.verified}>
-                                         <Image source={Icons.Ellipse}/>
-                                    <Text style={{fontSize:9,fontWeight:'600',lineHeight:10,letterSpacing:0,color:'#299F4D'}}>Open</Text>
-                                     </View>
-                                </View>
-                                <View style={boardinghomeservicestyles.verified}>
-                                    <Image source={Icons.MdVerifiedUser}  />
-                                    <Text style={boardinghomeservicestyles.verifyText}>Verified</Text>
-                                </View>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.viewFlex}>
-
-                            <View
-                                style={boardinghomeservicestyles.setIconTextGap}>
-                                <Image source={Icons.BiTimeFive} style={boardinghomeservicestyles.setImageIconPosition}/>
-                                <Text style={boardinghomeservicestyles.setTextSize}> 10:00 am - 09:00 pm </Text>
-                            </View>
-
-                            <View style={boardinghomeservicestyles.ratingGap}>
-                                    <Image source={Icons.StarIcon} style={boardinghomeservicestyles.ratingHeight} />
-                                    <Text style={boardinghomeservicestyles.ratePointSize}> 4.8</Text>
-                                </View>
-
-                            </View>
-
-                            <View style={boardinghomeservicestyles.widthSpace}>
-                                <View
-                                    style={boardinghomeservicestyles.iconAndTextGap}>
-                                    <Image
-                                        source={Icons.RiPinDistanceLine}
-                                        style={boardinghomeservicestyles.setImageIconPosition}
-                                    />
-                                    <Text style={boardinghomeservicestyles.setDigitSize}>2.2km Away</Text>
-                                </View>
-
-                                <View style={boardinghomeservicestyles.iconTextSpace}>
-                                    <Text  style={boardinghomeservicestyles.bold}> ₹ 200 <Text style={boardinghomeservicestyles.weekText}>/week</Text> </Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View> */}
         </View>
       </ScrollView>
     </View>

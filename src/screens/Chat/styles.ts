@@ -44,6 +44,98 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D1E7DD',
   },
+  // Service page style header
+  serviceStyleHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: responsiveHeight(5),
+  },
+  serviceHeaderContainer: {
+    width: responsiveWidth(100),
+    padding: responsiveWidth(4),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: responsiveHeight(2.5),
+  },
+  serviceHeaderLeft: {
+    flexDirection: 'row',
+    gap: responsiveWidth(1),
+    alignItems: 'center',
+  },
+  serviceHeaderTitle: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  serviceHeaderRight: {
+    flexDirection: 'row',
+    gap: responsiveWidth(1),
+    alignItems: 'center',
+  },
+  serviceHeaderSubtitle: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '400',
+  },
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: responsiveHeight(10),
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: responsiveHeight(10),
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    marginBottom: 20,
+    fontSize: 16,
+    color: '#E74C3C',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  retryButton: {
+    backgroundColor: '#58B9D0',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: responsiveHeight(15),
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  emptyList: {
+    flexGrow: 1,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

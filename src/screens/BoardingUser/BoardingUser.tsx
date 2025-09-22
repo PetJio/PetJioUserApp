@@ -150,9 +150,9 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
             {show ? (
-                <BoardingHomeService navigation={navigation} />
+                <BoardingHomeService navigation={navigation} mode={9} />
             ) : (
-                <CommercialService />
+                <CommercialService mode={10} />
             )}
 
             <Modal

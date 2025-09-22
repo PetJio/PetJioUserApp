@@ -21,6 +21,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { API_CONFIG } from '../../config/api';
 import signupstyles from '../SignUp/signup.styles';
 import profileStyles from './profileStyles';
+import serviceStyles from '../Service/styles';
 import { storageService } from '../../utils/storage';
 import { reset, navigate } from '../../utils/navigationService';
 import googleSignInService from '../../services/googleSignInService';
@@ -336,39 +337,63 @@ const Profile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={[signupstyles.container, {justifyContent: 'center', alignItems: 'center'}]}>
-        <ActivityIndicator size="large" color="#58B9D0" />
-        <Text style={{marginTop: 16, color: '#666'}}>Loading profile...</Text>
+      <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+        
+        {/* Sticky Header */}
+        <View style={serviceStyles.stickyHeader}>
+          <View style={serviceStyles.headerTitleContainer}>
+            <Text style={serviceStyles.stickyHeaderTitle}>Profile</Text>
+            <Text style={serviceStyles.stickyHeaderSubtitle}>Manage your account</Text>
+          </View>
+        </View>
+        
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" color="#58B9D0" />
+          <Text style={{marginTop: 16, color: '#666'}}>Loading profile...</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={signupstyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
       
-      <ScrollView 
-        style={signupstyles.scrollContainer}
-        contentContainerStyle={signupstyles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={signupstyles.formContainer}>
-          <View style={{alignItems:'center', paddingTop: responsiveHeight(3)}}>
-            <Text style={signupstyles.heading}>Profile</Text>
-            <Text style={signupstyles.subheading}>Manage your account</Text>
-          </View>
+      {/* Sticky Header */}
+      <View style={serviceStyles.stickyHeader}>
+        <View style={serviceStyles.headerTitleContainer}>
+          <Text style={serviceStyles.stickyHeaderTitle}>Profile</Text>
+          <Text style={serviceStyles.stickyHeaderSubtitle}>Manage your account</Text>
+        </View>
+      </View>
 
-          {message && (
-            <View style={[
-              signupstyles.messageContainer,
-              message.type === 'success' ? signupstyles.successMessage : signupstyles.errorMessage
-            ]}>
-              <Text style={signupstyles.messageText}>{message.text}</Text>
-            </View>
-          )}
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: responsiveWidth(4),
+          backgroundColor: '#F8F9FB',
+        }}
+      >
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: responsiveHeight(5),
+            flexGrow: 1,
+          }}
+        >
+          <View style={{
+            paddingTop: responsiveHeight(2),
+            paddingBottom: responsiveHeight(2),
+          }}>
+            {message && (
+              <View style={[
+                signupstyles.messageContainer,
+                message.type === 'success' ? signupstyles.successMessage : signupstyles.errorMessage
+              ]}>
+                <Text style={signupstyles.messageText}>{message.text}</Text>
+              </View>
+            )}
 
           {/* Tab Navigation */}
           <View style={profileStyles.tabContainer}>
@@ -411,7 +436,10 @@ const Profile: React.FC = () => {
 
           {/* User Profile Tab Content */}
           {activeTab === 'user' && (
-            <View style={signupstyles.inputContainer}>
+            <View style={{
+              gap: responsiveHeight(1.5),
+              paddingVertical: responsiveHeight(1),
+            }}>
               <TextInput
                 mode="outlined"
                 label="First Name"
@@ -564,66 +592,137 @@ const Profile: React.FC = () => {
 
           {/* Pets Tab Content */}
           {activeTab === 'pets' && (
-            <View style={profileStyles.petsSection}>
-              <View style={profileStyles.sectionHeader}>
-                <MaterialIcons 
-                  name="pets" 
-                  size={24} 
-                  color="#58B9D0" 
-                />
-                <Text style={profileStyles.sectionHeaderTitle}>My Pets</Text>
+            <View style={{ paddingVertical: responsiveHeight(1) }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: responsiveHeight(1.5),
+                paddingHorizontal: responsiveWidth(1),
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <MaterialIcons 
+                    name="pets" 
+                    size={20} 
+                    color="#58B9D0" 
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={{
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#333',
+                  }}>My Pets</Text>
+                </View>
                 <TouchableOpacity 
-                  style={[
-                    signupstyles.loginButton,
-                    {
-                      width: responsiveWidth(30),
-                      height: responsiveHeight(4.5),
-                      backgroundColor: '#58B9D0',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }
-                  ]}
+                  style={{
+                    backgroundColor: '#58B9D0',
+                    paddingVertical: responsiveHeight(1.2),
+                    paddingHorizontal: responsiveWidth(4),
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                   onPress={() => navigate('AddPet')}
                 >
                   <MaterialIcons name="add" size={18} color="#FFFFFF" style={{marginRight: 4}} />
-                  <Text style={[signupstyles.loginText, { fontSize: responsiveFontSize(1.8) }]}>Add Pet</Text>
+                  <Text style={{
+                    fontSize: responsiveFontSize(1.8),
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                  }}>Add Pet</Text>
                 </TouchableOpacity>
               </View>
 
               {loadingPets ? (
-                <View style={{padding: 20, alignItems: 'center'}}>
+                <View style={{padding: responsiveHeight(3), alignItems: 'center'}}>
                   <ActivityIndicator size="large" color="#58B9D0" />
                   <Text style={{marginTop: 10, color: '#666'}}>Loading pets...</Text>
                 </View>
               ) : petProfiles.length === 0 ? (
-                <View style={profileStyles.emptyPetsContainer}>
-                  <MaterialIcons name="pets" size={48} color="#ccc" />
-                  <Text style={profileStyles.emptyPetsText}>No pets added yet</Text>
-                  <Text style={profileStyles.emptyPetsSubtext}>Add your first pet to get started</Text>
+                <View style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 12,
+                  padding: responsiveWidth(6),
+                  alignItems: 'center',
+                  marginTop: responsiveHeight(2),
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                }}>
+                  <MaterialIcons name="pets" size={40} color="#ccc" />
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '500',
+                    color: '#999',
+                    marginTop: 12,
+                    textAlign: 'center',
+                  }}>No pets added yet</Text>
+                  <Text style={{
+                    fontSize: 14,
+                    color: '#ccc',
+                    marginTop: 4,
+                    textAlign: 'center',
+                  }}>Add your first pet to get started</Text>
                 </View>
               ) : (
                 petProfiles.map((pet, index) => (
-                  <View key={pet.id || index} style={profileStyles.petCard}>
-                    <View style={profileStyles.petCardHeader}>
-                      <View style={profileStyles.petImageContainer}>
-                        <Image
-                          source={pet.profileImg ? {uri: pet.profileImg} : images.DaisyDog}
-                          style={profileStyles.petImage}
-                        />
-                      </View>
-                      <View style={profileStyles.petBasicInfo}>
-                        <Text style={profileStyles.petName}>{pet.petName || 'Unnamed Pet'}</Text>
-                        <Text style={profileStyles.petCategory}>{pet.category?.catName || 'Unknown Category'}</Text>
-                        <Text style={profileStyles.petSize}>{pet.size?.size || 'Unknown Size'}</Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => navigate('EditPet', { pet })}
-                        style={profileStyles.editPetButton}
-                      >
-                        <MaterialIcons name="edit" size={20} color="#58B9D0" />
-                      </TouchableOpacity>
+                  <View key={pet.id || index} style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 12,
+                    padding: responsiveWidth(3),
+                    marginBottom: responsiveHeight(1),
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 2,
+                    elevation: 2,
+                  }}>
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: '#58B9D0',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: responsiveWidth(3),
+                    }}>
+                      <MaterialIcons name="pets" size={20} color="#FFFFFF" />
                     </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#333',
+                        marginBottom: 2,
+                      }}>{pet.petName || 'Unnamed Pet'}</Text>
+                      <Text style={{
+                        fontSize: 14,
+                        color: '#666',
+                        marginBottom: 1,
+                      }}>{pet.category?.catName || 'Unknown Category'}</Text>
+                      <Text style={{
+                        fontSize: 12,
+                        color: '#999',
+                      }}>{pet.size?.size || 'Unknown Size'}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => navigate('EditPet', { pet })}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        backgroundColor: '#F0F0F0',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MaterialIcons name="edit" size={16} color="#58B9D0" />
+                    </TouchableOpacity>
                   </View>
                 ))
               )}
@@ -632,17 +731,32 @@ const Profile: React.FC = () => {
 
           {/* Bottom Buttons Section - Only show for User tab */}
           {activeTab === 'user' && (
-            <View>
+            <View style={{ paddingTop: responsiveHeight(2) }}>
               {/* Save Button */}
               <TouchableOpacity 
                 onPress={handleSave}
-                style={[signupstyles.loginButton, isSaving && {opacity: 0.7}]}
+                style={[
+                  {
+                    backgroundColor: '#58B9D0',
+                    paddingVertical: responsiveHeight(1.8),
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: responsiveHeight(1.5),
+                    width: '100%',
+                  },
+                  isSaving && {opacity: 0.7}
+                ]}
                 disabled={isSaving}
               >
                 {isSaving ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={signupstyles.loginText}>Save Profile</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                  }}>Save Profile</Text>
                 )}
               </TouchableOpacity>
 
@@ -650,8 +764,14 @@ const Profile: React.FC = () => {
               <TouchableOpacity 
                 onPress={handleLogout}
                 style={[
-                  signupstyles.loginButton,
-                  { backgroundColor: '#FF6B6B', marginTop: responsiveHeight(2) },
+                  {
+                    backgroundColor: '#FF6B6B',
+                    paddingVertical: responsiveHeight(1.8),
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  },
                   isLoggingOut && {opacity: 0.7}
                 ]}
                 disabled={isLoggingOut}
@@ -659,14 +779,19 @@ const Profile: React.FC = () => {
                 {isLoggingOut ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={signupstyles.loginText}>Sign Out</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#FFFFFF',
+                  }}>Sign Out</Text>
                 )}
               </TouchableOpacity>
             </View>
           )}
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </View>
+    </View>
   );
 };
 

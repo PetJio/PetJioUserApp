@@ -19,7 +19,49 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TextInput } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles';
-import { chatService, ChatUser } from '../../services/chatService';
+import { API_CONFIG } from '../../config/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Update interface to match API response
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobile: string;
+  city: string;
+  state: string;
+  address: string;
+  businessName?: string;
+  userRoles: {
+    userId: number;
+    roleId: number;
+    role: {
+      id: number;
+      value: string;
+    };
+  }[];
+  fcmToken?: string;
+  isActive: number;
+}
+
+interface ApiResponse {
+  statusCode: number;
+  message: string;
+  body: User[];
+}
+
+// For navigation compatibility
+interface ChatUser {
+  id: string;
+  name: string;
+  avatar?: string;
+  isOnline?: boolean;
+  lastMessage?: string;
+  timestamp?: string;
+  unreadCount?: number;
+  role?: string;
+}
 
 type ChatStackParamList = {
   ChatList: undefined;
@@ -40,19 +82,107 @@ const ChatList: React.FC = () => {
     loadUsers();
   }, []);
 
+  // Function to get auth token
+  const getAuthToken = async () => {
+    const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+
+    for (const key of possibleTokenKeys) {
+      const value = await AsyncStorage.getItem(key);
+      if (value) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+    }
+    return null;
+  };
+
+  // Function to convert API users to ChatUser format
+  const convertToCompatibleUsers = (apiUsers: User[]): ChatUser[] => {
+    return apiUsers.map(user => ({
+      id: user.id.toString(),
+      name: `${user.firstName} ${user.lastName}`,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=58B9D0&color=fff`,
+      isOnline: Math.random() > 0.5, // Random online status for demo
+      lastMessage: user.userRoles[0]?.role?.value === 'boarding'
+        ? 'Available for boarding services'
+        : user.userRoles[0]?.role?.value === 'veterinary'
+        ? 'Veterinary services available'
+        : 'Hello! How can I help you?',
+      timestamp: 'Recently',
+      unreadCount: Math.floor(Math.random() * 3), // Random unread count for demo
+      role: user.userRoles[0]?.role?.value || 'user'
+    }));
+  };
+
   const loadUsers = async () => {
     setLoading(true);
     setError('');
     try {
-      const fetchedUsers = await chatService.getAllUsers();
-      setUsers(fetchedUsers);
-      if (fetchedUsers.length === 0) {
-        setError('No users found');
+      const token = await getAuthToken();
+      if (!token) {
+        setError('Authentication token not found. Please login again.');
+        return;
+      }
+
+      const apiUrl = 'http://13.204.155.197/api/user/get-all-users';
+      console.log('🌐 Fetching users from:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Users API Response Status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Users API Error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log('📄 Users Raw Response length:', responseText.length);
+
+      let result: ApiResponse;
+      try {
+        result = JSON.parse(responseText);
+        console.log('✅ Users Parsed Response:', {
+          statusCode: result.statusCode,
+          message: result.message,
+          userCount: result.body ? result.body.length : 0,
+        });
+      } catch (parseError) {
+        console.error('❌ Users JSON Parse Error:', parseError);
+        throw new Error(`Invalid JSON response`);
+      }
+
+      if (result.statusCode === 200) {
+        const apiUsers = result.body || [];
+        // Filter out inactive users and convert to ChatUser format
+        const activeUsers = apiUsers.filter(user => user.isActive === 1);
+        const chatUsers = convertToCompatibleUsers(activeUsers);
+
+        console.log('✅ Users Success - Data loaded:', chatUsers.length, 'active users');
+        setUsers(chatUsers);
+
+        if (chatUsers.length === 0) {
+          setError('No active users found');
+        }
+      } else {
+        console.error('❌ Users API returned non-200 status:', result.statusCode);
+        throw new Error(result.message || 'Failed to fetch users');
       }
     } catch (error) {
-      console.error('Error loading users:', error);
-      setError('Failed to load users');
+      console.error('🔥 Critical Error in loadUsers:', error);
+      setError(`Failed to load users: ${error.message}`);
     } finally {
+      console.log('🏁 loadUsers completed');
       setLoading(false);
     }
   };
@@ -66,8 +196,6 @@ const ChatList: React.FC = () => {
   // Filter users based on search query
   const filteredUsers = users.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.role?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -112,22 +240,22 @@ const ChatList: React.FC = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Chats</Text>
-          <Text style={styles.headerSubtitle}>Chat with providers</Text>
+      {/* Header - Matching Service Page Style */}
+      <View style={styles.serviceStyleHeader}>
+        <View style={styles.serviceHeaderContainer}>
+          <TouchableOpacity style={styles.serviceHeaderLeft}>
+            <Text style={styles.serviceHeaderTitle}>Chats</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.newChatButton}>
-          <MaterialIcons name="edit" size={20} color="#58B9D0" />
-        </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
           mode="outlined"
-          placeholder="Search chats..."
+          placeholder="Search users..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
           theme={{
             roundness: 16,
             colors: { primary: '#58B9D0', outline: '#E8E8E8' },
@@ -146,14 +274,51 @@ const ChatList: React.FC = () => {
       </View>
 
       {/* Chat List */}
-      <FlatList
-        data={filteredUsers}
-        renderItem={renderChatItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.chatList}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#58B9D0" />
+          <Text style={styles.loadingText}>Loading users...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <MaterialIcons name="error-outline" size={48} color="#E74C3C" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredUsers}
+          renderItem={renderChatItem}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.chatList,
+            filteredUsers.length === 0 && styles.emptyList
+          ]}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#58B9D0']}
+              tintColor="#58B9D0"
+            />
+          }
+          ListEmptyComponent={
+            !loading && !error ? (
+              <View style={styles.emptyContainer}>
+                <MaterialIcons name="chat-bubble-outline" size={64} color="#CCCCCC" />
+                <Text style={styles.emptyTitle}>No users found</Text>
+                <Text style={styles.emptySubtitle}>
+                  {searchQuery ? 'Try adjusting your search' : 'Pull down to refresh'}
+                </Text>
+              </View>
+            ) : null
+          }
+        />
+      )}
     </View>
   );
 };

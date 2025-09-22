@@ -20,6 +20,38 @@ const chatStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E8EBF0',
   },
+  // Service page style header
+  serviceStyleHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: responsiveHeight(5),
+  },
+  serviceHeaderContainer: {
+    width: responsiveWidth(100),
+    padding: responsiveWidth(4),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: responsiveHeight(2.5),
+  },
+  serviceHeaderLeft: {
+    flexDirection: 'row',
+    gap: responsiveWidth(1),
+    alignItems: 'center',
+  },
+  serviceHeaderTitle: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  serviceHeaderRight: {
+    flexDirection: 'row',
+    gap: responsiveWidth(1),
+    alignItems: 'center',
+  },
+  serviceHeaderSubtitle: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '400',
+  },
   backButton: {
     marginRight: 12,
     padding: 4,

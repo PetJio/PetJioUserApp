@@ -16,7 +16,7 @@ const boardingstyles = StyleSheet.create({
       padding: responsiveWidth(4),
       flexDirection: 'row',
       justifyContent: 'space-between',
-      position: 'absolute',
+    //   position: 'absolute',
       top: responsiveHeight(5),
   },
   flexGap: {
@@ -90,7 +90,7 @@ const boardingstyles = StyleSheet.create({
 
   // Fixed Button
   fixedButtonContainer: {
-      position: 'absolute',
+    //   position: 'absolute',
       bottom: responsiveHeight(3),
       width: '100%',
       alignItems: 'center',
