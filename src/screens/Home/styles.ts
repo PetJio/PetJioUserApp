@@ -41,10 +41,10 @@ const styles = StyleSheet.create({
     },
     
     container: {
-        top: responsiveHeight(4),
         width: responsiveWidth(100),
         height: responsiveHeight(100),
         backgroundColor: '#FFFFFF',
+        paddingTop: Platform.OS === 'ios' ? responsiveHeight(6) : responsiveHeight(4),
     },
     subcontainer: { top: responsiveHeight(2), gap: responsiveWidth(2.8) },
     
@@ -446,6 +446,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: responsiveWidth(3.5),
         gap: responsiveWidth(2.2),
+        paddingTop: responsiveHeight(1),
     },
     doctorcontainer: {
         width: responsiveWidth(15),

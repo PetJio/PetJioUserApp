@@ -68,7 +68,7 @@ const GroomingPaymentconfirmmethod: React.FC<InvoiceProps> = ({navigation}) => {
                         <Text style={groomingpaymentconfirmmethodstyles.remainderText}>We will remind you 30 minutes in advance</Text>
                       </View>
                        <TouchableOpacity
-                        onPress={()=>navigation.navigate("Main")}
+                        onPress={()=>navigation.navigate("Main", { screen: 'Home' })}
                        >
                         <View style={groomingpaymentconfirmmethodstyles.bottomshadow}>
                         <View style={groomingpaymentconfirmmethodstyles.nextBtnContainer}>

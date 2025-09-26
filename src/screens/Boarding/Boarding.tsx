@@ -7,6 +7,7 @@ import {
     Dimensions,
     TouchableOpacity,
     Modal,
+    StatusBar,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { TextInput } from 'react-native-paper';
@@ -17,6 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setSelectedDate, setFromTime, setToTime, setSelectedCity } from '../../store/slices/boardingSlice';
+import serviceStyles from '../Service/styles';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
@@ -144,34 +146,45 @@ const Boarding: React.FC<LocalityProps> = ({ navigation }) => {
 
     return (
         <View style={boardingstyles.parentContainer}>
+            <StatusBar
+                barStyle="dark-content"
+                backgroundColor="#FFFFFF"
+                translucent={false}
+                animated={true}
+            />
+
+            {/* Header Section matching BoardingDetails page */}
+            <View style={[serviceStyles.stickyHeader, { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
+                <TouchableOpacity onPress={() => navigation.navigate('Main')} style={{ marginRight: 16 }}>
+                    <Image
+                        source={Icons.LeftArrow}
+                        style={{ tintColor: '#000000', width: 20, height: 20 }}
+                    />
+                </TouchableOpacity>
+                <View style={serviceStyles.headerTitleContainer}>
+                    <Text style={serviceStyles.stickyHeaderTitle}>
+                        Date and Time
+                    </Text>
+                    <Text style={serviceStyles.stickyHeaderSubtitle}>
+                        Select your boarding schedule
+                    </Text>
+                </View>
+                <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F8F9FB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
+                    onPress={() => setShowCityModal(true)}
+                >
+                    <Text style={{ fontSize: 14, color: '#1A1D29', fontWeight: '500' }}>
+                        {selectedCity}
+                    </Text>
+                    <Image
+                        source={Icons.DownArrow}
+                        style={{ width: 16, height: 16, tintColor: '#6B7280' }}
+                    />
+                </TouchableOpacity>
+            </View>
+
             <View style={{ flex: 1 }}>
                 <View style={boardingstyles.relative}>
-                    <View style={boardingstyles.positionDateTimeIcon}>
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('Main')}>
-                            <View style={boardingstyles.flexGap}>
-                                <Image
-                                    source={Icons.LeftArrow}
-                                    style={boardingstyles.iconColor}
-                                />
-                                <Text style={boardingstyles.textDateTime}>
-                                    Date and Time
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={boardingstyles.trackingPositionIcon}
-                            onPress={() => setShowCityModal(true)}
-                        >
-                            <Text style={boardingstyles.trackTextColor}>
-                                {selectedCity}
-                            </Text>
-                            <Image
-                                source={Icons.DownArrow}
-                                style={boardingstyles.trackIcon}
-                            />
-                        </TouchableOpacity>
-                    </View>
                     <View>
                         <Text style={boardingstyles.selectDateText}>
                             Select Date

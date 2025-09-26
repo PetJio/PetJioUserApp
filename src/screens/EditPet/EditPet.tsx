@@ -309,7 +309,12 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
   if (loadingData) {
     return (
       <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#FFFFFF"
+          translucent={false}
+          animated={true}
+        />
         <View style={{ flex: 1 }}>
           {/* Header Section matching Services page */}
           <View style={serviceStyles.stickyHeader}>

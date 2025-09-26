@@ -63,7 +63,7 @@ const Paymentconfirmmethod: React.FC<InvoiceProps> = ({navigation}) => {
                         </View>
                         <Text style={Paymentconfirmmethodstyles.remainderText}>We will remind you 30 minutes in advance</Text>
                       </View>
-                    <TouchableOpacity  onPress={()=>navigation.navigate("Main")}>
+                    <TouchableOpacity  onPress={()=>navigation.navigate("Main", { screen: 'Home' })}>
                            <View style={Paymentconfirmmethodstyles.bottomshadow}>
                         <View style={Paymentconfirmmethodstyles.nextBtnContainer}>
                             <Text style={Paymentconfirmmethodstyles.nextBtnText}>Go Back to Homepage</Text>

@@ -64,7 +64,7 @@ const DonatePaymentconfirmmethod: React.FC<InvoiceProps> = ({navigation}) => {
                         <Text style={donatepaymentconfirmmethodstyles.remainderText}>Donations made to PAWS are exempt U/s 80G of the income {"\n"} tax Act vide approval number AABTGFGDCYTE156 Dated - 2 {"\n"} 5/10/24 & valid up to 25/10/26 </Text>
                       </View>
                        <TouchableOpacity
-                        onPress={()=>navigation.navigate("Main")}
+                        onPress={()=>navigation.navigate("Main", { screen: 'Home' })}
                        >
                         <View style={donatepaymentconfirmmethodstyles.bottomshadow}>
                         <View style={donatepaymentconfirmmethodstyles.nextBtnContainer}>

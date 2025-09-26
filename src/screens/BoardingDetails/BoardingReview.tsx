@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import boardingreviewstyles from './boardingreview.styles';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
+import { ReviewCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 interface BoardingReviewProps {
   rating?: number;
@@ -25,10 +27,8 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
 
   const fetchReview = async () => {
     try {
-      // setLoading(true);
-      // setError('');
-
-      // console.log('Fetching boarding details for providerId:', providerId);
+      setLoading(true);
+      setError('');
 
       const response = await fetch(
         `${API_CONFIG.BASE_URL}${API_ENDPOINTS.SERVICES.BOARDING_REVIEWS}`,
@@ -55,35 +55,90 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
         data.body.length > 0
       ) {
         console.log('data.body 000', data.body);
-        setReviewData(data.body); // Get the first boarding from the list
+        setReviewData(data.body);
       } else {
-        // If no API data, use default values to match reference UI
-        // setServiceDetails({
-        //     user: { firstName: 'Kiara', lastName: 'Das' },
-        //     reviewAvg: 4.8,
-        //     profileImg: null,
-        //     description: 'Hi Pet Parents !!!! I am a proficient grooming partner with pgroomy have an experience of 7+ years, can work efficiently with both dogs and cats. Also experienced with different breeds of pets in terms of styling and grooming.',
-        //     experience: 7,
-        //     facilityName: 'Kiara\'s Boarding'
-        // });
+        setReviewData([]);
       }
     } catch (error: any) {
-      console.error('Error fetching boarding details:', error);
-      setError(error.message || 'Failed to fetch boarding details');
-
-      // Set default data to match reference even on error
-      // setServiceDetails({
-      //     user: { firstName: 'Kiara', lastName: 'Das' },
-      //     reviewAvg: 4.8,
-      //     profileImg: null,
-      //     description: 'Hi Pet Parents !!!! I am a proficient grooming partner with pgroomy have an experience of 7+ years, can work efficiently with both dogs and cats. Also experienced with different breeds of pets in terms of styling and grooming.',
-      //     experience: 7,
-      //     facilityName: 'Kiara\'s Boarding'
-      // });
+      console.error('Error fetching review details:', error);
+      setError(error.message || 'Failed to fetch review details');
+      setReviewData([]);
     } finally {
       setLoading(false);
     }
   };
+  // Loading state
+  if (loading) {
+    return (
+      <View style={{ flex: 1, paddingVertical: 20 }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {[...Array(4)].map((_, index) => (
+            <ReviewCardSkeleton key={index} />
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Empty state - No reviews
+  if (!loading && reviewData.length === 0) {
+    return (
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+        paddingHorizontal: 20,
+      }}>
+        <View style={{
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: '#F3F4F6',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 20,
+        }}>
+          <MaterialIcons name="rate-review" size={36} color="#9CA3AF" />
+        </View>
+        <Text style={{
+          fontSize: 18,
+          fontWeight: '600',
+          color: '#374151',
+          textAlign: 'center',
+          marginBottom: 8,
+        }}>
+          No Reviews Yet
+        </Text>
+        <Text style={{
+          fontSize: 14,
+          color: '#6B7280',
+          textAlign: 'center',
+          lineHeight: 20,
+        }}>
+          Be the first to share your experience{'\n'}with this boarding provider
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#58B9D0',
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 24,
+            marginTop: 24,
+          }}
+        >
+          <Text style={{
+            color: '#FFFFFF',
+            fontSize: 14,
+            fontWeight: '600',
+          }}>
+            Write First Review
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={boardingreviewstyles.container}>
       <View style={boardingreviewstyles.contentGap}>
@@ -92,41 +147,6 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
           contentContainerStyle={boardingreviewstyles.bottomspace}
           showsVerticalScrollIndicator={false}
         >
-          {/* {Array(reviews > 10 ? 10 : reviews)
-            .fill(null)
-            .map((_, index) => (
-              <View key={index} style={boardingreviewstyles.generatedViewGap}>
-                <View style={boardingreviewstyles.viewSize}>
-                  <View style={boardingreviewstyles.imageTextGap}>
-                    <View>
-                      <Image
-                        source={images?.UserImage}
-                        style={boardingreviewstyles.userImageSize}
-                      />
-                      <Text style={boardingreviewstyles.ratingSize}>
-                        {rating}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={boardingreviewstyles.nameText}>
-                        Kamal Sharma
-                      </Text>
-                      <Text style={boardingreviewstyles.paragraphText}>
-                        Lorem Ipsum is simply dummy text of the {'\n'}
-                        printing and typesetting industry. Lorem Ipsum {'\n'}
-                        has been the industry's standard dummy text{'\n'} ever
-                        since the 1500s.
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={boardingreviewstyles.datePosition}>
-                    <Text style={boardingreviewstyles.datefontSize}>
-                      May 13, 2024
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ))} */}
           {reviewData.map(item => (
             <View key={item?.id} style={boardingreviewstyles.generatedViewGap}>
               <View style={boardingreviewstyles.viewSize}>
@@ -159,16 +179,6 @@ const BoardingReview: React.FC<BoardingReviewProps> = ({
           ))}
         </ScrollView>
       </View>
-
-      {/* Fixed Button at the Bottom */}
-      {/* <View style={boardingreviewstyles.fixedButtonContainer}>
-        <TouchableOpacity
-          // onPress={() => navigation.navigate('HomeService')}
-          style={boardingreviewstyles.nextBtnContainer}
-        >
-          <Text style={boardingreviewstyles.nextBtnText}>Write a review</Text>
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 };

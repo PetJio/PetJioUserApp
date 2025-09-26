@@ -43,7 +43,7 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
       </View>
 
       {/* Why Choose Us Section */}
-      <View style={{ marginBottom: 24 }}>
+      {/* <View style={{ marginBottom: 24 }}>
         <Text style={{
           fontSize: 16,
           fontWeight: '600',
@@ -59,10 +59,10 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
         }}>
           {serviceDetails?.whyChooseUs || 'Experienced staff, clean facility, and daily updates.'}
         </Text>
-      </View>
+      </View> */}
 
       {/* Facilities Section */}
-      <View style={{ marginBottom: 24 }}>
+      {/* <View style={{ marginBottom: 24 }}>
         <Text style={{
           fontSize: 16,
           fontWeight: '600',
@@ -125,7 +125,7 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
             </Text>
           </View>
         </View>
-      </View>
+      </View> */}
     </View>
   );
 };

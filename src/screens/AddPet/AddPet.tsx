@@ -342,7 +342,12 @@ const AddPet: React.FC = () => {
   if (initialLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+        <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
         <View style={{ flex: 1 }}>
           {/* Header Section matching Services page */}
           <View style={serviceStyles.stickyHeader}>
@@ -354,7 +359,7 @@ const AddPet: React.FC = () => {
             </TouchableOpacity>
             <View style={serviceStyles.headerTitleContainer}>
               <Text style={serviceStyles.stickyHeaderTitle}>
-                Add Pet Profile
+                Add Pet
               </Text>
               <Text style={serviceStyles.stickyHeaderSubtitle}>
                 Create a new pet profile
@@ -376,7 +381,12 @@ const AddPet: React.FC = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
       <View style={{ flex: 1 }}>
         {/* Header Section matching Services page */}
         <View style={serviceStyles.stickyHeader}>
@@ -388,10 +398,10 @@ const AddPet: React.FC = () => {
           </TouchableOpacity>
           <View style={serviceStyles.headerTitleContainer}>
             <Text style={serviceStyles.stickyHeaderTitle}>
-              Add Pet Profile
+              Add Pet
             </Text>
             <Text style={serviceStyles.stickyHeaderSubtitle}>
-              Create a new pet profile
+              Add a new pet
             </Text>
           </View>
         </View>
@@ -765,7 +775,7 @@ const AddPet: React.FC = () => {
               {loading ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={boardingQuestionStyles.bookButtonText}>Add Pet Profile</Text>
+                <Text style={boardingQuestionStyles.bookButtonText}>Add Pet</Text>
               )}
             </TouchableOpacity>
           </ScrollView>

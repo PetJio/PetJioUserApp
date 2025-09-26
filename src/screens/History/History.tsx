@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../../config/api';
 import { navigate } from '../../utils/navigationService';
 import historyStyles from './history.styles';
+import { HistoryCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 // Interface definitions based on API response
 interface BookingDetail {
@@ -498,7 +499,12 @@ const History: React.FC = () => {
 
   return (
     <View style={historyStyles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
 
       {/* Header - Service Page Style */}
       <View style={historyStyles.serviceStyleHeader}>
@@ -512,9 +518,10 @@ const History: React.FC = () => {
       {/* Content */}
       <View style={historyStyles.content}>
         {loading && !refreshing ? (
-          <View style={historyStyles.loadingContainer}>
-            <ActivityIndicator size="large" color="#58B9D0" />
-            <Text style={historyStyles.loadingText}>Loading booking history...</Text>
+          <View style={{ flex: 1, paddingTop: 20 }}>
+            {[...Array(5)].map((_, index) => (
+              <HistoryCardSkeleton key={index} />
+            ))}
           </View>
         ) : error ? (
           <View style={historyStyles.errorContainer}>
@@ -544,12 +551,63 @@ const History: React.FC = () => {
             }
             ListEmptyComponent={
               !loading && !error ? (
-                <View style={historyStyles.emptyContainer}>
-                  <MaterialIcons name="history" size={64} color="#CCCCCC" />
-                  <Text style={historyStyles.emptyTitle}>No Booking History</Text>
-                  <Text style={historyStyles.emptySubtitle}>
-                    Your booking history will appear here once you make your first booking
+                <View style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingVertical: 80,
+                  paddingHorizontal: 20,
+                }}>
+                  <View style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 50,
+                    backgroundColor: '#F3F4F6',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: 24,
+                  }}>
+                    <MaterialIcons name="history" size={48} color="#9CA3AF" />
+                  </View>
+                  <Text style={{
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#374151',
+                    textAlign: 'center',
+                    marginBottom: 8,
+                  }}>
+                    No Booking History
                   </Text>
+                  <Text style={{
+                    fontSize: 14,
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    lineHeight: 20,
+                    marginBottom: 32,
+                  }}>
+                    Your booking history will appear here{'\n'}once you make your first booking
+                  </Text>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#58B9D0',
+                      paddingHorizontal: 32,
+                      paddingVertical: 16,
+                      borderRadius: 25,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                    onPress={() => navigate('Main')}
+                  >
+                    <MaterialIcons name="pets" size={20} color="#FFFFFF" />
+                    <Text style={{
+                      color: '#FFFFFF',
+                      fontSize: 16,
+                      fontWeight: '600',
+                    }}>
+                      Book a Service
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               ) : null
             }

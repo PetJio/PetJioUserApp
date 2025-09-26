@@ -23,6 +23,7 @@ import { RootStackParamList } from '../../types/navigation';
 import { API_CONFIG } from '../../config/api';
 import historyStyles from './history.styles';
 import serviceStyles from '../Service/styles';
+import { HistoryDetailsSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 // Interface definitions from History.tsx
 interface BookingDetail {
@@ -96,6 +97,16 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   const [updatingStatus, setUpdatingStatus] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [ownerId, setOwnerId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Simulate initial data loading
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Helper functions from History.tsx
   const formatDate = (dateString: string) => {
@@ -391,19 +402,28 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={historyStyles.detailsScrollContainer}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: responsiveWidth(4) }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#58B9D0']}
-            tintColor="#58B9D0"
-          />
-        }
-      >
+      {/* Content */}
+      {loading ? (
+        <ScrollView
+          style={historyStyles.detailsScrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <HistoryDetailsSkeleton />
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={historyStyles.detailsScrollContainer}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: responsiveWidth(4) }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#58B9D0']}
+              tintColor="#58B9D0"
+            />
+          }
+        >
         {/* Main Info Card */}
         <View style={historyStyles.detailsCard}>
           <View style={historyStyles.cardHeader}>
@@ -524,6 +544,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           </View>
         </View>
       </ScrollView>
+      )}
 
       {/* Action Button - Fixed at bottom */}
       {actionButton && (

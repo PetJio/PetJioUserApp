@@ -539,7 +539,12 @@ const Profile: React.FC = () => {
   if (isLoading) {
     return (
       <View style={profileStyles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#FFFFFF"
+          translucent={false}
+          animated={true}
+        />
 
         {/* Modern Header */}
         <View style={profileStyles.stickyHeader}>
@@ -563,7 +568,12 @@ const Profile: React.FC = () => {
 
   return (
     <View style={profileStyles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
 
       {/* Header - Service Page Style */}
       <View style={serviceStyles.stickyHeader}>

@@ -68,7 +68,7 @@ const TrainingPaymentconfirmmethod: React.FC<InvoiceProps> = ({navigation}) => {
                         <Text style={trainingpaymentconfirmmethodstyles.remainderText}>We will remind you 30 minutes in advance</Text>
                       </View>
                        <TouchableOpacity
-                        onPress={()=>navigation.navigate("Main")}
+                        onPress={()=>navigation.navigate("Main", { screen: 'Home' })}
                        >
                         <View style={trainingpaymentconfirmmethodstyles.bottomshadow}>
                         <View style={trainingpaymentconfirmmethodstyles.nextBtnContainer}>

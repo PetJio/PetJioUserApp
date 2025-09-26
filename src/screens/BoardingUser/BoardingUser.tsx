@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, Modal, FlatList } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, Modal, FlatList, StatusBar } from 'react-native';
 import images from '../../../assets/images';
 import Icon from 'react-native-vector-icons/Feather';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Icons from '../../../assets/icons';
 import boardinguserstyles from './boardinguser.styles';
 import CommercialService from './CommercialService';
 import BoardingHomeService from './BoardingHomeService';
 import { StackNavigationProp } from '@react-navigation/stack';
+import serviceStyles from '../Service/styles';
 
 
 
@@ -29,9 +31,9 @@ interface UserDetailsProps {
 }
 
 const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
-    const [show, setShow] = useState<boolean>(true);
+    const [show, setShow] = useState<boolean>(false);
     const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
-    const [selectedCity, setSelectedCity] = useState<string>('Kasba');
+    const [selectedCity, setSelectedCity] = useState<string>('Kolkata');
 
     const indianCities = [
         'Mumbai',
@@ -107,46 +109,130 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
 
     return (
         <View style={boardinguserstyles.container}>
-            <View style={boardinguserstyles.containerchild}>
-               <TouchableOpacity onPress={()=>navigation.goBack('')}>
-                    <View style={boardinguserstyles.containerfirstsubchild}>
-                            <Image source={Icons.LeftArrow} style={boardinguserstyles.leftarrowicon} />
-                            <Text style={boardinguserstyles.groomingText}>Boarding</Text>
-                        </View>
-               </TouchableOpacity>
+            <StatusBar
+                barStyle="dark-content"
+                backgroundColor="#FFFFFF"
+                translucent={false}
+                animated={true}
+            />
+
+            {/* Header Section matching BoardingDetails page */}
+            <View style={[serviceStyles.stickyHeader, { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
+                    <Image
+                        source={Icons.LeftArrow}
+                        style={{ tintColor: '#000000', width: 20, height: 20 }}
+                    />
+                </TouchableOpacity>
+                <View style={serviceStyles.headerTitleContainer}>
+                    <Text style={serviceStyles.stickyHeaderTitle}>
+                        Boarding
+                    </Text>
+                    <Text style={serviceStyles.stickyHeaderSubtitle}>
+                        Find trusted boarding providers
+                    </Text>
+                </View>
                 <TouchableOpacity
-                    style={boardinguserstyles.locationtext}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F8F9FB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
                     onPress={() => setShowCityDropdown(true)}
                 >
-                    <Text style={boardinguserstyles.locationtextColor}>{selectedCity}</Text>
-                    <Image source={Icons.DownArrow} style={boardinguserstyles.downArrowIcon} />
+                    <Text style={{ fontSize: 14, color: '#1A1D29', fontWeight: '500' }}>
+                        {selectedCity}
+                    </Text>
+                    <Image
+                        source={Icons.DownArrow}
+                        style={{ width: 16, height: 16, tintColor: '#6B7280' }}
+                    />
                 </TouchableOpacity>
             </View>
 
-            <View style={boardinguserstyles.containersecondsubchild}>
-                <TouchableOpacity onPress={handleToggle}>
-                    <Text style={show ? boardinguserstyles.onsitetext : boardinguserstyles.homeservicetext}>
-                       Commercial Service 
+            {/* Tab Navigation */}
+            <View style={{
+                flexDirection: 'row',
+                backgroundColor: '#F8F9FB',
+                borderRadius: 12,
+                // padding: 4,
+                marginHorizontal: 20,
+                // marginTop: 8,
+                // marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+            }}>
+                <TouchableOpacity
+                    onPress={handleToggle}
+                    style={{
+                        flex: 1,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                        backgroundColor: !show ? '#58B9D0' : 'transparent',
+                        borderRadius: 8,
+                    }}
+                >
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: !show ? '#FFFFFF' : '#6B7280',
+                    }}>
+                        Home Service
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleToggle}>
-                    <Text style={show ? boardinguserstyles.homeservicetext : boardinguserstyles.onsitetext}>
-                       Home Service
+                                <TouchableOpacity
+                    onPress={handleToggle}
+                    style={{
+                        flex: 1,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                        backgroundColor: show ? '#58B9D0' : 'transparent',
+                        borderRadius: 8,
+                    }}
+                >
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: show ? '#FFFFFF' : '#6B7280',
+                    }}>
+                        Commercial Service
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            <View style={boardinguserstyles.searchparent}>
-                <View style={boardinguserstyles.searchchild}>
-                    <Image source={Icons.search} style={boardinguserstyles.iconMargin}/>
+            {/* Search and Filter */}
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                paddingHorizontal: 20,
+                // marginBottom: 12,
+            }}>
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1,
+                    backgroundColor: '#F6F6F6',
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    height: 48,
+                }}>
+                    <MaterialIcons name="search" size={20} color="#999" style={{ marginRight: 12 }} />
                     <TextInput
                         placeholder="Search for Boarders"
                         placeholderTextColor="#999"
-                        style={boardinguserstyles.textInput}
+                        style={{
+                            flex: 1,
+                            fontSize: 16,
+                            color: '#333',
+                        }}
                     />
                 </View>
-                <TouchableOpacity style={boardinguserstyles.filterbtn}>
-                    <Image source={Icons.Filter} style={boardinguserstyles.filterIcon} />
+                <TouchableOpacity style={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: '#58B9D0',
+                    borderRadius: 12,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}>
+                    <MaterialIcons name="tune" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
             {show ? (

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text,Image ,TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text,Image ,TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import images from '../../../../assets/images';
 import Icons from '../../../../assets/icons';
 import insiteservicestyles from './insiteservice.styles';
@@ -21,6 +21,40 @@ type InSiteServiceProps = {
 
 
 const InSiteService: React.FC<InSiteServiceProps> = ({ navigation }) => {
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Simulate loading
+        const timer = setTimeout(() => {
+            setLoading(false);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (loading) {
+        return (
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingTop: 50,
+                }}
+            >
+                <ActivityIndicator size="large" color="#58B9D0" />
+                <Text style={{
+                    marginTop: 16,
+                    fontSize: 16,
+                    color: '#6B7280',
+                    fontWeight: '500'
+                }}>
+                    Loading grooming services...
+                </Text>
+            </View>
+        );
+    }
+
     return (
         <View style={insiteservicestyles.container}>
         

@@ -25,6 +25,10 @@ import { chatService, ChatUser } from '../../services/chatService';
 import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from '../../config/api';
 import { STORAGE_KEYS } from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { chatContextService } from '../../services/chatContextService';
+import { realtimeChatService } from '../../services/realtimeChatService';
+import { useFocusEffect } from '@react-navigation/native';
+import { ChatPageSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 interface MessageStatus {
   id: number;
@@ -82,6 +86,7 @@ const Chat: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -94,6 +99,68 @@ const Chat: React.FC = () => {
       loadMessages();
     }
   }, [currentUserId]);
+
+  // Set up chat context for real-time messages
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id && currentUserId) {
+        console.log('📱 Setting up realtime chat for user:', user.id);
+        console.log('👤 Current user ID:', currentUserId);
+
+        // Set up both services for redundancy
+        chatContextService.setCurrentChat(user.id.toString(), addRealtimeMessage);
+        realtimeChatService.setCurrentChat(user.id.toString(), addRealtimeMessage, currentUserId.toString());
+
+        // Cleanup function
+        return () => {
+          console.log('📱 Clearing realtime chat context');
+          chatContextService.clearCurrentChat();
+          realtimeChatService.clearCurrentChat();
+        };
+      }
+    }, [user?.id, currentUserId])
+  );
+
+  // Function to add real-time messages to the chat
+  const addRealtimeMessage = React.useCallback((newMessage: Message) => {
+    console.log('💬 Adding real-time message:', newMessage);
+    console.log('📊 Current messages count before:', messages.length);
+
+    setMessages(prevMessages => {
+      console.log('📊 Previous messages in setState:', prevMessages.length);
+
+      // Check if message already exists to avoid duplicates
+      // Check by both ID and content/timestamp to be extra safe
+      const messageExists = prevMessages.some(msg =>
+        msg.id === newMessage.id ||
+        (msg.message === newMessage.message &&
+         msg.senderId === newMessage.senderId &&
+         Math.abs(new Date(msg.createdAt).getTime() - new Date(newMessage.createdAt).getTime()) < 1000)
+      );
+
+      if (messageExists) {
+        console.log('❌ Message already exists, skipping');
+        return prevMessages;
+      }
+
+      console.log('✅ Adding new message to chat');
+      // Add new message to the end of the list (since messages are ordered oldest first)
+      const updatedMessages = [...prevMessages, newMessage];
+      console.log('📊 Updated messages count:', updatedMessages.length);
+
+      // Force re-render by returning a new array reference
+      return updatedMessages;
+    });
+
+    // Force component re-render
+    setForceUpdate(prev => prev + 1);
+
+    // Scroll to bottom to show new message (outside setState to ensure it runs)
+    setTimeout(() => {
+      console.log('📱 Scrolling to bottom');
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 200);
+  }, [messages.length]);
 
   // Get current user ID
   const loadCurrentUser = async () => {
@@ -429,7 +496,12 @@ const Chat: React.FC = () => {
       style={chatStyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
       
       {/* Header */}
       <View style={chatStyles.serviceStyleHeader}>
@@ -465,7 +537,7 @@ const Chat: React.FC = () => {
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => `message-${item.id}-${index}-${forceUpdate}`}
         style={chatStyles.messagesList}
         contentContainerStyle={chatStyles.messagesContent}
         showsVerticalScrollIndicator={false}
@@ -482,16 +554,49 @@ const Chat: React.FC = () => {
         }
         ListEmptyComponent={
           !initialLoading && !refreshing && messages.length === 0 ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-              <MaterialIcons name="chat-bubble-outline" size={64} color="#CCCCCC" />
-              <Text style={{ color: '#9CA3AF', marginTop: 16, textAlign: 'center', fontSize: 16 }}>
-                No messages yet{'\n'}Start a conversation!
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 32,
+              paddingVertical: 80,
+              minHeight: responsiveHeight(60),
+            }}>
+              <View style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                backgroundColor: '#F8F9FB',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 24,
+                borderWidth: 2,
+                borderColor: '#E5E7EB',
+              }}>
+                <MaterialIcons name="chat-bubble-outline" size={48} color="#9CA3AF" />
+              </View>
+              <Text style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: '#374151',
+                textAlign: 'center',
+                marginBottom: 8,
+              }}>
+                No messages yet
+              </Text>
+              <Text style={{
+                fontSize: 14,
+                color: '#6B7280',
+                textAlign: 'center',
+                lineHeight: 20,
+                marginBottom: 32,
+              }}>
+                Start a conversation with {user?.name || 'this provider'}{'\n'}Your messages will appear here
               </Text>
             </View>
           ) : initialLoading ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-              <ActivityIndicator size="large" color="#58B9D0" />
-              <Text style={{ color: '#9CA3AF', marginTop: 16 }}>Loading messages...</Text>
+            <View style={{ flex: 1, minHeight: responsiveHeight(70) }}>
+              <ChatPageSkeleton />
             </View>
           ) : null
         }

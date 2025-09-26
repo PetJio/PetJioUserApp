@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import {
@@ -170,7 +171,12 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
 
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF', minHeight: screenHeight }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
 
       {/* Header Section matching AddPet page */}
       <View style={[serviceStyles.stickyHeader, { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
@@ -189,14 +195,26 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           </Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Image
-            source={Icons.MdOutlineCall}
-            style={{ width: 24, height: 24, tintColor: '#58B9D0' }}
-          />
-          <Image
-            source={Icons.LoveIcon}
-            style={{ width: 24, height: 24, tintColor: '#E74C3C' }}
-          />
+          <TouchableOpacity style={{
+            width: 40,
+            height: 40,
+            backgroundColor: '#E8F4FD',
+            borderRadius: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            <MaterialIcons name="call" size={20} color="#58B9D0" />
+          </TouchableOpacity>
+          <TouchableOpacity style={{
+            width: 40,
+            height: 40,
+            backgroundColor: '#FFEAEA',
+            borderRadius: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            <MaterialIcons name="favorite-border" size={20} color="#E74C3C" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -215,64 +233,84 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           {/* Facility Card */}
         <View style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 20,
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 24,
           borderWidth: 1,
           borderColor: '#E5E7EB',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 2,
         }}>
           <View style={{ flexDirection: 'row', gap: 16 }}>
-            <Image
-              source={
-                bookingDetailsData?.profileImg
-                  ? { uri: bookingDetailsData.profileImg }
-                  : images.walkinguserimage
-              }
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 12,
-                backgroundColor: '#F3F4F6',
-              }}
-            />
+            <View style={{
+              width: 85,
+              height: 85,
+              borderRadius: 16,
+              backgroundColor: '#F8F9FB',
+              borderWidth: 2,
+              borderColor: '#E5E7EB',
+              overflow: 'hidden',
+            }}>
+              <Image
+                source={
+                  bookingDetailsData?.profileImg
+                    ? { uri: bookingDetailsData.profileImg }
+                    : images.walkinguserimage
+                }
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#F3F4F6',
+                }}
+              />
+            </View>
             <View style={{ flex: 1 }}>
-              {/* Facility Name and Rating */}
+              {/* Facility Name */}
+              <Text style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: '#111827',
+                marginBottom: 6,
+                lineHeight: 24,
+              }} numberOfLines={1}>
+                {bookingDetailsData?.facilityName || 'John Orthon'}
+              </Text>
+
+              {/* Rating */}
               <View style={{
                 flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: 8,
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 12,
               }}>
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: '600',
-                  color: '#1F2937',
-                  flex: 1,
-                  marginRight: 8,
-                }}>
-                  {bookingDetailsData?.facilityName || 'Facility Name Not Available'}
-                </Text>
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 4,
                   backgroundColor: '#FEF3C7',
-                  paddingHorizontal: 8,
-                  paddingVertical: 4,
-                  borderRadius: 12,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 16,
                 }}>
-                  <Image
-                    source={Icons.StarIcon}
-                    style={{ width: 14, height: 14 }}
-                  />
+                  <MaterialIcons name="star" size={16} color="#F59E0B" />
                   <Text style={{
-                    fontSize: 12,
+                    fontSize: 13,
                     color: '#F59E0B',
-                    fontWeight: '600',
+                    fontWeight: '700',
                   }}>
                     {bookingDetailsData?.reviewAvg ? bookingDetailsData.reviewAvg.toFixed(1) : '0.0'}
                   </Text>
                 </View>
+                <Text style={{
+                  fontSize: 12,
+                  color: '#6B7280',
+                  fontWeight: '500',
+                }}>
+                  ({bookingDetailsData?.reviewCount || 0} reviews)
+                </Text>
               </View>
 
               {/* Verified Badge */}
@@ -282,7 +320,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
                 gap: 6,
                 marginBottom: 8,
               }}>
-                <Image source={Icons.MdVerifiedUser} style={{ width: 16, height: 16 }} />
+                <MaterialIcons name="verified" size={16} color="#10B981" />
                 <Text style={{
                   fontSize: 12,
                   color: '#10B981',
@@ -299,16 +337,13 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
                 gap: 6,
                 marginBottom: 8,
               }}>
-                <Image
-                  source={Icons.BiTimeFive}
-                  style={{ width: 14, height: 14, tintColor: '#6B7280' }}
-                />
+                <MaterialIcons name="access-time" size={14} color="#6B7280" />
                 <Text style={{
                   fontSize: 12,
                   color: '#6B7280',
                   fontWeight: '500',
                 }}>
-                  {bookingDetailsData?.checkinTime && bookingDetailsData?.checkoutTime 
+                  {bookingDetailsData?.checkinTime && bookingDetailsData?.checkoutTime
                     ? `${bookingDetailsData.checkinTime}:00 am - ${bookingDetailsData.checkoutTime}:00 pm`
                     : 'Hours not specified'
                   }
@@ -321,10 +356,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
                 alignItems: 'center',
                 gap: 6,
               }}>
-                <Image
-                  source={Icons.locationposition}
-                  style={{ width: 14, height: 14, tintColor: '#6B7280' }}
-                />
+                <MaterialIcons name="location-on" size={14} color="#6B7280" />
                 <Text style={{
                   fontSize: 12,
                   color: '#6B7280',
@@ -419,32 +451,6 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           flexDirection: 'row',
           gap: 12,
         }}>
-          {/* Chat Button */}
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: '#FFFFFF',
-              paddingVertical: 16,
-              borderRadius: 8,
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 50,
-              borderWidth: 2,
-              borderColor: '#58B9D0',
-              flexDirection: 'row',
-              gap: 8,
-            }}
-            onPress={handleChatPress}
-          >
-            <MaterialIcons name="chat-bubble-outline" size={20} color="#58B9D0" />
-            <Text style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#58B9D0',
-            }}>
-              Chat
-            </Text>
-          </TouchableOpacity>
 
           {/* Book Now Button */}
           <TouchableOpacity

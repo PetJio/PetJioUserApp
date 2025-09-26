@@ -7,12 +7,13 @@ import {
   FlatList,
   ScrollView,
   StatusBar,
+  Platform,
 } from 'react-native';
 import {
   responsiveWidth,
   responsiveHeight,
 } from 'react-native-responsive-dimensions';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { TextInput } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
@@ -20,6 +21,16 @@ import styles from './styles';
 
 const Mart: React.FC = () => {
   const naviagtion = useNavigation();
+
+  // Force status bar to be white whenever Service screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor('#FFFFFF', true);
+        StatusBar.setBarStyle('dark-content', true);
+      }
+    }, [])
+  );
 
   const services = [
     // { id: '1', name: 'Veterinary', image: images.serviceveterinaryImage },
@@ -46,7 +57,12 @@ const Mart: React.FC = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
       
       {/* Sticky Header */}
       <View style={styles.stickyHeader}>

@@ -96,25 +96,6 @@ const styles = StyleSheet.create({
     paddingVertical: responsiveHeight(10),
     paddingHorizontal: 20,
   },
-  errorText: {
-    marginTop: 16,
-    marginBottom: 20,
-    fontSize: 16,
-    color: '#E74C3C',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  retryButton: {
-    backgroundColor: '#58B9D0',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -122,16 +103,19 @@ const styles = StyleSheet.create({
     paddingVertical: responsiveHeight(15),
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    color: '#666',
-    marginTop: 16,
-    marginBottom: 8,
+    color: '#1A1D29',
+    marginTop: 24,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 16,
+    color: '#6B7280',
     textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
   emptyList: {
     flexGrow: 1,
@@ -159,7 +143,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
   },
   chatList: {
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
     paddingBottom: responsiveHeight(10),
   },
   chatItem: {
@@ -244,8 +228,8 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#F3F4F6',
-    marginVertical: 4,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 16,
   },
 });
 

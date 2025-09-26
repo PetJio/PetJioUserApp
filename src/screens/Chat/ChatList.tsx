@@ -14,7 +14,7 @@ import {
   responsiveWidth,
   responsiveHeight,
 } from 'react-native-responsive-dimensions';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TextInput } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -22,6 +22,7 @@ import styles from './styles';
 import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from '../../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../constants';
+import { ChatListItemSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 // Chat conversation interfaces
 interface ConversationUser {
@@ -95,6 +96,14 @@ const ChatList: React.FC = () => {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  // Refresh chat list when screen comes into focus (e.g., returning from chat)
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('📱 ChatList screen focused - refreshing conversations');
+      loadUsers();
+    }, [])
+  );
 
   // Debug function to check all AsyncStorage keys
   const debugAsyncStorage = async () => {
@@ -349,31 +358,116 @@ const ChatList: React.FC = () => {
     navigation.navigate('Chat', { user });
   };
 
+  const renderSearchHeader = () => (
+    <View style={styles.searchContainer}>
+      <TextInput
+        mode="outlined"
+        placeholder="Search conversations..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        theme={{
+          roundness: 16,
+          colors: { primary: '#58B9D0', outline: '#E8E8E8' },
+        }}
+        style={styles.textInput}
+        contentStyle={styles.inputContent}
+        outlineStyle={styles.inputOutline}
+        left={
+          <TextInput.Icon
+            icon={() => (
+              <MaterialIcons name="search" size={20} color="#666" />
+            )}
+          />
+        }
+      />
+    </View>
+  );
+
   const renderChatItem = ({ item }: { item: ChatUser }) => (
-    <TouchableOpacity 
-      style={styles.chatItem}
+    <TouchableOpacity
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#FFFFFF',
+      }}
       onPress={() => navigateToChat(item)}
       activeOpacity={0.7}
     >
-      <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        {item.isOnline && <View style={styles.onlineIndicator} />}
+      {/* Avatar */}
+      <View style={{ position: 'relative', marginRight: 12 }}>
+        <Image
+          source={{ uri: item.avatar }}
+          style={{
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            backgroundColor: '#F3F4F6',
+          }}
+        />
+        {item.isOnline && (
+          <View style={{
+            position: 'absolute',
+            bottom: 2,
+            right: 2,
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: '#10B981',
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+          }} />
+        )}
       </View>
-      
-      <View style={styles.chatContent}>
-        <View style={styles.chatHeader}>
-          <Text style={styles.userName}>{item.name}</Text>
-          <Text style={styles.timestamp}>{item.timestamp}</Text>
+
+      <View style={{ flex: 1, gap: 6 }}>
+        {/* Name and timestamp row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#1F2937',
+            flex: 1,
+            marginRight: 8,
+          }} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={{
+            fontSize: 12,
+            color: '#6B7280',
+            fontWeight: '400',
+          }}>
+            {item.timestamp}
+          </Text>
         </View>
-        
-        <View style={styles.messageRow}>
-          <Text style={styles.lastMessage} numberOfLines={1}>
+
+        {/* Last message and unread count row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{
+            fontSize: 14,
+            color: '#6B7280',
+            flex: 1,
+            marginRight: 8,
+          }} numberOfLines={1}>
             {item.lastMessage}
           </Text>
           {item.unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>
-                {item.unreadCount > 99 ? '99+' : item.unreadCount}
+            <View style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: '#58B9D0',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minWidth: 20,
+            }}>
+              <Text style={{
+                fontSize: 12,
+                color: '#FFFFFF',
+                fontWeight: '600',
+              }}>
+                {item.unreadCount > 9 ? '9+' : item.unreadCount}
               </Text>
             </View>
           )}
@@ -384,7 +478,12 @@ const ChatList: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FB" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+        animated={true}
+      />
       
       {/* Header - Matching Service Page Style */}
       <View style={styles.serviceStyleHeader}>
@@ -395,43 +494,24 @@ const ChatList: React.FC = () => {
         </View>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          mode="outlined"
-          placeholder="Search conversations..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          theme={{
-            roundness: 16,
-            colors: { primary: '#58B9D0', outline: '#E8E8E8' },
-          }}
-          style={styles.textInput}
-          contentStyle={styles.inputContent}
-          outlineStyle={styles.inputOutline}
-          left={
-            <TextInput.Icon
-              icon={() => (
-                <MaterialIcons name="search" size={20} color="#666" />
-              )}
-            />
-          }
-        />
-      </View>
-
       {/* Chat List */}
       {loading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#58B9D0" />
-          <Text style={styles.loadingText}>Loading conversations...</Text>
+        <View style={{ flex: 1}}>
+          {renderSearchHeader()}
+          {[...Array(8)].map((_, index) => (
+            <ChatListItemSkeleton key={index} />
+          ))}
         </View>
       ) : error ? (
-        <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={48} color="#E74C3C" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          {renderSearchHeader()}
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="chat-bubble-outline" size={80} color="#58B9D0" />
+            <Text style={styles.emptyTitle}>No conversations yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Start a conversation by messaging someone from your contacts!
+            </Text>
+          </View>
         </View>
       ) : (
         <FlatList
@@ -443,6 +523,7 @@ const ChatList: React.FC = () => {
             styles.chatList,
             filteredUsers.length === 0 && styles.emptyList
           ]}
+          ListHeaderComponent={renderSearchHeader}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           refreshControl={
             <RefreshControl
@@ -455,10 +536,15 @@ const ChatList: React.FC = () => {
           ListEmptyComponent={
             !loading && !error ? (
               <View style={styles.emptyContainer}>
-                <MaterialIcons name="chat-bubble-outline" size={64} color="#CCCCCC" />
-                <Text style={styles.emptyTitle}>No conversations found</Text>
+                <MaterialIcons name="chat-bubble-outline" size={80} color="#58B9D0" />
+                <Text style={styles.emptyTitle}>
+                  {searchQuery ? 'No matching conversations' : 'No conversations yet'}
+                </Text>
                 <Text style={styles.emptySubtitle}>
-                  {searchQuery ? 'Try adjusting your search' : 'Start a conversation with someone!'}
+                  {searchQuery
+                    ? 'Try searching with a different name or keyword'
+                    : 'Start chatting by messaging someone from your contacts or services!'
+                  }
                 </Text>
               </View>
             ) : null

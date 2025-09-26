@@ -8,7 +8,9 @@ const BoardingSuccess = () => {
     const navigation = useNavigation();
 
     const handleGoHome = () => {
-        (navigation as any).navigate('Main');
+        (navigation as any).navigate('Main', {
+            screen: 'Home'
+        });
     };
 
     return (

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import commercialservicestyles from './commercialservice.styles';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
 import { useNavigation } from '@react-navigation/native';
+import { BoardingCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 // Define stack params
 type RootStackParamList = {
@@ -89,6 +90,19 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {[...Array(6)].map((_, index) => (
+            <BoardingCardSkeleton key={index}  />
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -116,14 +130,12 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
             >
               <View
                 style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 12,
-                  marginBottom: 12,
+                                backgroundColor: '#F8F9FA',
+                  borderRadius: 16,
+                  marginBottom: 16,
                   borderWidth: 1,
                   borderColor: '#E5E7EB',
-                  padding: 12,
-                  elevation: 0,
-                  shadowOpacity: 0,
+                  padding: 16,
                 }}
               >
                 <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -134,9 +146,9 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
                         : images.petJiocrecheImage
                     }
                     style={{
-                      width: 70,
-                      height: 70,
-                      borderRadius: 10,
+                      width: 80,
+                      height: 80,
+                      borderRadius: 12,
                       backgroundColor: '#F3F4F6',
                     }}
                   />
@@ -152,11 +164,13 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
                     >
                       <Text
                         style={{
-                          fontSize: 16,
-                          fontWeight: '600',
-                          color: '#1F2937',
-                          marginBottom: 2,
+                          fontSize: 18,
+                          fontWeight: '700',
+                          color: '#111827',
+                          marginBottom: 4,
+                          lineHeight: 22,
                         }}
+                        numberOfLines={1}
                       >
                         {item?.facilityName || 'Facility Name Not Available'}
                       </Text>
