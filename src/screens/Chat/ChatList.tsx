@@ -19,36 +19,50 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TextInput } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles';
-import { API_CONFIG } from '../../config/api';
+import { API_CONFIG, API_ENDPOINTS, buildApiUrl } from '../../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '../../constants';
 
-// Update interface to match API response
-interface User {
+// Chat conversation interfaces
+interface ConversationUser {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
-  mobile: string;
-  city: string;
-  state: string;
-  address: string;
-  businessName?: string;
-  userRoles: {
-    userId: number;
-    roleId: number;
-    role: {
-      id: number;
-      value: string;
-    };
-  }[];
-  fcmToken?: string;
-  isActive: number;
 }
 
-interface ApiResponse {
+interface LastMessage {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  message: string;
+  statusId: number;
+  status: {
+    id: number;
+    status: string;
+  };
+  createdAt: string;
+}
+
+interface Conversation {
+  conversationWith: ConversationUser;
+  lastMessage: LastMessage;
+  unreadCount: number;
+}
+
+// API Response for conversations
+interface ConversationApiResponse {
   statusCode: number;
   message: string;
-  body: User[];
+  body: Conversation[];
+}
+
+// User data interface
+interface CurrentUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 // For navigation compatibility
@@ -82,55 +96,189 @@ const ChatList: React.FC = () => {
     loadUsers();
   }, []);
 
-  // Function to get auth token
-  const getAuthToken = async () => {
-    const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
+  // Debug function to check all AsyncStorage keys
+  const debugAsyncStorage = async () => {
+    try {
+      console.log('🔍 Debugging AsyncStorage contents...');
+      const allKeys = await AsyncStorage.getAllKeys();
+      console.log('📋 All AsyncStorage keys:', allKeys);
 
-    for (const key of possibleTokenKeys) {
-      const value = await AsyncStorage.getItem(key);
-      if (value) {
+      for (const key of allKeys) {
         try {
-          return JSON.parse(value);
-        } catch {
-          return value;
+          const value = await AsyncStorage.getItem(key);
+          if (value && (key.toLowerCase().includes('user') || key.toLowerCase().includes('token'))) {
+            console.log(`🔑 ${key}:`, value.substring(0, 100) + '...');
+          }
+        } catch (e) {
+          console.log(`❌ Error reading key ${key}:`, e);
         }
       }
+    } catch (error) {
+      console.error('❌ Error debugging AsyncStorage:', error);
+    }
+  };
+
+  // Function to get auth token
+  const getAuthToken = async () => {
+    try {
+      console.log('🔍 Getting auth token from storage...');
+
+      // Try the correct storage key first
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.USER_TOKEN);
+      if (token) {
+        console.log('✅ Found auth token in correct storage key');
+        try {
+          return JSON.parse(token);
+        } catch {
+          return token;
+        }
+      }
+
+      // Fallback: try alternative token keys
+      const possibleTokenKeys = ['token', 'authToken', 'access_token', 'loginToken', 'bearerToken'];
+      for (const key of possibleTokenKeys) {
+        const value = await AsyncStorage.getItem(key);
+        if (value) {
+          console.log(`🔍 Found auth token in alternative key: ${key}`);
+          try {
+            return JSON.parse(value);
+          } catch {
+            return value;
+          }
+        }
+      }
+
+      console.error('❌ No auth token found in any storage key');
+    } catch (error) {
+      console.error('❌ Error getting auth token:', error);
     }
     return null;
   };
 
-  // Function to convert API users to ChatUser format
-  const convertToCompatibleUsers = (apiUsers: User[]): ChatUser[] => {
-    return apiUsers.map(user => ({
-      id: user.id.toString(),
-      name: `${user.firstName} ${user.lastName}`,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=58B9D0&color=fff`,
-      isOnline: Math.random() > 0.5, // Random online status for demo
-      lastMessage: user.userRoles[0]?.role?.value === 'boarding'
-        ? 'Available for boarding services'
-        : user.userRoles[0]?.role?.value === 'veterinary'
-        ? 'Veterinary services available'
-        : 'Hello! How can I help you?',
-      timestamp: 'Recently',
-      unreadCount: Math.floor(Math.random() * 3), // Random unread count for demo
-      role: user.userRoles[0]?.role?.value || 'user'
-    }));
+  // Function to get current user data
+  const getCurrentUser = async (): Promise<CurrentUser | null> => {
+    try {
+      console.log('🔍 Getting current user data from storage...');
+
+      // Try the correct storage key first
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      console.log('📄 Raw user data from storage:', userData ? 'Present' : 'Missing');
+
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log('✅ Parsed user data:', {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email
+        });
+
+        if (user.id && user.firstName && user.lastName) {
+          return {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email
+          };
+        } else {
+          console.error('❌ User data is missing required fields');
+        }
+      }
+
+      // Fallback: try alternative storage keys
+      const alternativeKeys = ['userData', 'user', 'currentUser', 'loginUser'];
+      for (const key of alternativeKeys) {
+        try {
+          const altData = await AsyncStorage.getItem(key);
+          if (altData) {
+            console.log(`🔍 Found user data in alternative key: ${key}`);
+            const user = JSON.parse(altData);
+            if (user.id && user.firstName) {
+              return {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName || '',
+                email: user.email || ''
+              };
+            }
+          }
+        } catch (e) {
+          // Continue to next key
+        }
+      }
+
+      console.error('❌ No valid user data found in any storage key');
+    } catch (error) {
+      console.error('❌ Error getting current user:', error);
+    }
+    return null;
+  };
+
+  // Function to convert conversations to ChatUser format
+  const convertConversationsToUsers = (conversations: Conversation[]): ChatUser[] => {
+    return conversations.map(conversation => {
+      const user = conversation.conversationWith;
+      const lastMsg = conversation.lastMessage;
+
+      // Format timestamp
+      const messageDate = new Date(lastMsg.createdAt);
+      const now = new Date();
+      const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+
+      let timestamp = '';
+      if (diffInHours < 1) {
+        timestamp = 'Just now';
+      } else if (diffInHours < 24) {
+        timestamp = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else if (diffInHours < 168) { // Less than a week
+        const days = Math.floor(diffInHours / 24);
+        timestamp = `${days}d ago`;
+      } else {
+        timestamp = messageDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+
+      return {
+        id: user.id.toString(),
+        name: `${user.firstName} ${user.lastName}`,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=58B9D0&color=fff`,
+        isOnline: Math.random() > 0.5, // Random online status for demo
+        lastMessage: lastMsg.message,
+        timestamp,
+        unreadCount: conversation.unreadCount,
+        role: 'user'
+      };
+    });
   };
 
   const loadUsers = async () => {
     setLoading(true);
     setError('');
     try {
+      // Debug AsyncStorage contents
+      await debugAsyncStorage();
+
+      // Get authentication token
       const token = await getAuthToken();
       if (!token) {
         setError('Authentication token not found. Please login again.');
         return;
       }
 
-      const apiUrl = 'http://13.204.155.197/api/user/get-all-users';
-      console.log('🌐 Fetching users from:', apiUrl);
+      // Get current user data
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        setError('User data not found. Please login again.');
+        return;
+      }
 
-      const response = await fetch(apiUrl, {
+      // Build API URL with user ID
+      const apiUrl = buildApiUrl(API_ENDPOINTS.CHAT.GET_ALL_MESSAGES, { userId: currentUser.id.toString() });
+      const fullUrl = `${apiUrl}?page=1&limit=10`;
+
+      console.log('🌐 Fetching conversations from:', fullUrl);
+      console.log('👤 Current user ID:', currentUser.id);
+
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -138,49 +286,47 @@ const ChatList: React.FC = () => {
         },
       });
 
-      console.log('📥 Users API Response Status:', response.status);
+      console.log('📥 Chat API Response Status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Users API Error:', errorText);
+        console.error('❌ Chat API Error:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const responseText = await response.text();
-      console.log('📄 Users Raw Response length:', responseText.length);
+      console.log('📄 Chat Raw Response length:', responseText.length);
 
-      let result: ApiResponse;
+      let result: ConversationApiResponse;
       try {
         result = JSON.parse(responseText);
-        console.log('✅ Users Parsed Response:', {
+        console.log('✅ Chat Parsed Response:', {
           statusCode: result.statusCode,
           message: result.message,
-          userCount: result.body ? result.body.length : 0,
+          conversationCount: result.body ? result.body.length : 0,
         });
       } catch (parseError) {
-        console.error('❌ Users JSON Parse Error:', parseError);
+        console.error('❌ Chat JSON Parse Error:', parseError);
         throw new Error(`Invalid JSON response`);
       }
 
       if (result.statusCode === 200) {
-        const apiUsers = result.body || [];
-        // Filter out inactive users and convert to ChatUser format
-        const activeUsers = apiUsers.filter(user => user.isActive === 1);
-        const chatUsers = convertToCompatibleUsers(activeUsers);
+        const conversations = result.body || [];
+        const chatUsers = convertConversationsToUsers(conversations);
 
-        console.log('✅ Users Success - Data loaded:', chatUsers.length, 'active users');
+        console.log('✅ Chat Success - Data loaded:', chatUsers.length, 'conversations');
         setUsers(chatUsers);
 
         if (chatUsers.length === 0) {
-          setError('No active users found');
+          setError('No conversations found. Start chatting with someone!');
         }
       } else {
-        console.error('❌ Users API returned non-200 status:', result.statusCode);
-        throw new Error(result.message || 'Failed to fetch users');
+        console.error('❌ Chat API returned non-200 status:', result.statusCode);
+        throw new Error(result.message || 'Failed to fetch conversations');
       }
     } catch (error) {
       console.error('🔥 Critical Error in loadUsers:', error);
-      setError(`Failed to load users: ${error.message}`);
+      setError(`Failed to load conversations: ${error.message}`);
     } finally {
       console.log('🏁 loadUsers completed');
       setLoading(false);
@@ -253,7 +399,7 @@ const ChatList: React.FC = () => {
       <View style={styles.searchContainer}>
         <TextInput
           mode="outlined"
-          placeholder="Search users..."
+          placeholder="Search conversations..."
           value={searchQuery}
           onChangeText={setSearchQuery}
           theme={{
@@ -277,7 +423,7 @@ const ChatList: React.FC = () => {
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#58B9D0" />
-          <Text style={styles.loadingText}>Loading users...</Text>
+          <Text style={styles.loadingText}>Loading conversations...</Text>
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
@@ -310,9 +456,9 @@ const ChatList: React.FC = () => {
             !loading && !error ? (
               <View style={styles.emptyContainer}>
                 <MaterialIcons name="chat-bubble-outline" size={64} color="#CCCCCC" />
-                <Text style={styles.emptyTitle}>No users found</Text>
+                <Text style={styles.emptyTitle}>No conversations found</Text>
                 <Text style={styles.emptySubtitle}>
-                  {searchQuery ? 'Try adjusting your search' : 'Pull down to refresh'}
+                  {searchQuery ? 'Try adjusting your search' : 'Start a conversation with someone!'}
                 </Text>
               </View>
             ) : null

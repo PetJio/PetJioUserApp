@@ -175,23 +175,67 @@ const AddPet: React.FC = () => {
     }
   };
 
+  // Helper function to generate curl command for debugging
+  const generateAddPetCurlCommand = (url: string, token: string, data: any) => {
+    const curlCommand = `curl -X POST "${url}" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${token}" \\
+  -d '${JSON.stringify(data, null, 2)}' \\
+  -v`;
+
+    return curlCommand;
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
+      console.warn('⚠️ Form validation failed');
       return;
     }
 
     try {
       setLoading(true);
+      console.log('🔄 Starting pet profile creation...');
+
+      // Debug token retrieval
       const token = await storageService.getUserToken();
-      // const ownerId = await AsyncStorage.getItem('ownerId');
-      const ownerId = 29;
+      console.log('🔍 Token retrieved:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
 
-      console.log('check ===>', token, ownerId);
-
-      if (!token || !ownerId) {
-        setMessage({ type: 'error', text: 'Authentication data not found' });
+      if (!token) {
+        console.error('❌ No authentication token found');
+        setMessage({ type: 'error', text: 'Authentication token not found' });
         return;
       }
+
+      // Fetch owner ID dynamically from API
+      console.log('🔍 Fetching owner ID from API...');
+      const ownerResponse = await fetch(
+        `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!ownerResponse.ok) {
+        console.error('❌ Failed to get owner information:', ownerResponse.status);
+        setMessage({ type: 'error', text: 'Failed to get owner information' });
+        return;
+      }
+
+      const ownerData = await ownerResponse.json();
+      console.log('📋 Owner API response:', ownerData);
+
+      if (ownerData.statusCode !== 200 || !ownerData.body?.id) {
+        console.error('❌ Owner ID not found in response:', ownerData);
+        setMessage({ type: 'error', text: 'Owner ID not found' });
+        return;
+      }
+
+      const ownerId = ownerData.body.id;
+      console.log('👤 Owner ID retrieved:', ownerId);
 
       const petData = {
         petName: petName.trim(),
@@ -211,9 +255,20 @@ const AddPet: React.FC = () => {
         disability: disability.trim() || null,
       };
 
-      console.log('petData', petData)
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile`;
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile`, {
+      console.log('📝 Pet data to be sent:', petData);
+      console.log('🌐 API URL:', apiUrl);
+      console.log('🔑 Authorization header:', `Bearer ${token.substring(0, 20)}...`);
+
+      // Generate and log curl command for easy testing
+      const curlCommand = generateAddPetCurlCommand(apiUrl, token, petData);
+      console.log('🔧 Generated curl command for debugging:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -222,7 +277,13 @@ const AddPet: React.FC = () => {
         body: JSON.stringify(petData),
       });
 
+      console.log('📡 API Response status:', response.status);
+      console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('✅ Pet profile created successfully:', responseData);
+
         setMessage({
           type: 'success',
           text: 'Pet profile created successfully!',
@@ -231,18 +292,37 @@ const AddPet: React.FC = () => {
           goBack();
         }, 1500);
       } else {
-        const errorData = await response.json();
-        console.log('error', errorData);
+        console.error('❌ Pet creation failed with status:', response.status);
+
+        let errorData;
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json();
+        } else {
+          errorData = { message: await response.text() };
+        }
+
+        console.error('❌ Error response data:', errorData);
         setMessage({
           type: 'error',
-          text: errorData.message || 'Failed to create pet profile',
+          text: errorData.message || `Failed to create pet profile (${response.status})`,
         });
       }
     } catch (error) {
-      console.error('Error creating pet profile:', error);
-      setMessage({ type: 'error', text: 'Error creating pet profile' });
+      console.error('🔥 Error creating pet profile:', error);
+      console.error('🔥 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      setMessage({
+        type: 'error',
+        text: 'Network error. Please check your connection and try again.'
+      });
     } finally {
       setLoading(false);
+      console.log('✅ Pet creation process completed');
     }
   };
 

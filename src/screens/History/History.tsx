@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   responsiveWidth,
   responsiveHeight,
@@ -16,6 +17,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../../config/api';
+import { navigate } from '../../utils/navigationService';
 import historyStyles from './history.styles';
 
 // Interface definitions based on API response
@@ -100,6 +102,16 @@ const History: React.FC = () => {
     initializeAndLoadData();
     loadFlowOptions();
   }, []);
+
+  // Refresh data when screen comes into focus (after returning from ViewDetails)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (ownerId && bookings.length > 0) {
+        // Only refresh if we already have data and ownerId
+        loadBookingHistory(ownerId);
+      }
+    }, [ownerId, bookings.length])
+  );
 
   // Function to get auth token
   const getAuthToken = async () => {
@@ -215,7 +227,15 @@ const History: React.FC = () => {
       if (result.statusCode === 200) {
         const bookingData = result.body || [];
         console.log('✅ Booking History Success - Data loaded:', bookingData.length, 'bookings');
-        setBookings(bookingData);
+
+        // Sort bookings by start time in descending order (newest first)
+        const sortedBookings = bookingData.sort((a, b) => {
+          const dateA = new Date(a.bookingDetail.startTime);
+          const dateB = new Date(b.bookingDetail.startTime);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        setBookings(sortedBookings);
 
         if (bookingData.length === 0) {
           setError('No booking history found');
@@ -413,13 +433,18 @@ const History: React.FC = () => {
     }
   };
 
+  const handleViewDetails = (item: BookingHistoryItem) => {
+    navigate('ViewDetails', { bookingItem: item });
+  };
+
   const renderBookingItem = ({ item }: { item: BookingHistoryItem }) => {
     const duration = calculateDuration(item.bookingDetail.startTime, item.bookingDetail.endTime);
     const serviceTitle = getServiceTitle(item);
     const providerName = getProviderName(item);
+    const currentStatus = getCurrentStatus(item.flowHistories);
 
     return (
-      <TouchableOpacity style={historyStyles.bookingCard} activeOpacity={0.7}>
+      <View style={historyStyles.bookingCard}>
         {/* Header */}
         <View style={historyStyles.cardHeader}>
           <View style={historyStyles.headerLeft}>
@@ -437,89 +462,37 @@ const History: React.FC = () => {
           </View>
         </View>
 
-        {/* Date Range */}
-        <View style={historyStyles.dateSection}>
-          <View style={historyStyles.dateItem}>
-            <MaterialIcons name="calendar-today" size={16} color="#666" />
-            <View style={historyStyles.dateTexts}>
-              <Text style={historyStyles.dateLabel}>Check-in</Text>
-              <Text style={historyStyles.dateValue}>{formatDate(item.bookingDetail.startTime)}</Text>
-            </View>
-          </View>
-          <View style={historyStyles.dateDivider} />
-          <View style={historyStyles.dateItem}>
-            <MaterialIcons name="event" size={16} color="#666" />
-            <View style={historyStyles.dateTexts}>
-              <Text style={historyStyles.dateLabel}>Check-out</Text>
-              <Text style={historyStyles.dateValue}>{formatDate(item.bookingDetail.endTime)}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Service Features for Boarding */}
-        {item.boardingServiceBookings.length > 0 && (
-          <View style={historyStyles.featuresSection}>
-            <Text style={historyStyles.featuresTitle}>Services Included:</Text>
-            <View style={historyStyles.featuresList}>
-              {getServiceFeatures(item.boardingServiceBookings[0]).map((feature, index) => (
-                <View key={index} style={historyStyles.featureItem}>
-                  <MaterialIcons name="check-circle" size={14} color="#10B981" />
-                  <Text style={historyStyles.featureText}>{feature}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Pets Count */}
-        <View style={historyStyles.petsSection}>
-          <MaterialIcons name="pets" size={16} color="#58B9D0" />
-          <Text style={historyStyles.petsText}>
-            {item.boardingServiceBookings.length} pet{item.boardingServiceBookings.length !== 1 ? 's' : ''} boarded
+        {/* Minimal Date Info */}
+        <View style={historyStyles.minimalDateSection}>
+          <Text style={historyStyles.dateRange}>
+            {formatDate(item.bookingDetail.startTime)} - {formatDate(item.bookingDetail.endTime)}
           </Text>
         </View>
 
-        {/* Status Section */}
-        {item.flowHistories.length > 0 && (
-          <View style={historyStyles.statusSection}>
-            <View style={historyStyles.statusRow}>
-              <MaterialIcons name="info-outline" size={16} color="#666" />
-              <Text style={historyStyles.statusText}>
-                {getStatusMessage(getCurrentStatus(item.flowHistories)?.id || 7)}
-              </Text>
-            </View>
-            {(() => {
-              const currentStatus = getCurrentStatus(item.flowHistories);
-              const actionButton = currentStatus ? getActionButton(currentStatus.id, item.bookingDetail.id) : null;
-              return actionButton ? (
-                <TouchableOpacity
-                  style={[historyStyles.actionButton, { backgroundColor: actionButton.color }]}
-                  onPress={actionButton.action}
-                  disabled={updatingStatus === item.bookingDetail.id}
-                >
-                  {updatingStatus === item.bookingDetail.id ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <Text style={historyStyles.actionButtonText}>{actionButton.text}</Text>
-                  )}
-                </TouchableOpacity>
-              ) : null;
-            })()
-            }
+        {/* Status */}
+        {currentStatus && (
+          <View style={historyStyles.statusRow}>
+            <MaterialIcons name="info-outline" size={16} color="#666" />
+            <Text style={historyStyles.statusText}>
+              {getStatusMessage(currentStatus.id)}
+            </Text>
           </View>
         )}
 
         {/* Footer */}
         <View style={historyStyles.cardFooter}>
           <Text style={historyStyles.bookingDate}>
-            Booked on {formatDate(item.flowHistories[0]?.createdAt || item.bookingDetail.startTime)}
+            {item.boardingServiceBookings.length} pet{item.boardingServiceBookings.length !== 1 ? 's' : ''}
           </Text>
-          <TouchableOpacity style={historyStyles.viewButton}>
+          <TouchableOpacity
+            style={historyStyles.viewButton}
+            onPress={() => handleViewDetails(item)}
+          >
             <Text style={historyStyles.viewButtonText}>View Details</Text>
             <MaterialIcons name="chevron-right" size={16} color="#58B9D0" />
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -532,9 +505,6 @@ const History: React.FC = () => {
         <View style={historyStyles.serviceHeaderContainer}>
           <View style={historyStyles.serviceHeaderLeft}>
             <Text style={historyStyles.serviceHeaderTitle}>History</Text>
-          </View>
-          <View style={historyStyles.serviceHeaderRight}>
-            <Text style={historyStyles.serviceHeaderSubtitle}>Booking History</Text>
           </View>
         </View>
       </View>

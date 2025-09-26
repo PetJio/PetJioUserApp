@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import boardingQuestionStyles from './boardingquestions.styles';
@@ -98,6 +99,21 @@ const BoardingQuestions: React.FC = () => {
       answer: null,
     },
   ]);
+
+  const getQuestionIcon = (questionId: number) => {
+    switch (questionId) {
+      case 1:
+        return 'restaurant'; // Food/meals icon
+      case 2:
+        return 'luggage'; // Possessions icon
+      case 3:
+        return 'content-cut'; // Shaving/trimming icon
+      case 4:
+        return 'shower'; // Grooming/bathing icon
+      default:
+        return 'help-outline';
+    }
+  };
 
   const handleAnswerChange = (questionId: number, answer: boolean) => {
     setQuestions(prevQuestions =>
@@ -217,21 +233,26 @@ const BoardingQuestions: React.FC = () => {
         showsVerticalScrollIndicator={false}
         style={boardingQuestionStyles.scrollContainer}
       >
-        <View style={boardingQuestionStyles.header}>
-          <Text style={boardingQuestionStyles.subtitle}>
-            Please answer the following questions to complete your booking
-          </Text>
-        </View>
-
         <View style={boardingQuestionStyles.questionsContainer}>
           {questions.map((question, index) => (
             <View key={question.id} style={boardingQuestionStyles.questionCard}>
-              <Text style={boardingQuestionStyles.questionNumber}>
-                Question {index + 1}
-              </Text>
-              <Text style={boardingQuestionStyles.questionText}>
-                {question.question}
-              </Text>
+              <View style={boardingQuestionStyles.questionHeader}>
+                <View style={boardingQuestionStyles.iconContainer}>
+                  <MaterialIcons
+                    name={getQuestionIcon(question.id)}
+                    size={24}
+                    color="#58B9D0"
+                  />
+                </View>
+                <View style={boardingQuestionStyles.questionInfo}>
+                  <Text style={boardingQuestionStyles.questionNumber}>
+                    Question {index + 1}
+                  </Text>
+                  <Text style={boardingQuestionStyles.questionText}>
+                    {question.question}
+                  </Text>
+                </View>
+              </View>
 
               <View style={boardingQuestionStyles.answerButtons}>
                 <TouchableOpacity
@@ -242,6 +263,11 @@ const BoardingQuestions: React.FC = () => {
                   ]}
                   onPress={() => handleAnswerChange(question.id, true)}
                 >
+                  <MaterialIcons
+                    name="check-circle"
+                    size={18}
+                    color={question.answer === true ? "#10B981" : "#CCCCCC"}
+                  />
                   <Text
                     style={[
                       boardingQuestionStyles.answerText,
@@ -261,6 +287,11 @@ const BoardingQuestions: React.FC = () => {
                   ]}
                   onPress={() => handleAnswerChange(question.id, false)}
                 >
+                  <MaterialIcons
+                    name="cancel"
+                    size={18}
+                    color={question.answer === false ? "#EF4444" : "#CCCCCC"}
+                  />
                   <Text
                     style={[
                       boardingQuestionStyles.answerText,

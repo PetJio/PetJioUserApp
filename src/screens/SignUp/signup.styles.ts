@@ -137,7 +137,8 @@ messageContainer: {
   paddingVertical: 12,
   paddingHorizontal: 16,
   borderRadius: 8,
-  marginBottom: 16,
+  marginBottom: 10,
+  marginTop: 10,
   alignItems: 'center',
 },
 successMessage: {

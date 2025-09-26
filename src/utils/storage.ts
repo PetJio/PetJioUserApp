@@ -149,29 +149,97 @@ class StorageService {
     return enabled ?? false;
   }
 
-  // Logout user - clear all data
+  // FCM Token methods
+  async setFCMToken(token: string): Promise<void> {
+    try {
+      // Store FCM tokens as plain strings, not JSON
+      await AsyncStorage.setItem('fcm_token', token);
+      await AsyncStorage.setItem('current_fcm_token', token);
+    } catch (error) {
+      console.error('Error setting FCM token:', error);
+      throw error;
+    }
+  }
+
+  async getFCMToken(): Promise<string | null> {
+    try {
+      // Try multiple keys for backward compatibility, but handle plain strings
+      const keys = ['fcm_token', 'current_fcm_token', '@fcm_token'];
+
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        if (value) {
+          // FCM tokens are stored as plain strings, not JSON
+          return value;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting FCM token:', error);
+      return null;
+    }
+  }
+
+  async removeFCMToken(): Promise<void> {
+    await this.removeItem('fcm_token');
+    await this.removeItem('current_fcm_token');
+    await this.removeItem('@fcm_token');
+    await this.removeItem('firebase_messaging_token');
+  }
+
+  // Logout user - clear all data including FCM tokens
   async logout(): Promise<void> {
     try {
+      // Clear user authentication data
       await this.removeItem(STORAGE_KEYS.USER_TOKEN);
       await this.removeItem(STORAGE_KEYS.USER_DATA);
       await this.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
-      console.log('✅ User logged out successfully');
+
+      // Clear FCM and push notification related data
+      await this.removeFCMToken();
+      await this.removeItem('pending_fcm_token');
+      await this.removeItem('fcm_token_registered');
+      await this.removeItem('registered_fcm_token');
+
+      // Clear any other possible token storage keys
+      await this.removeItem('token');
+      await this.removeItem('authToken');
+      await this.removeItem('access_token');
+      await this.removeItem('loginToken');
+
+      console.log('✅ User logged out successfully - all local storage cleared');
     } catch (error) {
       console.error('❌ Failed to logout:', error);
       throw error;
     }
   }
 
-  // Clear all user related data
+  // Clear all user related data including FCM tokens
   async clearUserData(): Promise<void> {
     const keysToRemove = [
+      // User authentication data
       STORAGE_KEYS.USER_TOKEN,
       STORAGE_KEYS.USER_DATA,
       STORAGE_KEYS.IS_LOGGED_IN,
+      // FCM and push notification related data
+      'fcm_token',
+      'current_fcm_token',
+      '@fcm_token',
+      'firebase_messaging_token',
+      'pending_fcm_token',
+      'fcm_token_registered',
+      'registered_fcm_token',
+      // Other possible token storage keys
+      'token',
+      'authToken',
+      'access_token',
+      'loginToken',
     ];
 
     try {
       await Promise.all(keysToRemove.map(key => this.removeItem(key)));
+      console.log('✅ All user data and FCM tokens cleared');
     } catch (error) {
       console.error('Error clearing user data:', error);
       throw error;

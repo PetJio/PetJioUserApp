@@ -12,7 +12,7 @@ import { typography } from '../../styles/typography';
 const profileStyles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#F8F9FB',
     },
     topImage: {
         width: responsiveWidth(100),
@@ -160,18 +160,17 @@ const profileStyles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: spacing.xl,
         paddingVertical: spacing.md,
-        borderRadius: BORDER_RADIUS.xl,
-        backgroundColor: 'rgba(88, 185, 208, 0.1)',
-        borderWidth: 2,
-        borderColor: '#58B9D0',
-        ...shadows.sm,
+        borderRadius: 12,
+        backgroundColor: '#58B9D0',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
         gap: spacing.xs,
         minWidth: responsiveWidth(50),
     },
     editButtonText: {
-        color: '#58B9D0',
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.semibold,
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
     },
     formSection: {
         flex: 1,
@@ -207,25 +206,19 @@ const profileStyles = StyleSheet.create({
     saveButton: {
         flex: 1,
         height: responsiveHeight(7),
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
         marginRight: spacing.xs,
-        ...shadows.lg,
-        shadowColor: '#58B9D0',
-        elevation: 8,
     },
     cancelButton: {
         flex: 1,
         height: responsiveHeight(7),
-        borderRadius: BORDER_RADIUS.xl,
-        backgroundColor: 'rgba(255, 107, 107, 0.1)',
-        borderWidth: 2,
-        borderColor: '#FF6B6B',
-        borderStyle: 'solid',
+        borderRadius: 12,
+        backgroundColor: '#EF4444',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: spacing.xs,
-        ...shadows.md,
-        elevation: 4,
     },
     buttonGradient: {
         flex: 1,
@@ -234,15 +227,15 @@ const profileStyles = StyleSheet.create({
         borderRadius: BORDER_RADIUS.xl,
     },
     saveButtonText: {
-        color: colors.white,
-        fontSize: FONT_SIZES.lg,
-        fontWeight: typography.fontWeight.bold,
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
         letterSpacing: 0.5,
     },
     cancelButtonText: {
-        color: '#FF6B6B',
-        fontSize: FONT_SIZES.lg,
-        fontWeight: typography.fontWeight.bold,
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
         letterSpacing: 0.5,
     },
     messageContainer: {
@@ -287,10 +280,10 @@ const profileStyles = StyleSheet.create({
         color: colors.textSecondary,
     },
     sectionTitle: {
-        fontSize: FONT_SIZES.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.textPrimary,
-        marginBottom: spacing.md,
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1F2937',
+        marginBottom: 12,
         marginTop: spacing.lg,
     },
     infoContainer: {
@@ -427,11 +420,10 @@ const profileStyles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
-        borderRadius: BORDER_RADIUS.xl,
-        backgroundColor: 'rgba(255, 107, 107, 0.1)',
-        borderWidth: 2,
-        borderColor: '#FF6B6B',
-        ...shadows.sm,
+        borderRadius: 12,
+        backgroundColor: '#EF4444',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
     },
     logoutButtonContent: {
         flexDirection: 'row',
@@ -440,9 +432,9 @@ const profileStyles = StyleSheet.create({
         gap: spacing.xs,
     },
     logoutButtonText: {
-        color: '#FF6B6B',
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.semibold,
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
     },
     saveButtonGradient: {
         flex: 1,
@@ -456,14 +448,16 @@ const profileStyles = StyleSheet.create({
         justifyContent: 'center',
     },
     loadingContainer: {
+        flex: 1,
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: spacing.xs,
+        gap: spacing.md,
+        backgroundColor: '#F8F9FB',
     },
     loadingText: {
-        color: colors.white,
-        fontSize: FONT_SIZES.md,
+        color: '#6B7280',
+        fontSize: FONT_SIZES.lg,
         fontWeight: typography.fontWeight.medium,
     },
     // Bottom Section Styles
@@ -478,34 +472,34 @@ const profileStyles = StyleSheet.create({
     bottomSaveButton: {
         width: '100%',
         height: responsiveHeight(7),
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
         marginBottom: spacing.md,
         borderWidth: 1,
-        borderColor: '#4A9FB8',
+        borderColor: '#E5E7EB',
     },
     bottomSaveButtonText: {
-        color: colors.white,
-        fontSize: FONT_SIZES.xl,
-        fontWeight: typography.fontWeight.bold,
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
         letterSpacing: 0.5,
     },
     bottomLogoutButton: {
         width: '100%',
         height: responsiveHeight(7),
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#FF5252',
+        borderColor: '#E5E7EB',
     },
     logoutButtonGradient: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
     },
     bottomLogoutButtonText: {
-        color: colors.white,
-        fontSize: FONT_SIZES.lg,
-        fontWeight: typography.fontWeight.bold,
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
         letterSpacing: 0.5,
     },
     versionText: {
@@ -521,16 +515,16 @@ const profileStyles = StyleSheet.create({
         backgroundColor: colors.background,
         paddingHorizontal: spacing.xl,
     },
-    // Tab Navigation Styles
+    // Tab Navigation Styles - Matching History page styling
     tabContainer: {
         flexDirection: 'row',
         backgroundColor: '#FFFFFF',
         marginTop: spacing.xs,
         marginBottom: spacing.md,
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
         padding: spacing.xs,
         borderWidth: 1,
-        borderColor: '#E8EBF0',
+        borderColor: '#E5E7EB',
     },
     tabButton: {
         flex: 1,
@@ -539,22 +533,22 @@ const profileStyles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.sm,
-        borderRadius: BORDER_RADIUS.lg,
+        borderRadius: 8,
         gap: spacing.xs,
     },
     activeTab: {
         backgroundColor: '#58B9D0',
         borderWidth: 1,
-        borderColor: '#4A9FB8',
+        borderColor: '#E5E7EB',
     },
     tabText: {
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.medium,
-        color: '#999',
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#6B7280',
     },
     activeTabText: {
         color: '#FFFFFF',
-        fontWeight: typography.fontWeight.bold,
+        fontWeight: '600',
     },
     // Pets Section Styles
     petsSection: {
@@ -578,14 +572,14 @@ const profileStyles = StyleSheet.create({
         color: colors.textSecondary,
         marginTop: spacing.xs,
     },
-    // Pet Card Styles
+    // Pet Card Styles - Matching History page styling
     petCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: BORDER_RADIUS.xl,
-        padding: spacing.md,
-        marginBottom: spacing.md,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E8EBF0',
+        borderColor: '#E5E7EB',
     },
     petCardHeader: {
         flexDirection: 'row',
@@ -623,8 +617,8 @@ const profileStyles = StyleSheet.create({
     },
     editPetButton: {
         padding: spacing.sm,
-        borderRadius: BORDER_RADIUS.lg,
-        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        borderRadius: 8,
+        backgroundColor: '#58B9D0',
     },
     petEditForm: {
         borderTopWidth: 1,
@@ -656,34 +650,34 @@ const profileStyles = StyleSheet.create({
     petCancelButton: {
         flex: 1,
         paddingVertical: spacing.md,
-        borderRadius: BORDER_RADIUS.xl,
-        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        borderRadius: 12,
+        backgroundColor: '#EF4444',
         borderWidth: 1,
-        borderColor: '#FF6B6B',
+        borderColor: '#E5E7EB',
         alignItems: 'center',
     },
     petCancelButtonText: {
-        color: '#FF6B6B',
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.semibold,
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
     },
     petSaveButton: {
         flex: 1,
         height: responsiveHeight(6),
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#4A9FB8',
+        borderColor: '#E5E7EB',
     },
     petSaveGradient: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: BORDER_RADIUS.xl,
+        borderRadius: 12,
     },
     petSaveButtonText: {
-        color: colors.white,
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.bold,
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
     },
     
     // Pet details styles
@@ -713,27 +707,27 @@ const profileStyles = StyleSheet.create({
         borderStyle: 'dashed',
     },
     
-    // New Enhanced UI Styles
+    // New Enhanced UI Styles - Matching History page styling
     profileWelcomeCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: BORDER_RADIUS.xl,
-        padding: spacing.xl,
+        borderRadius: 12,
+        padding: 16,
         marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
+        marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E8EBF0',
+        borderColor: '#E5E7EB',
     },
     
     profileStatsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         backgroundColor: '#FFFFFF',
-        borderRadius: BORDER_RADIUS.xl,
-        padding: spacing.lg,
+        borderRadius: 12,
+        padding: 16,
         marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
+        marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E8EBF0',
+        borderColor: '#E5E7EB',
     },
     
     profileStat: {
@@ -755,11 +749,11 @@ const profileStyles = StyleSheet.create({
     
     sectionCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: BORDER_RADIUS.xl,
-        padding: spacing.md,
-        marginBottom: spacing.md,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E8EBF0',
+        borderColor: '#E5E7EB',
     },
     
     sectionHeader: {
@@ -776,9 +770,9 @@ const profileStyles = StyleSheet.create({
     },
     
     sectionHeaderTitle: {
-        fontSize: FONT_SIZES.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: '#1A1D29',
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1F2937',
         flex: 1,
     },
     
@@ -798,7 +792,7 @@ const profileStyles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#4A9FB8',
+        borderColor: '#E5E7EB',
     },
     
     profileBadge: {
@@ -821,17 +815,17 @@ const profileStyles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
-        borderRadius: BORDER_RADIUS.lg,
-        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        borderRadius: 8,
+        backgroundColor: '#58B9D0',
         borderWidth: 1,
-        borderColor: '#58B9D0',
+        borderColor: '#E5E7EB',
         gap: spacing.xs,
     },
     
     addPetButtonText: {
-        color: '#58B9D0',
-        fontSize: FONT_SIZES.md,
-        fontWeight: typography.fontWeight.semibold,
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
     },
     
     // Sticky Header Styles
@@ -879,11 +873,11 @@ const profileStyles = StyleSheet.create({
     
     profilePhotoCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: spacing.lg,
+        borderRadius: 12,
+        padding: 16,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#E8EBF0',
+        borderColor: '#E5E7EB',
     },
     
     profilePhotoButton: {
@@ -986,33 +980,25 @@ const profileStyles = StyleSheet.create({
         alignItems: 'center',
     },
     
-    // Common Button Styles for consistent UI across app
+    // Common Button Styles for consistent UI across app - Matching History page
     commonButton: {
         width: '100%',
         height: responsiveHeight(6.5),
-        borderRadius: 20,
-        borderWidth: 2,
+        borderRadius: 12,
+        borderWidth: 1,
         justifyContent: 'center',
         alignItems: 'center',
         flexDirection: 'row',
-        shadowColor: '#58B9D0',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 6,
     },
     
     commonButtonPrimary: {
-        borderColor: '#58B9D0',
-        backgroundColor: '#E6F3F7',
+        borderColor: '#E5E7EB',
+        backgroundColor: '#58B9D0',
     },
     
     commonButtonDanger: {
-        borderColor: '#FF6B6B',
-        backgroundColor: '#FFF5F5',
+        borderColor: '#E5E7EB',
+        backgroundColor: '#EF4444',
     },
     
     commonButtonGray: {
@@ -1027,11 +1013,11 @@ const profileStyles = StyleSheet.create({
     },
     
     commonButtonTextPrimary: {
-        color: '#58B9D0',
+        color: '#FFFFFF',
     },
     
     commonButtonTextDanger: {
-        color: '#FF6B6B',
+        color: '#FFFFFF',
     },
     
     commonButtonTextGray: {
@@ -1065,6 +1051,98 @@ const profileStyles = StyleSheet.create({
         fontWeight: '600',
         lineHeight: 16,
         letterSpacing: 1
+    },
+
+    // Compact Profile Styles for Card Layout
+    profileInfoHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+
+    compactProfilePhotoWrapper: {
+        position: 'relative',
+        width: responsiveWidth(16),
+        height: responsiveWidth(16),
+        borderRadius: responsiveWidth(8),
+        backgroundColor: colors.background,
+        marginRight: spacing.md,
+    },
+
+    compactProfilePhoto: {
+        width: responsiveWidth(16),
+        height: responsiveWidth(16),
+        borderRadius: responsiveWidth(8),
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    compactUploadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: responsiveWidth(8),
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    compactCameraIcon: {
+        position: 'absolute',
+        bottom: 2,
+        right: 2,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#58B9D0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
+    },
+
+    profileInfoText: {
+        flex: 1,
+    },
+
+    compactUserName: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#1F2937',
+        marginBottom: 2,
+    },
+
+    compactUserEmail: {
+        fontSize: 14,
+        color: '#58B9D0',
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+
+    compactVerifiedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        gap: 4,
+    },
+
+    compactVerifiedText: {
+        fontSize: 12,
+        color: '#4CAF50',
+        fontWeight: '600',
+    },
+
+    // Action buttons container
+    actionButtonsContainer: {
+        gap: 12,
+        marginTop: 16,
     },
 });
 

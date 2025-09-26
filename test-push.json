@@ -1,0 +1,22 @@
+{
+  "message": {
+    "token": "eJsS2qsZTsiUEuA-SjVdrf:APA91bG4FIxQTiY_GPJlitE411aOdqg9ZxpLZ5bmnppV_i4LZ7nyPYx2_QZvri5HtCdKsOsrlPrLkRPz6Y-FQC81d82wz2_C_R8gQElv9wv7HT67TcTShdI",
+    "notification": {
+      "title": "Test Notification from Petjio! 🐕",
+      "body": "Your push notifications are working! 🎉"
+    },
+    "data": {
+      "custom_key": "custom_value",
+      "test": "true",
+      "timestamp": "1728143973"
+    },
+    "android": {
+      "notification": {
+        "icon": "ic_launcher",
+        "color": "#58B9D0",
+        "sound": "default",
+        "channel_id": "default_notification_channel_id"
+      }
+    }
+  }
+}

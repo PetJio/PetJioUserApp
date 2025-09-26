@@ -53,6 +53,18 @@ type RootStackParamList = {
   };
   BoardingReview: undefined;
   BoardingRegistrationform: undefined;
+  Chat: {
+    user: {
+      id: string;
+      name: string;
+      avatar?: string;
+      isOnline?: boolean;
+      lastMessage?: string;
+      timestamp?: string;
+      unreadCount?: number;
+      role?: string;
+    }
+  };
 };
 
 // Define the navigation prop type
@@ -112,6 +124,27 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
 
   const handleTabPress = (tab: string, screen?: keyof RootStackParamList) => {
     setActiveTab(tab);
+  };
+
+  // Handle chat navigation
+  const handleChatPress = () => {
+    if (!bookingDetailsData) {
+      Alert.alert('Error', 'Provider information not available');
+      return;
+    }
+
+    const chatUser = {
+      id: bookingDetailsData.userId?.toString() || 'unknown',
+      name: bookingDetailsData.facilityName || 'Provider',
+      avatar: bookingDetailsData.profileImg
+        ? `${API_CONFIG.BASE_URL}${bookingDetailsData.profileImg}`
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(bookingDetailsData.facilityName || 'Provider')}&background=58B9D0&color=fff`,
+      isOnline: Math.random() > 0.5, // Random online status for demo
+      role: 'boarding_provider',
+    };
+
+    console.log('🗨️ Opening chat with provider:', chatUser);
+    navigation.navigate('Chat', { user: chatUser });
   };
 
   if (loading) {
@@ -368,7 +401,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         </View>
         </ScrollView>
 
-        {/* Book Now Button - Fixed at bottom */}
+        {/* Chat and Book Now Buttons - Fixed at bottom */}
       <View style={{
         backgroundColor: '#FFFFFF',
         paddingHorizontal: responsiveWidth(4),
@@ -382,26 +415,59 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         shadowOpacity: 0.1,
         shadowRadius: 4,
       }}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#58B9D0',
-            paddingVertical: 16,
-            borderRadius: 8,
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            minHeight: 50,
-          }}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={{
-            fontSize: 16,
-            fontWeight: '600',
-            color: '#FFFFFF',
-          }}>
-            Book Now
-          </Text>
-        </TouchableOpacity>
+        <View style={{
+          flexDirection: 'row',
+          gap: 12,
+        }}>
+          {/* Chat Button */}
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: '#FFFFFF',
+              paddingVertical: 16,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+              borderWidth: 2,
+              borderColor: '#58B9D0',
+              flexDirection: 'row',
+              gap: 8,
+            }}
+            onPress={handleChatPress}
+          >
+            <MaterialIcons name="chat-bubble-outline" size={20} color="#58B9D0" />
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: '#58B9D0',
+            }}>
+              Chat
+            </Text>
+          </TouchableOpacity>
+
+          {/* Book Now Button */}
+          <TouchableOpacity
+            style={{
+              flex: 2,
+              backgroundColor: '#58B9D0',
+              paddingVertical: 16,
+              borderRadius: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+            }}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: '#FFFFFF',
+            }}>
+              Book Now
+            </Text>
+          </TouchableOpacity>
+        </View>
         </View>
       </View>
 

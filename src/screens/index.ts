@@ -95,8 +95,11 @@ export { default as VeterinaryPaymentMethod} from './VeterinaryPaymentMethod/Vet
 export { default as PharmacyOrderOnTheWay} from './PharmacyOrderOnTheWay/PharmacyOrderOnTheWay';
 export { default as VeterinaryHomeVisiteDetails} from './VeterinaryHomeVisiteDetails/VeterinaryHomeVisiteDetails';
 export { default as AddPet} from './AddPet/AddPet';
+export { default as EditPet} from './EditPet/EditPet';
 export { default as ChatList} from './Chat/ChatList';
 export { default as Chat} from './Chat/Chat';
+export { default as History} from './History/History';
+export { default as ViewDetails} from './History/ViewDetails';
 
 
 

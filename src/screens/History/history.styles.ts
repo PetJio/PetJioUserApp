@@ -125,11 +125,6 @@ const historyStyles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
   },
 
   // Card header
@@ -298,6 +293,18 @@ const historyStyles = StyleSheet.create({
     fontSize: 12,
     color: '#9CA3AF',
   },
+
+  // Minimal date section
+  minimalDateSection: {
+    marginBottom: 12,
+  },
+  dateRange: {
+    fontSize: 14,
+    color: '#4B5563',
+    fontWeight: '500',
+  },
+
+  // View button
   viewButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -307,6 +314,115 @@ const historyStyles = StyleSheet.create({
     color: '#58B9D0',
     fontWeight: '500',
     marginRight: 4,
+  },
+
+  // ViewDetails page styles
+  detailsScrollContainer: {
+    flex: 1,
+    backgroundColor: '#F8F9FB',
+  },
+  detailsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
+  },
+  detailsServiceTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  detailsProviderName: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  providerInfo: {
+    gap: 12,
+  },
+  providerDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  providerDetailText: {
+    fontSize: 14,
+    color: '#4B5563',
+    flex: 1,
+  },
+  additionalAdviceSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  adviceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  adviceText: {
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
+  },
+  statusTextLarge: {
+    fontSize: 16,
+    color: '#4B5563',
+    marginLeft: 8,
+    flex: 1,
+    fontWeight: '500',
+  },
+  petsTextLarge: {
+    fontSize: 16,
+    color: '#4B5563',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  detailsActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 16,
+    gap: 8,
+  },
+  detailsActionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  bottomButtonContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: responsiveWidth(4),
+    paddingVertical: responsiveHeight(2),
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  bottomActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: responsiveHeight(1.8),
+    paddingHorizontal: responsiveWidth(4),
+    borderRadius: 12,
+    gap: 8,
+  },
+  bottomActionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

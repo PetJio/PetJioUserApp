@@ -18,6 +18,7 @@ import googleSignInService, { GoogleSignInResponse } from '../../services/google
 import { RootStackParamList } from '../../types/navigation';
 import { storageService } from '../../utils/storage';
 import { STORAGE_KEYS } from '../../constants';
+import FirebaseMessagingService from '../../services/firebaseMessagingService';
 
 type LogInScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -86,10 +87,33 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
           await storageService.setUserData(response.user);
           await storageService.setUserToken(response.token);
           await storageService.setItem(STORAGE_KEYS.IS_LOGGED_IN, true);
-          
+
           console.log('✅ Login data stored successfully');
+
+          // Register FCM token after successful login
+          console.log('🔔 Registering FCM token after login...');
+          try {
+            // Get FCM token from local storage
+            const fcmToken = await storageService.getFCMToken();
+
+            if (fcmToken) {
+              console.log('📱 FCM token found, registering with backend...');
+              const registered = await FirebaseMessagingService.registerDeviceToken(fcmToken);
+
+              if (registered) {
+                console.log('✅ FCM token registered successfully after login');
+              } else {
+                console.log('⚠️ Failed to register FCM token after login');
+              }
+            } else {
+              console.log('⚠️ No FCM token found to register after login');
+            }
+          } catch (error) {
+            console.error('❌ Error registering FCM token after login:', error);
+          }
+
           setMessage({type: 'success', text: response.message});
-          
+
           setTimeout(() => {
             navigation.navigate('Main');
           }, 1500);
@@ -124,12 +148,34 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
         
         if (response.success && response.user && response.token) {
           console.log('✅ Google Sign-In successful:', response.user.name);
-          
+
+          // Register FCM token after successful Google Sign-In
+          console.log('🔔 Registering FCM token after Google Sign-In...');
+          try {
+            // Get FCM token from local storage
+            const fcmToken = await storageService.getFCMToken();
+
+            if (fcmToken) {
+              console.log('📱 FCM token found, registering with backend...');
+              const registered = await FirebaseMessagingService.registerDeviceToken(fcmToken);
+
+              if (registered) {
+                console.log('✅ FCM token registered successfully after Google Sign-In');
+              } else {
+                console.log('⚠️ Failed to register FCM token after Google Sign-In');
+              }
+            } else {
+              console.log('⚠️ No FCM token found to register after Google Sign-In');
+            }
+          } catch (error) {
+            console.error('❌ Error registering FCM token after Google Sign-In:', error);
+          }
+
           setMessage({
-            type: 'success', 
+            type: 'success',
             text: `Welcome ${response.user.name}! Signed in successfully.`
           });
-          
+
           // Navigate to main screen after successful Google sign-in
           setTimeout(() => {
             navigation.navigate('Main');

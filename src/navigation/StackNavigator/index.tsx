@@ -86,12 +86,16 @@ import {
   VeterinaryCalendar,
   VoiceCallWithVeterinary,
   OnlineChatWithVeterinary,
+  ChatList,
+  Chat,
   LiveTalkToVeterinary,
   PharmacyOrderOverview,
   VeterinaryPaymentMethod,
   PharmacyOrderOnTheWay,
   VeterinaryHomeVisiteDetails,
   AddPet,
+  EditPet,
+  ViewDetails,
 } from '../../screens';
 import TabNavigator from '../TabNavigator';
 import ServiceStackNavigator from '../ServiceStackNavigator';
@@ -212,6 +216,8 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="VeterinaryCalendar" component={VeterinaryCalendar}/>
             <Stack.Screen name="VoiceCallWithVeterinary" component={VoiceCallWithVeterinary}/>
             <Stack.Screen name="OnlineChatWithVeterinary" component={OnlineChatWithVeterinary}/>
+            <Stack.Screen name="ChatList" component={ChatList}/>
+            <Stack.Screen name="Chat" component={Chat}/>
             <Stack.Screen name="LiveTalkToVeterinary" component={LiveTalkToVeterinary}/>
             <Stack.Screen name="PharmacyOrderOverview" component={PharmacyOrderOverview}/>
             <Stack.Screen name="VeterinaryPaymentMethod" component={VeterinaryPaymentMethod}/>
@@ -219,6 +225,8 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             {/* @ts-ignore - Legacy component with custom props interface */}
             <Stack.Screen name="VeterinaryHomeVisiteDetails" component={VeterinaryHomeVisiteDetails}/>
             <Stack.Screen name="AddPet" component={AddPet}/>
+            <Stack.Screen name="EditPet" component={EditPet}/>
+            <Stack.Screen name="ViewDetails" component={ViewDetails}/>
 
         </Stack.Navigator>
     );

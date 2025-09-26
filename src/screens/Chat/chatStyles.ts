@@ -52,6 +52,27 @@ const chatStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '400',
   },
+
+  // Header user info styles
+  headerUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: responsiveWidth(3),
+  },
+  headerTextInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  headerUserStatus: {
+    fontSize: 12,
+    color: '#58B9D0',
+    fontWeight: '400',
+    marginTop: 2,
+  },
+  headerAction: {
+    padding: 8,
+  },
   backButton: {
     marginRight: 12,
     padding: 4,
@@ -149,8 +170,9 @@ const chatStyles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9CA3AF',
+    fontWeight: '400',
   },
   inputContainer: {
     backgroundColor: '#FFFFFF',

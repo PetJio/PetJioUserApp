@@ -32,7 +32,14 @@ export type RootStackParamList = {
   TrainingPaymentmethod: undefined;
   TrainingPaymentconfirmmethod: undefined;
   Boarding: undefined;
-  BoardingDetails: undefined;
+  BoardingDetails: {
+    providerId?: number;
+    selectedDate: string;
+    selectedTime: string;
+    city: string;
+    boardDetails?: any;
+    mode?: number;
+  };
   BoardingUser: undefined;
   BoardingQuestions: undefined;
   BoardingRegistrationform: undefined;
@@ -82,10 +89,24 @@ export type RootStackParamList = {
   AddVaccination: undefined;
   AddPet: undefined;
   EditPet: { pet: any };
-  
+
   // Chat Screens
   ChatList: undefined;
-  Chat: { user: any };
+  Chat: {
+    user: {
+      id: string;
+      name: string;
+      avatar?: string;
+      isOnline?: boolean;
+      lastMessage?: string;
+      timestamp?: string;
+      unreadCount?: number;
+      role?: string;
+    };
+  };
+
+  // History Screens
+  ViewDetails: { bookingItem: any };
   
   // Mart Screens
   MartLocalityAddress: undefined;

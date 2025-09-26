@@ -41,7 +41,13 @@
       "Bash(timeout 30 adb logcat:*)",
       "Bash(adb:*)",
       "Bash(timeout 10 adb logcat:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(del test-profile.js)",
+      "Bash(dir)",
+      "Bash(./gradlew.bat:*)",
+      "Bash(dir:*)",
+      "Bash(copy:*)",
+      "Bash(timeout 15 adb logcat)"
     ],
     "deny": [],
     "ask": [],

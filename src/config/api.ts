@@ -47,6 +47,14 @@ export const API_ENDPOINTS = {
     SERVICES_BOOKING: '/api/boarding-service-bookings',
   },
 
+  // Chat
+  CHAT: {
+    GET_ALL_MESSAGES: '/api/user-chat/get-all-messages/:userId',
+    GET_CONVERSATION_MESSAGES: '/api/user-chat/end-end/:myId/:userId',
+    SEND_MESSAGE: '/api/notifications/send-message',
+    GET_CONVERSATIONS: '/api/user-chat/conversations',
+  },
+
   // Location Services
   LOCATION: {
     SEARCH: '/api/location/search',

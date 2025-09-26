@@ -19,7 +19,7 @@ const getMessaging = () => {
 };
 
 export class FirebaseMessagingService {
-  
+
   /**
    * Request permission for push notifications
    */
@@ -30,16 +30,41 @@ export class FirebaseMessagingService {
         console.error('Firebase messaging not available');
         return false;
       }
-      const authStatus = await messaging().requestPermission();
+
+      // Check current permission status first
+      const currentAuthStatus = await messaging().hasPermission();
+      console.log('Current notification permission status:', currentAuthStatus);
+
+      // If already authorized, return true
+      if (currentAuthStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          currentAuthStatus === messaging.AuthorizationStatus.PROVISIONAL) {
+        console.log('Firebase messaging permission already granted:', currentAuthStatus);
+        return true;
+      }
+
+      // Request permission
+      console.log('Requesting Firebase messaging permission...');
+      const authStatus = await messaging().requestPermission({
+        sound: true,
+        announcement: true,
+        badge: true,
+        carPlay: true,
+        criticalAlert: true,
+        provisional: false,
+        alert: true,
+      });
+
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
-        console.log('Firebase messaging permission granted:', authStatus);
+        console.log('✅ Firebase messaging permission granted:', authStatus);
+        console.log('🔔 Push notifications are now enabled!');
         return true;
       } else {
-        console.log('Firebase messaging permission denied');
+        console.log('❌ Firebase messaging permission denied:', authStatus);
+        console.log('⚠️ User needs to manually enable notifications in device settings');
         return false;
       }
     } catch (error) {
@@ -62,9 +87,20 @@ export class FirebaseMessagingService {
       console.log('FCM Token retrieved:', fcmToken);
       console.log('FCM TOKEN FOR TESTING:', fcmToken);
       console.log('==================================================');
-      console.log('COPY THIS TOKEN FOR API TESTING:');
+      console.log('CURRENT FCM TOKEN:');
       console.log(fcmToken);
       console.log('==================================================');
+      console.log('🔗 DYNAMIC TOKEN EXTRACTION: CURRENT_FCM_TOKEN=' + fcmToken);
+      console.log('📱 Token length:', fcmToken ? fcmToken.length : 0);
+      console.log('✅ Token format valid:', fcmToken ? /^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$/.test(fcmToken) : false);
+
+      // Store in AsyncStorage for external access
+      await AsyncStorage.setItem('current_fcm_token', fcmToken);
+      await AsyncStorage.setItem('@fcm_token', fcmToken);
+      await AsyncStorage.setItem('firebase_messaging_token', fcmToken);
+
+      console.log('💾 FCM Token stored in AsyncStorage with keys: current_fcm_token, @fcm_token, firebase_messaging_token');
+
       return fcmToken;
     } catch (error) {
       console.error('Error getting FCM token:', error);
@@ -77,7 +113,7 @@ export class FirebaseMessagingService {
    */
   private static async getAuthToken(): Promise<string | null> {
     const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-    
+
     for (const key of possibleTokenKeys) {
       const value = await AsyncStorage.getItem(key);
       if (value) {
@@ -92,18 +128,18 @@ export class FirebaseMessagingService {
   }
 
   /**
-   * Register device token with backend API
+   * Register or unregister device token with backend API
    */
   static async registerDeviceToken(fcmToken: string): Promise<boolean> {
     try {
       const authToken = await this.getAuthToken();
-      
+
       if (!authToken) {
-  console.error('No authentication token found for device registration');
-  // Save the token as pending so it can be registered after login
-  await AsyncStorage.setItem('pending_fcm_token', fcmToken);
-  console.log('Saved pending FCM token for later registration');
-  return false;
+        console.error('No authentication token found for device registration');
+        // Save the token as pending so it can be registered after login
+        await AsyncStorage.setItem('pending_fcm_token', fcmToken);
+        console.log('Saved pending FCM token for later registration');
+        return false;
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notifications/register-device`, {
@@ -123,7 +159,7 @@ export class FirebaseMessagingService {
         console.log('Device token registered successfully:', result);
         console.log('SUCCESS! FCM Token sent to backend API');
         console.log('API Response:', JSON.stringify(result, null, 2));
-        
+
         // Store registration status
         await AsyncStorage.setItem('fcm_token_registered', 'true');
         await AsyncStorage.setItem('registered_fcm_token', fcmToken);
@@ -166,6 +202,54 @@ export class FirebaseMessagingService {
   }
 
   /**
+   * Unregister device token on logout by sending empty FCM token
+   */
+  static async unregisterDeviceToken(): Promise<boolean> {
+    try {
+      const authToken = await this.getAuthToken();
+
+      if (!authToken) {
+        console.error('No authentication token found for device unregistration');
+        return false;
+      }
+
+      console.log('Unregistering device token by sending empty FCM token...');
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/notifications/register-device`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          fcmToken: '', // Empty token to unregister
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log('Device token unregistered successfully:', result);
+        console.log('SUCCESS! Device unregistered from push notifications');
+
+        // Clear registration status
+        await AsyncStorage.removeItem('fcm_token_registered');
+        await AsyncStorage.removeItem('registered_fcm_token');
+        await AsyncStorage.removeItem('pending_fcm_token');
+
+        return true;
+      } else {
+        console.error('Failed to unregister device token:', result);
+        console.error('API Error Response:', JSON.stringify(result, null, 2));
+        return false;
+      }
+    } catch (error) {
+      console.error('Error unregistering device token:', error);
+      return false;
+    }
+  }
+
+  /**
    * Initialize Firebase messaging (call after login)
    */
   static async initializeMessaging(): Promise<void> {
@@ -174,7 +258,7 @@ export class FirebaseMessagingService {
 
       // Request permission
       const hasPermission = await this.requestPermission();
-      
+
       if (!hasPermission) {
         console.log('Push notification permission not granted');
         return;
@@ -182,29 +266,24 @@ export class FirebaseMessagingService {
 
       // Get FCM token
       const fcmToken = await this.getFCMToken();
-      
+
       if (!fcmToken) {
         console.error('Could not retrieve FCM token');
         return;
       }
 
       console.log('Checking if token needs registration...');
-      
+
       // Check if token is already registered
-      const lastRegisteredToken = await AsyncStorage.getItem('registered_fcm_token');
-      if (lastRegisteredToken === fcmToken) {
-        console.log('FCM token already registered, skipping API call');
-        console.log('Existing token:', lastRegisteredToken);
-        return;
-      }
+      // const lastRegisteredToken = await AsyncStorage.getItem('registered_fcm_token');
 
       console.log('Registering new FCM token with backend API...');
       console.log('New token:', fcmToken);
-      console.log('Previous token:', lastRegisteredToken || 'None');
+      // console.log('Previous token:', lastRegisteredToken || 'None');
 
       // Register token with backend
       const registered = await this.registerDeviceToken(fcmToken);
-      
+
       if (registered) {
         console.log('Firebase messaging initialization complete');
         console.log('Device is now ready to receive push notifications!');
@@ -234,10 +313,10 @@ export class FirebaseMessagingService {
       console.log('TOKEN REFRESHED - COPY NEW TOKEN FOR TESTING:');
       console.log(fcmToken);
       console.log('============================================================');
-      
+
       // Re-register the new token
       const registered = await this.registerDeviceToken(fcmToken);
-      
+
       if (registered) {
         console.log('New FCM token registered successfully');
         console.log('Token refresh and registration complete!');
@@ -257,7 +336,7 @@ export class FirebaseMessagingService {
       console.error('Firebase messaging not available for message handlers');
       return;
     }
-    
+
     // Handle messages when app is in foreground
     messaging().onMessage(async (remoteMessage) => {
       console.log('Foreground message received:', remoteMessage);
