@@ -449,7 +449,7 @@ const profileStyles = StyleSheet.create({
     },
     loadingContainer: {
         flex: 1,
-        flexDirection: 'column',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: spacing.md,

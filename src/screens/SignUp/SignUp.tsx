@@ -183,11 +183,18 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
   }, [message]);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={signupstyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView 
+      {/* Sticky Back Button */}
+      <TouchableOpacity onPress={() => navigation.goBack()} style={signupstyles.stickyBackButton}>
+        <View style={signupstyles.backIconContainer}>
+          <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
+        </View>
+      </TouchableOpacity>
+
+      <ScrollView
         style={signupstyles.scrollContainer}
         contentContainerStyle={signupstyles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -196,11 +203,6 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
       >
         <View style={signupstyles.setLeftIconposition}>
           <Image source={images.signupImage} style={signupstyles.topImage} />
-          <TouchableOpacity onPress={() => navigation.goBack()} style={signupstyles.arrowIconPosition}>
-            <View>
-              <Image source={Icons.LeftArrow} style={signupstyles.leftArrowIconSize}/>
-            </View>
-          </TouchableOpacity>
         </View>
 
         <View style={signupstyles.formContainer}>
@@ -228,28 +230,30 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
               setFirstName(value);
               clearFieldError('firstName');
             }}
-            theme={{ 
+            theme={{
               roundness: 12,
               colors: { primary: '#58B9D0', outline: errors.firstName ? '#FF6B6B' : '#E2E2E2' }
             }}
             error={!!errors.firstName}
+            left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} color="#58B9D0" />} />}
           />
           {errors.firstName && <Text style={signupstyles.errorText}>{errors.firstName}</Text>}
           
           <TextInput
             mode="outlined"
-            label="Enter Last Name" 
+            label="Enter Last Name"
             placeholder="Last Name"
             value={lastName}
             onChangeText={(value) => {
               setLastName(value);
               clearFieldError('lastName');
             }}
-            theme={{ 
+            theme={{
               roundness: 12,
               colors: { primary: '#58B9D0', outline: errors.lastName ? '#FF6B6B' : '#E2E2E2' }
             }}
             error={!!errors.lastName}
+            left={<TextInput.Icon icon={() => <MaterialIcons name="person-outline" size={20} color="#58B9D0" />} />}
           />
           {errors.lastName && <Text style={signupstyles.errorText}>{errors.lastName}</Text>}
 
@@ -262,13 +266,14 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
               setEmail(value);
               clearFieldError('email');
             }}
-            theme={{ 
+            theme={{
               roundness: 12,
               colors: { primary: '#58B9D0', outline: errors.email ? '#FF6B6B' : '#E2E2E2' }
             }}
             error={!!errors.email}
             keyboardType="email-address"
             autoCapitalize="none"
+            left={<TextInput.Icon icon={() => <MaterialIcons name="email" size={20} color="#58B9D0" />} />}
           />
           {errors.email && <Text style={signupstyles.errorText}>{errors.email}</Text>}
 
@@ -281,13 +286,14 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
               setPhoneNumber(value);
               clearFieldError('phoneNumber');
             }}
-            theme={{ 
+            theme={{
               roundness: 12,
               colors: { primary: '#58B9D0', outline: errors.phoneNumber ? '#FF6B6B' : '#E2E2E2' }
             }}
             error={!!errors.phoneNumber}
             keyboardType="phone-pad"
             maxLength={10}
+            left={<TextInput.Icon icon={() => <MaterialIcons name="phone" size={20} color="#58B9D0" />} />}
           />
           {errors.phoneNumber && <Text style={signupstyles.errorText}>{errors.phoneNumber}</Text>}
 
@@ -301,14 +307,15 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
               clearFieldError('password');
             }}
             secureTextEntry={!showPassword}
-            theme={{ 
+            theme={{
               roundness: 12,
               colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E2E2E2' }
             }}
             error={!!errors.password}
+            left={<TextInput.Icon icon={() => <MaterialIcons name="lock" size={20} color="#58B9D0" />} />}
             right={
               <TextInput.Icon
-                icon={showPassword ? Icons.eyeInvisible : Icons.eyeInvisible}
+                icon={() => <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color="#666" />}
                 onPress={() => setShowPassword(!showPassword)}
               />
             }
@@ -325,14 +332,15 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
               clearFieldError('confirmPassword');
             }}
             secureTextEntry={!showConfirmPassword}
-            theme={{ 
+            theme={{
               roundness: 12,
               colors: { primary: '#58B9D0', outline: errors.confirmPassword ? '#FF6B6B' : '#E2E2E2' }
             }}
             error={!!errors.confirmPassword}
+            left={<TextInput.Icon icon={() => <MaterialIcons name="lock-outline" size={20} color="#58B9D0" />} />}
             right={
               <TextInput.Icon
-                icon={showConfirmPassword ? Icons.eyeInvisible : Icons.eyeInvisible}
+                icon={() => <MaterialIcons name={showConfirmPassword ? "visibility" : "visibility-off"} size={20} color="#666" />}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               />
             }

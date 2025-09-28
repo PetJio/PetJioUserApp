@@ -506,12 +506,11 @@ const History: React.FC = () => {
         animated={true}
       />
 
-      {/* Header - Service Page Style */}
-      <View style={historyStyles.serviceStyleHeader}>
-        <View style={historyStyles.serviceHeaderContainer}>
-          <View style={historyStyles.serviceHeaderLeft}>
-            <Text style={historyStyles.serviceHeaderTitle}>History</Text>
-          </View>
+      {/* Sticky Header - Services Style */}
+      <View style={historyStyles.stickyHeader}>
+        <View style={historyStyles.headerTitleContainer}>
+          <Text style={historyStyles.stickyHeaderTitle}>History</Text>
+          <Text style={historyStyles.stickyHeaderSubtitle}>View your booking history and details</Text>
         </View>
       </View>
 

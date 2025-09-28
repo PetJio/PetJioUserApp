@@ -38,6 +38,12 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
+import {
+  ProfileHeaderSkeleton,
+  PersonalInfoSkeleton,
+  AddressInfoSkeleton,
+  PetsTabSkeleton,
+} from '../../components/SkeletonLoader/SkeletonLoader';
 
 interface PetOwner {
   userId: number;
@@ -200,7 +206,10 @@ const Profile: React.FC = () => {
       console.error('Error fetching profile:', error);
       setMessage({ type: 'error', text: 'Error loading profile data' });
     } finally {
-      setIsLoading(false);
+      // Add a small delay to show skeleton loaders
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
     }
   };
 
@@ -546,22 +555,40 @@ const Profile: React.FC = () => {
           animated={true}
         />
 
-        {/* Modern Header */}
-        <View style={profileStyles.stickyHeader}>
-          <View style={profileStyles.headerTitleContainer}>
-            <Text style={profileStyles.headerTitle}>Profile</Text>
-            <Text style={profileStyles.headerSubtitle}>
+        {/* Header - Service Page Style */}
+        <View style={serviceStyles.stickyHeader}>
+          <View style={serviceStyles.headerTitleContainer}>
+            <Text style={serviceStyles.stickyHeaderTitle}>Profile</Text>
+            <Text style={serviceStyles.stickyHeaderSubtitle}>
               Manage your account & pets
             </Text>
           </View>
         </View>
 
-        <View style={profileStyles.loadingContainer}>
-          <ActivityIndicator size="large" color="#58B9D0" />
-          <Text style={profileStyles.loadingText}>
-            Loading profile...
-          </Text>
-        </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: responsiveWidth(2),
+            paddingTop: responsiveHeight(1),
+            paddingBottom: responsiveHeight(2),
+          }}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: '#F8F9FB',
+            paddingTop: responsiveHeight(2),
+          }}>
+            {/* Profile Header Skeleton */}
+            <ProfileHeaderSkeleton />
+
+            {/* Personal Information Skeleton */}
+            <PersonalInfoSkeleton />
+
+            {/* Address Information Skeleton */}
+            <AddressInfoSkeleton />
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -956,17 +983,7 @@ const Profile: React.FC = () => {
                 </View>
 
                 {loadingPets ? (
-                  <View
-                    style={{
-                      padding: responsiveHeight(3),
-                      alignItems: 'center',
-                    }}
-                  >
-                    <ActivityIndicator size="large" color="#58B9D0" />
-                    <Text style={{ marginTop: 10, color: '#666' }}>
-                      Loading pets...
-                    </Text>
-                  </View>
+                  <PetsTabSkeleton />
                 ) : petProfiles.length === 0 ? (
                   <View
                     style={{

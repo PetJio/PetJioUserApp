@@ -23,7 +23,7 @@ const locationStyles = StyleSheet.create({
     },
     scrollContent: {
         flexGrow: 1,
-        paddingBottom: 20,
+        paddingBottom: responsiveHeight(8),
     },
     formContainer: {
         paddingHorizontal: 20,
@@ -51,6 +51,28 @@ const locationStyles = StyleSheet.create({
     leftArrowIconSize: {
         width: responsiveWidth(8),
         height: responsiveHeight(2)
+    },
+    backIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    stickyBackButton: {
+        position: 'absolute',
+        top: responsiveHeight(6),
+        left: responsiveWidth(8),
+        zIndex: 1000,
     },
     
     // Header Styles
@@ -201,7 +223,7 @@ const locationStyles = StyleSheet.create({
         backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: '#E2E2E2',
-        marginBottom: responsiveHeight(2),
+        marginVertical: responsiveHeight(2),
         alignSelf: 'center'
     },
     locationButtonGradient: {

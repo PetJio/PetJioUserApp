@@ -271,7 +271,6 @@ const Home: React.FC = () => {
       <View
         style={{
           backgroundColor: '#FFFFFF',
-          paddingTop: responsiveHeight(1.5),
           paddingBottom: responsiveHeight(2),
           paddingHorizontal: responsiveWidth(5),
           zIndex: 1000,
@@ -280,6 +279,7 @@ const Home: React.FC = () => {
           shadowOpacity: 0.02,
           shadowRadius: 3,
           elevation: 1,
+          paddingTop: Platform.OS === 'ios' ? responsiveHeight(6) : responsiveHeight(5),
         }}
       >
         <View
@@ -380,69 +380,6 @@ const Home: React.FC = () => {
               </View>
             ) : (
               <>
-                {/* First pet slot */}
-                {/* {pets.length > 0 ? (
-                <TouchableOpacity
-                  onPress={() => navigate('EditPet', { pet: pets[0] })}
-                  activeOpacity={0.8}
-                >
-                  <View>
-                    <View style={[styles.doctorcontainer, {
-                      backgroundColor: '#58B9D0',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }]}>
-                      <MaterialIcons name="pets" size={24} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.dogname}>{pets[0].petName}</Text>
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => navigate('AddPet')}
-                  activeOpacity={0.7}
-                >
-                  <View>
-                    <View style={styles.doctorcontainer}>
-                      <View
-                        style={{
-                          width: 60,
-                          height: 60,
-                          borderRadius: 30,
-                          backgroundColor: '#58B9D0',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <MaterialIcons name="pets" size={24} color="#FFFFFF" />
-                      </View>
-                    </View>
-                    <Text style={styles.dogname}>Add Pet</Text>
-                  </View>
-                </TouchableOpacity>
-              )} */}
-
-                {/* Second pet slot - Always show DaisyDog container */}
-                {/* {pets.length > 1 && (
-                <TouchableOpacity
-                  onPress={() => navigate('EditPet', { pet: pets[1] })}
-                  activeOpacity={0.8}
-                >
-                  <View>
-                    <View style={[styles.dogcontainer, {
-                      backgroundColor: '#58B9D0',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }]}>
-                      <MaterialIcons name="pets" size={24} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.dogname}>{pets[1].petName}</Text>
-                  </View>
-                </TouchableOpacity>
-              )} */}
-
-                {/* Plus button only shows when no pets */}
-
                 {pets?.map(item => (
                   <TouchableOpacity
                     key={item?.id}
@@ -479,20 +416,10 @@ const Home: React.FC = () => {
           </View>
         </View>
 
-        {/* Appointments Section - Dynamic Data Only */}
-        <View>
-          <View style={styles.secondcontainer}>
-            <View style={styles.flex}>
-              <Text style={styles.appointmentText}>Appointments</Text>
-              <Text style={styles.showallText}>Show All</Text>
-            </View>
-          </View>
-        </View>
-
         {/* Attractive empty state for appointments */}
         <View
           style={{
-            marginTop: responsiveHeight(1),
+            marginTop: responsiveHeight(5),
             paddingHorizontal: responsiveWidth(5),
             justifyContent: 'center',
             alignItems: 'center',
@@ -540,21 +467,10 @@ const Home: React.FC = () => {
             Schedule your pet's next visit with our trusted veterinarians
           </Text>
         </View>
-
-        {/* News Section - Dynamic Data Only */}
-        <View>
-          <View style={styles.fourthcontainer}>
-            <View style={styles.flex}>
-              <Text style={styles.appointmentText}>News</Text>
-              <Text style={styles.showallText}>Show All</Text>
-            </View>
-          </View>
-        </View>
-
         {/* Attractive empty state for news */}
         <View
           style={{
-            marginTop: responsiveHeight(1),
+            marginTop: responsiveHeight(2),
             paddingHorizontal: responsiveWidth(5),
             justifyContent: 'center',
             alignItems: 'center',
@@ -603,60 +519,56 @@ const Home: React.FC = () => {
           </Text>
         </View>
 
-        <View style={{ marginTop: responsiveHeight(1) }}>
-          <View style={styles.fivethcontainer}>
-            {/* Attractive empty state for blogs */}
-            <View
-              style={{
-                paddingHorizontal: responsiveWidth(5),
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingVertical: responsiveHeight(2.5),
-                backgroundColor: '#FEF7ED',
-                marginHorizontal: responsiveWidth(5),
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: '#FED7AA',
-                borderStyle: 'dashed',
-                marginBottom: responsiveHeight(3),
-              }}
-            >
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: '#FEF3C7',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}
-              >
-                <MaterialIcons name="article" size={28} color="#F59E0B" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#1F2937',
-                  textAlign: 'center',
-                  marginBottom: 4,
-                }}
-              >
-                No blog posts yet
-              </Text>
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: '#6B7280',
-                  textAlign: 'center',
-                  lineHeight: 20,
-                }}
-              >
-                Discover helpful tips and guides for caring for your pets
-              </Text>
-            </View>
+        <View
+          style={{
+            marginTop: responsiveHeight(2),
+            paddingHorizontal: responsiveWidth(5),
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: responsiveHeight(2.5),
+            backgroundColor: '#FEF7ED',
+            marginHorizontal: responsiveWidth(5),
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: '#FED7AA',
+            borderStyle: 'dashed',
+            marginBottom: responsiveHeight(3),
+          }}
+        >
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#FEF3C7',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 12,
+            }}
+          >
+            <MaterialIcons name="article" size={28} color="#F59E0B" />
           </View>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: '#1F2937',
+              textAlign: 'center',
+              marginBottom: 4,
+            }}
+          >
+            No blog posts yet
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: '#6B7280',
+              textAlign: 'center',
+              lineHeight: 20,
+            }}
+          >
+            Discover helpful tips and guides for caring for your pets
+          </Text>
         </View>
       </ScrollView>
     </View>

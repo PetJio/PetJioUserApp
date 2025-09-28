@@ -480,17 +480,16 @@ const ChatList: React.FC = () => {
     <View style={styles.container}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#FFFFFF"
+        backgroundColor="#F8F9FB"
         translucent={false}
         animated={true}
       />
       
-      {/* Header - Matching Service Page Style */}
-      <View style={styles.serviceStyleHeader}>
-        <View style={styles.serviceHeaderContainer}>
-          <TouchableOpacity style={styles.serviceHeaderLeft}>
-            <Text style={styles.serviceHeaderTitle}>Chats</Text>
-          </TouchableOpacity>
+      {/* Sticky Header - Services Style */}
+      <View style={styles.stickyHeader}>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.stickyHeaderTitle}>Chats</Text>
+          <Text style={styles.stickyHeaderSubtitle}>Connect with pet care providers</Text>
         </View>
       </View>
 

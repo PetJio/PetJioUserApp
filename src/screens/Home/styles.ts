@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
         width: responsiveWidth(100),
         height: responsiveHeight(100),
         backgroundColor: '#FFFFFF',
-        paddingTop: Platform.OS === 'ios' ? responsiveHeight(6) : responsiveHeight(4),
+        // paddingTop: Platform.OS === 'ios' ? responsiveHeight(6) : responsiveHeight(4),
     },
     subcontainer: { top: responsiveHeight(2), gap: responsiveWidth(2.8) },
     

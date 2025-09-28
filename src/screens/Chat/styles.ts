@@ -4,11 +4,38 @@ import {
   responsiveHeight,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
+import { FONT_SIZES } from '../../constants/dimensions';
+import { typography } from '../../styles/typography';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FB',
+  },
+
+  // Sticky Header Styles - Matching Services Page
+  stickyHeader: {
+    backgroundColor: '#F8F9FB',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8EBF0',
+  },
+
+  stickyHeaderTitle: {
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: typography.fontWeight.bold,
+    color: '#1A1D29',
+    marginBottom: 2,
+  },
+
+  stickyHeaderSubtitle: {
+    fontSize: FONT_SIZES.sm,
+    color: '#666',
+    fontWeight: typography.fontWeight.medium,
   },
   header: {
     backgroundColor: '#F8F9FB',

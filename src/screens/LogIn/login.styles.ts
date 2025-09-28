@@ -5,9 +5,14 @@ import {
 } from 'react-native-responsive-dimensions';
 
 const loginstyles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         backgroundColor: '#fff',
-        height:responsiveHeight(100)
+        flexGrow: 1,
+        paddingBottom: responsiveHeight(8)
       },
       topImage: {
         width:responsiveWidth(100),
@@ -85,6 +90,7 @@ const loginstyles = StyleSheet.create({
       registerText: {
         textAlign: 'center',
         color: '#666',
+        marginBottom: responsiveHeight(4),
       },
       registerLink: {
         top:responsiveHeight(0.35),
@@ -215,6 +221,28 @@ const loginstyles = StyleSheet.create({
 leftArrowIconSize:{
       width:responsiveWidth(8),
       height:responsiveHeight(2)
+},
+backIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+},
+stickyBackButton: {
+      position: 'absolute',
+      top: responsiveHeight(6),
+      left: responsiveWidth(8),
+      zIndex: 1000,
 },
 
 // Message styles

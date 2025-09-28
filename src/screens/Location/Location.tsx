@@ -571,23 +571,27 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={locationStyles.container} 
+    <KeyboardAvoidingView
+      style={locationStyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView 
-        style={locationStyles.scrollContainer} 
+      {/* Sticky Back Button */}
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={locationStyles.stickyBackButton}
+      >
+        <View style={locationStyles.backIconContainer}>
+          <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
+        </View>
+      </TouchableOpacity>
+
+      <ScrollView
+        style={locationStyles.scrollContainer}
         contentContainerStyle={locationStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={locationStyles.setLeftIconposition}>
           <Image source={images.signupImage} style={locationStyles.topImage} />
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()} 
-            style={locationStyles.arrowIconPosition}
-          >
-            <Image source={Icons.LeftArrow} style={locationStyles.leftArrowIconSize}/>
-          </TouchableOpacity>
         </View>
 
         <View style={locationStyles.formContainer}>
@@ -613,13 +617,14 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   placeholder="Enter your full address"
                   value={locationData.address}
                   onChangeText={(value) => updateLocationData('address', value)}
-                  theme={{ 
+                  theme={{
                     roundness: 12,
                     colors: { primary: '#58B9D0', outline: errors.address ? '#FF6B6B' : '#E2E2E2' }
                   }}
                   error={!!errors.address}
                   multiline
                   numberOfLines={3}
+                  left={<TextInput.Icon icon={() => <MaterialIcons name="home" size={20} color="#58B9D0" />} />}
                 />
                 {errors.address && <Text style={locationStyles.errorText}>{errors.address}</Text>}
               </View>
@@ -631,12 +636,13 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   placeholder="Enter your city"
                   value={locationData.city}
                   onChangeText={(value) => updateLocationData('city', value)}
-                  theme={{ 
+                  theme={{
                     roundness: 12,
                     colors: { primary: '#58B9D0', outline: errors.city ? '#FF6B6B' : '#E2E2E2' }
                   }}
                   error={!!errors.city}
                   autoCapitalize="words"
+                  left={<TextInput.Icon icon={() => <MaterialIcons name="location-city" size={20} color="#58B9D0" />} />}
                 />
                 {errors.city && <Text style={locationStyles.errorText}>{errors.city}</Text>}
               </View>
@@ -648,12 +654,13 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   placeholder="Enter your state"
                   value={locationData.state}
                   onChangeText={(value) => updateLocationData('state', value)}
-                  theme={{ 
+                  theme={{
                     roundness: 12,
                     colors: { primary: '#58B9D0', outline: errors.state ? '#FF6B6B' : '#E2E2E2' }
                   }}
                   error={!!errors.state}
                   autoCapitalize="words"
+                  left={<TextInput.Icon icon={() => <MaterialIcons name="map" size={20} color="#58B9D0" />} />}
                 />
                 {errors.state && <Text style={locationStyles.errorText}>{errors.state}</Text>}
               </View>
@@ -665,13 +672,14 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
                   placeholder="Enter 6-digit pincode"
                   value={locationData.pincode}
                   onChangeText={(value) => updateLocationData('pincode', value)}
-                  theme={{ 
+                  theme={{
                     roundness: 12,
                     colors: { primary: '#58B9D0', outline: errors.pincode ? '#FF6B6B' : '#E2E2E2' }
                   }}
                   error={!!errors.pincode}
                   keyboardType="numeric"
                   maxLength={6}
+                  left={<TextInput.Icon icon={() => <MaterialIcons name="pin-drop" size={20} color="#58B9D0" />} />}
                   right={
                     isPincodeLoading && locationData.pincode.length === 6 ? (
                       <TextInput.Icon

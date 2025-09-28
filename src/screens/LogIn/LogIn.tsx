@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import images from '../../../assets/images'; 
@@ -199,15 +201,18 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
     };
 
   return (
-    <View style={loginstyles.container}>
-     <View style={loginstyles.setLeftIconposition}>
-          <Image source={images.signupImage} style={loginstyles.topImage} />
-         <TouchableOpacity onPress={()=>navigation.navigate("SignIn")} style={loginstyles.arrowIconPosition}>
-          <View>
-               <Image source={Icons.LeftArrow} style={loginstyles.leftArrowIconSize}/>
-          </View>
-         </TouchableOpacity>
-     </View>
+    <View style={loginstyles.mainContainer}>
+      {/* Sticky Back Button */}
+      <TouchableOpacity onPress={()=>navigation.navigate("SignIn")} style={loginstyles.stickyBackButton}>
+        <View style={loginstyles.backIconContainer}>
+             <MaterialIcons name="arrow-back" size={24} color="#58B9D0" />
+        </View>
+      </TouchableOpacity>
+
+      <ScrollView style={loginstyles.container} showsVerticalScrollIndicator={false}>
+       <View style={loginstyles.setLeftIconposition}>
+            <Image source={images.signupImage} style={loginstyles.topImage} />
+       </View>
 
       <View style={loginstyles.formContainer}>
         <View style={{alignItems:'center'}}>
@@ -233,11 +238,12 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
             setEmailPhone(value);
             clearFieldError('emailPhone');
           }}
-          theme={{ 
+          theme={{
             roundness: 12,
             colors: { primary: '#58B9D0', outline: errors.emailPhone ? '#FF6B6B' : '#E2E2E2' }
           }}
           error={!!errors.emailPhone}
+          left={<TextInput.Icon icon={() => <MaterialIcons name="email" size={20} color="#58B9D0" />} />}
         />
         {errors.emailPhone && <Text style={loginstyles.errorText}>{errors.emailPhone}</Text>}
         
@@ -252,14 +258,15 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
             clearFieldError('password');
           }}
           secureTextEntry={!showPassword}
-          theme={{ 
+          theme={{
             roundness: 12,
             colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E2E2E2' }
           }}
           error={!!errors.password}
+          left={<TextInput.Icon icon={() => <MaterialIcons name="lock" size={20} color="#58B9D0" />} />}
           right={
             <TextInput.Icon
-              icon={showPassword ? Icons.eyeInvisible : Icons.eyeInvisible}
+              icon={() => <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color="#666" />}
               onPress={() => setShowPassword(!showPassword)}
             />
           }
@@ -314,6 +321,7 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
          </TouchableOpacity>
         </Text>
       </View>
+    </ScrollView>
     </View>
   );
 };

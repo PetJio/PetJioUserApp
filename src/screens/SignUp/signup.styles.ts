@@ -18,7 +18,7 @@ const signupstyles = StyleSheet.create({
       },
       scrollContent: {
         flexGrow: 1,
-        paddingBottom: 20,
+        paddingBottom: responsiveHeight(8),
       },
       formContainer: {
         paddingHorizontal: 20,
@@ -60,7 +60,7 @@ const signupstyles = StyleSheet.create({
         height: responsiveHeight(5.8),
         borderRadius: responsiveHeight(1),
         backgroundColor: '#58B9D0',
-        marginBottom: responsiveHeight(2)
+        marginVertical: responsiveHeight(2),
       },
       loginText: {
         color: '#fff',
@@ -130,6 +130,28 @@ const signupstyles = StyleSheet.create({
 leftArrowIconSize:{
       width:responsiveWidth(8),
       height:responsiveHeight(2)
+},
+backIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+},
+stickyBackButton: {
+      position: 'absolute',
+      top: responsiveHeight(6),
+      left: responsiveWidth(8),
+      zIndex: 1000,
 },
 
 // Message styles

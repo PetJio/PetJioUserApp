@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing } from 'react-native';
-import { responsiveWidth, responsiveHeight } from 'react-native-responsive-dimensions';
+import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 
 interface SkeletonLoaderProps {
   width?: number | string;
@@ -560,6 +560,326 @@ export const ChatPageSkeleton: React.FC = () => {
           </View>
         );
       })}
+    </View>
+  );
+};
+
+// Skeleton component for profile header section
+export const ProfileHeaderSkeleton: React.FC = () => {
+  return (
+    <View style={{
+      backgroundColor: '#FFFFFF',
+      paddingVertical: 20,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      gap: 12,
+      marginHorizontal: 16,
+      marginBottom: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    }}>
+      {/* Profile avatar */}
+      <SkeletonLoader
+        width={80}
+        height={80}
+        borderRadius={40}
+      />
+
+      {/* Profile name */}
+      <SkeletonLoader
+        width={120}
+        height={20}
+        borderRadius={4}
+      />
+
+      {/* Email */}
+      <SkeletonLoader
+        width={160}
+        height={16}
+        borderRadius={4}
+      />
+
+      {/* Verified badge */}
+      <SkeletonLoader
+        width={80}
+        height={20}
+        borderRadius={10}
+      />
+
+      {/* Tab buttons */}
+      <View style={{
+        flexDirection: 'row',
+        marginTop: 16,
+        gap: 8,
+      }}>
+        <SkeletonLoader
+          width={120}
+          height={40}
+          borderRadius={8}
+        />
+        <SkeletonLoader
+          width={100}
+          height={40}
+          borderRadius={8}
+        />
+      </View>
+    </View>
+  );
+};
+
+// Skeleton component for profile form fields
+export const ProfileFormFieldSkeleton: React.FC<{ label?: string }> = ({ label }) => {
+  return (
+    <View style={{ gap: 8 }}>
+      {/* Field label */}
+      <SkeletonLoader
+        width={label ? label.length * 8 : 80}
+        height={16}
+        borderRadius={4}
+      />
+
+      {/* Input field with icon */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FB',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E2E2E2',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
+      }}>
+        {/* Icon placeholder */}
+        <SkeletonLoader
+          width={20}
+          height={20}
+          borderRadius={4}
+        />
+
+        {/* Input value */}
+        <SkeletonLoader
+          width="70%"
+          height={16}
+          borderRadius={4}
+        />
+      </View>
+    </View>
+  );
+};
+
+// Skeleton component for personal information section
+export const PersonalInfoSkeleton: React.FC = () => {
+  return (
+    <View style={{
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: 20,
+      marginHorizontal: 16,
+      marginBottom: 16,
+      gap: 20,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    }}>
+      {/* Section header */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+      }}>
+        <SkeletonLoader
+          width={24}
+          height={24}
+          borderRadius={4}
+        />
+        <SkeletonLoader
+          width={160}
+          height={20}
+          borderRadius={4}
+        />
+      </View>
+
+      {/* Form fields */}
+      <ProfileFormFieldSkeleton label="First Name" />
+      <ProfileFormFieldSkeleton label="Last Name" />
+      <ProfileFormFieldSkeleton label="Email" />
+      <ProfileFormFieldSkeleton label="Phone Number" />
+    </View>
+  );
+};
+
+// Skeleton component for address information section
+export const AddressInfoSkeleton: React.FC = () => {
+  return (
+    <View style={{
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: 20,
+      marginHorizontal: 16,
+      marginBottom: 16,
+      gap: 20,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    }}>
+      {/* Section header */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+      }}>
+        <SkeletonLoader
+          width={24}
+          height={24}
+          borderRadius={4}
+        />
+        <SkeletonLoader
+          width={140}
+          height={20}
+          borderRadius={4}
+        />
+      </View>
+
+      {/* Address field - multiline */}
+      <View style={{ gap: 8 }}>
+        <SkeletonLoader
+          width={60}
+          height={16}
+          borderRadius={4}
+        />
+        <View style={{
+          backgroundColor: '#F8F9FB',
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: '#E2E2E2',
+          padding: 16,
+          gap: 8,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <SkeletonLoader
+              width={20}
+              height={20}
+              borderRadius={4}
+            />
+            <SkeletonLoader
+              width="80%"
+              height={16}
+              borderRadius={4}
+            />
+          </View>
+          <SkeletonLoader
+            width="60%"
+            height={16}
+            borderRadius={4}
+          />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// Skeleton component for pets tab content
+export const PetsTabSkeleton: React.FC = () => {
+  return (
+    <View>
+      {/* Pets list - vertical layout */}
+      <View style={{
+        gap: responsiveHeight(1.5),
+        marginTop: responsiveHeight(1)
+      }}>
+        {[...Array(3)].map((_, index) => (
+          <View
+            key={index}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+              padding: responsiveWidth(4),
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            {/* Pet Avatar */}
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: 'rgba(88, 185, 208, 0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: responsiveWidth(4),
+              }}
+            >
+              <SkeletonLoader
+                width={32}
+                height={32}
+                borderRadius={16}
+              />
+            </View>
+
+            {/* Pet Info */}
+            <View style={{ flex: 1 }}>
+              {/* Pet Name */}
+              <SkeletonLoader
+                width="70%"
+                height={18}
+                borderRadius={4}
+                style={{ marginBottom: 8 }}
+              />
+
+              {/* Category row */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 4,
+              }}>
+                <SkeletonLoader
+                  width={16}
+                  height={16}
+                  borderRadius={8}
+                  style={{ marginRight: 6 }}
+                />
+                <SkeletonLoader
+                  width="50%"
+                  height={14}
+                  borderRadius={4}
+                />
+              </View>
+
+              {/* Size row */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}>
+                <SkeletonLoader
+                  width={16}
+                  height={16}
+                  borderRadius={8}
+                  style={{ marginRight: 6 }}
+                />
+                <SkeletonLoader
+                  width="40%"
+                  height={14}
+                  borderRadius={4}
+                />
+              </View>
+            </View>
+
+            {/* Edit Button */}
+            <SkeletonLoader
+              width={50}
+              height={38}
+              borderRadius={8}
+            />
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
