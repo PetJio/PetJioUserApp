@@ -21,6 +21,7 @@ import {
   MediaType,
   ImagePickerResponse,
 } from 'react-native-image-picker';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { API_CONFIG } from '../../config/api';
@@ -51,11 +52,17 @@ interface PetOwner {
   lastName: string;
   email: string;
   phoneNumber: string;
+  mobile?: string;
+  alterNo?: string;
   address?: string;
   city?: string;
   state?: string;
   zipCode?: string;
+  pinCode?: string;
   profileImg?: string;
+  pets?: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface ValidationErrors {
@@ -63,6 +70,7 @@ interface ValidationErrors {
   lastName?: string;
   email?: string;
   phoneNumber?: string;
+  alterNo?: string;
   address?: string;
   city?: string;
   state?: string;
@@ -76,17 +84,24 @@ const Profile: React.FC = () => {
     lastName: '',
     email: '',
     phoneNumber: '',
+    mobile: '',
+    alterNo: '',
     address: '',
     city: '',
     state: '',
     zipCode: '',
+    pinCode: '',
     profileImg: '',
+    pets: '',
+    lat: 0,
+    lng: 0,
   });
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [alterNo, setAlterNo] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -102,6 +117,7 @@ const Profile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'user' | 'pets'>('user');
   const [petProfiles, setPetProfiles] = useState([]);
   const [loadingPets, setLoadingPets] = useState(false);
+  const [petsError, setPetsError] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const clearFieldError = (fieldName: keyof ValidationErrors) => {
@@ -147,17 +163,18 @@ const Profile: React.FC = () => {
       const userData = await storageService.getUserData();
 
       if (userData) {
-        console.log('Loading profile from storage:', userData);
-        setPetOwner(userData);
-        setFirstName(userData.firstName || '');
-        setLastName(userData.lastName || '');
-        setEmail(userData.email || '');
-        setPhoneNumber(userData.phoneNumber || userData.mobile || '');
-        setAddress(userData.address || '');
-        setCity(userData.city || '');
-        setState(userData.state || '');
-        setZipCode(userData.zipCode || userData.pinCode || '');
-        return;
+        // console.log('Loading profile from storage:', userData);
+        // setPetOwner(userData);
+        // setFirstName(userData.firstName || '');
+        // setLastName(userData.lastName || '');
+        // setEmail(userData.email || '');
+        // setPhoneNumber(userData.phoneNumber || userData.mobile || '');
+        // setAlterNo(userData.alterNo || '');
+        // setAddress(userData.address || '');
+        // setCity(userData.city || '');
+        // setState(userData.state || '');
+        // setZipCode(userData.zipCode || userData.pinCode || '');
+        // return;
       }
 
       // If no user data in storage, try to fetch from API
@@ -169,7 +186,20 @@ const Profile: React.FC = () => {
       }
 
       console.log('Fetching profile from API...');
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/user/profile`, {
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+
+      // Generate and log CURL command for debugging
+      const curlCommand = `curl --location --request GET '${apiUrl}' \\
+--header 'Content-Type: application/json' \\
+--header 'Authorization: Bearer ${token}'`;
+
+      console.log('🔧 CURL command for fetchUserProfile:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -181,6 +211,7 @@ const Profile: React.FC = () => {
         const data = await response.json();
         console.log('Profile API response:', data);
         const profile = data.user || data.body || data;
+        console.log(profile, 'profileprofile');
 
         // Store the fetched data for future use
         await storageService.setUserData(profile);
@@ -190,6 +221,7 @@ const Profile: React.FC = () => {
         setLastName(profile.lastName || '');
         setEmail(profile.email || '');
         setPhoneNumber(profile.phoneNumber || profile.mobile || '');
+        setAlterNo(profile.alterNo || '');
         setAddress(profile.address || '');
         setCity(profile.city || '');
         setState(profile.state || '');
@@ -216,10 +248,11 @@ const Profile: React.FC = () => {
   const fetchPetProfiles = async () => {
     try {
       setLoadingPets(true);
+      setPetsError(false);
       const token = await storageService.getUserToken();
 
       if (!token) {
-        setMessage({ type: 'error', text: 'Authentication token not found' });
+        setPetsError(true);
         return;
       }
 
@@ -236,15 +269,17 @@ const Profile: React.FC = () => {
       );
 
       if (!ownerResponse.ok) {
-        setMessage({ type: 'error', text: 'Failed to get owner information' });
+        setPetsError(true);
         return;
       }
 
       const ownerData = await ownerResponse.json();
       if (ownerData.statusCode !== 200 || !ownerData.body?.id) {
-        setMessage({ type: 'error', text: 'Owner ID not found' });
+        setPetsError(true);
         return;
       }
+
+      console.log(ownerData, 'ownerDataownerData');
 
       const ownerId = ownerData.body.id;
 
@@ -264,6 +299,7 @@ const Profile: React.FC = () => {
         if (result.statusCode === 200) {
           console.log('Pet profiles fetched:', result.body);
           setPetProfiles(result.body || []);
+          setPetsError(false);
         } else {
           throw new Error(result.message || 'Failed to fetch pet profiles');
         }
@@ -272,7 +308,7 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching pet profiles:', error);
-      setMessage({ type: 'error', text: 'Failed to load pet profiles' });
+      setPetsError(true);
     } finally {
       setLoadingPets(false);
     }
@@ -297,7 +333,10 @@ const Profile: React.FC = () => {
           PermissionsAndroid.PERMISSIONS.CAMERA,
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('Permission denied', 'Camera permission is required to take photos.');
+          Alert.alert(
+            'Permission denied',
+            'Camera permission is required to take photos.',
+          );
           return;
         }
       }
@@ -331,42 +370,90 @@ const Profile: React.FC = () => {
   const uploadProfileImage = async (imageUri: string) => {
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('profileImg', {
-        uri: imageUri,
-        type: 'image/jpeg',
-        name: 'profile.jpg',
-      } as any);
-
       const token = await storageService.getUserToken();
       if (!token) {
         Alert.alert('Error', 'Authentication token not found');
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-owner/upload-profile-image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
+      // Generate a unique filename
+      const timestamp = Date.now();
+      const fileName = `profile-${timestamp}.jpg`;
+      const fileType = 'image/jpeg';
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.statusCode === 200) {
-          setPetOwner(prev => ({ ...prev, profileImg: result.body.profileImg }));
-          setMessage({ type: 'success', text: 'Profile image updated successfully!' });
+      // Step 1: Get presigned URL from AWS S3
+      console.log('🔄 Step 1: Getting presigned URL...');
+      const presignedResponse = await fetch(
+        `${API_CONFIG.BASE_URL}/api/aws-s3/presigned-url`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileType: fileType,
+            fileName: fileName,
+          }),
+        },
+      );
+
+      if (!presignedResponse.ok) {
+        throw new Error('Failed to get presigned URL');
+      }
+
+      const presignedData = await presignedResponse.json();
+      console.log('✅ Presigned URL Response:', presignedData);
+
+      // Step 2: Upload image directly to S3 using presigned URL
+      if (presignedData.statusCode === 201 && presignedData.body) {
+        const presignedUrl = presignedData.body;
+        console.log('🔄 Step 2: Uploading image to S3...');
+
+        // Use react-native-blob-util to upload the file
+        const uploadResult = await ReactNativeBlobUtil.fetch(
+          'PUT',
+          presignedUrl,
+          {
+            'Content-Type': fileType,
+          },
+          ReactNativeBlobUtil.wrap(imageUri.replace('file://', '')),
+        );
+
+        if (uploadResult.info().status === 200) {
+          console.log('✅ Image successfully uploaded to S3!');
+
+          // Extract the clean S3 URL (without query parameters)
+          const s3ImageUrl = presignedUrl.split('?')[0];
+          console.log('📷 Final S3 Image URL:', s3ImageUrl);
+
+          // Update local state with the new profile image
+          setPetOwner(prev => ({ ...prev, profileImg: s3ImageUrl }));
+
+          // Update user data in storage
+          const userData = await storageService.getUserData();
+          if (userData) {
+            await storageService.setUserData({
+              ...userData,
+              profileImg: s3ImageUrl,
+            });
+          }
+
+          setMessage({
+            type: 'success',
+            text: 'Profile photo updated successfully!',
+          });
         } else {
-          throw new Error(result.message || 'Failed to upload image');
+          throw new Error(
+            `Upload failed with status: ${uploadResult.info().status}`,
+          );
         }
       } else {
-        throw new Error('Failed to upload image');
+        throw new Error('Invalid presigned URL response');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload profile image');
+      Alert.alert('Error', 'Failed to upload profile image. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -398,11 +485,15 @@ const Profile: React.FC = () => {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
-        phoneNumber: phoneNumber.trim(),
+        mobile: phoneNumber.trim(),
+        alterNo: alterNo.trim(),
         address: address.trim(),
         city: city.trim(),
         state: state.trim(),
-        zipCode: zipCode.trim(),
+        pinCode: zipCode.trim(),
+        profileImg: petOwner.profileImg || '',
+        lat: petOwner.lat || 0,
+        lng: petOwner.lng || 0,
       };
 
       const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/update-profile`;
@@ -490,7 +581,8 @@ const Profile: React.FC = () => {
             // Unregister FCM token before logout
             console.log('🔔 Unregistering FCM token before logout...');
             try {
-              const unregistered = await FirebaseMessagingService.unregisterDeviceToken();
+              const unregistered =
+                await FirebaseMessagingService.unregisterDeviceToken();
               if (unregistered) {
                 console.log('✅ FCM token unregistered successfully');
               } else {
@@ -533,7 +625,7 @@ const Profile: React.FC = () => {
       if (activeTab === 'pets') {
         fetchPetProfiles();
       }
-    }, [activeTab])
+    }, [activeTab]),
   );
 
   useEffect(() => {
@@ -574,11 +666,13 @@ const Profile: React.FC = () => {
             paddingBottom: responsiveHeight(2),
           }}
         >
-          <View style={{
-            flex: 1,
-            backgroundColor: '#F8F9FB',
-            paddingTop: responsiveHeight(2),
-          }}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: '#F8F9FB',
+              paddingTop: responsiveHeight(2),
+            }}
+          >
             {/* Profile Header Skeleton */}
             <ProfileHeaderSkeleton />
 
@@ -616,513 +710,746 @@ const Profile: React.FC = () => {
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingHorizontal: responsiveWidth(2),
           paddingTop: responsiveHeight(1),
           paddingBottom: responsiveHeight(2),
         }}
       >
-        {/* Profile Info Card */}
-        <View style={profileStyles.sectionCard}>
-          <View style={profileStyles.profileInfoHeader}>
-            <TouchableOpacity
-              style={profileStyles.profilePhotoButton}
-              onPress={pickImage}
-              disabled={isUploading}
-            >
-              <View style={profileStyles.compactProfilePhotoWrapper}>
-                {petOwner.profileImg ? (
-                  <Image
-                    source={{ uri: petOwner.profileImg }}
-                    style={profileStyles.compactProfilePhoto}
-                  />
-                ) : (
-                  <View style={profileStyles.compactProfilePhoto}>
-                    <MaterialIcons name="person" size={40} color="#CCCCCC" />
-                  </View>
-                )}
-
-                {isUploading && (
-                  <View style={profileStyles.compactUploadingOverlay}>
-                    <ActivityIndicator size="small" color="#58B9D0" />
-                  </View>
-                )}
-
-                <View style={profileStyles.compactCameraIcon}>
-                  <MaterialIcons name="camera-alt" size={14} color="#FFFFFF" />
+        {/* Profile Info Card - Centered Layout */}
+        <View style={{
+          backgroundColor: '#FFFFFF',
+          paddingVertical: responsiveHeight(2.5),
+          paddingHorizontal: responsiveWidth(5),
+          alignItems: 'center',
+          gap: 12,
+          marginHorizontal: 16,
+          marginBottom: responsiveHeight(2),
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+        }}>
+          {/* Profile Photo */}
+          <TouchableOpacity
+            onPress={pickImage}
+            disabled={isUploading}
+            style={{ position: 'relative' }}
+          >
+            <View style={{ position: 'relative' }}>
+              {petOwner.profileImg ? (
+                <Image
+                  source={{ uri: petOwner.profileImg }}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    backgroundColor: '#F8F9FB',
+                  }}
+                />
+              ) : (
+                <View style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  backgroundColor: '#F8F9FB',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <MaterialIcons name="person" size={40} color="#CCCCCC" />
                 </View>
-              </View>
-            </TouchableOpacity>
+              )}
 
-            <View style={profileStyles.profileInfoText}>
-              <Text style={profileStyles.compactUserName}>
-                {`${petOwner.firstName} ${petOwner.lastName}` || 'User Name'}
-              </Text>
-              <Text style={profileStyles.compactUserEmail}>{petOwner.email}</Text>
-              <View style={profileStyles.compactVerifiedBadge}>
-                <MaterialIcons name="verified" size={14} color="#4CAF50" />
-                <Text style={profileStyles.compactVerifiedText}>Verified</Text>
+              {isUploading && (
+                <View style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: 40,
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                </View>
+              )}
+
+              {/* Camera Icon */}
+              <View style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                backgroundColor: '#58B9D0',
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: '#FFFFFF',
+              }}>
+                <MaterialIcons name="camera-alt" size={14} color="#FFFFFF" />
               </View>
             </View>
+          </TouchableOpacity>
+
+          {/* Profile Name */}
+          <Text style={{
+            fontSize: 20,
+            fontWeight: '600',
+            color: '#1F2937',
+            textAlign: 'center',
+          }}>
+            {`${petOwner.firstName} ${petOwner.lastName}` || 'User Name'}
+          </Text>
+
+          {/* Email */}
+          <Text style={{
+            fontSize: 14,
+            color: '#6B7280',
+            textAlign: 'center',
+          }}>
+            {petOwner.email}
+          </Text>
+
+          {/* Verified Badge */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            backgroundColor: '#F0FDF4',
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 12,
+          }}>
+            <MaterialIcons name="verified" size={16} color="#4CAF50" />
+            <Text style={{
+              fontSize: 14,
+              color: '#16A34A',
+              fontWeight: '500',
+            }}>
+              Verified
+            </Text>
           </View>
         </View>
 
         {/* Tab Navigation */}
-        <View style={profileStyles.tabContainer}>
-              <TouchableOpacity
-                style={[
-                  profileStyles.tabButton,
-                  activeTab === 'user' && profileStyles.activeTab,
-                ]}
-                onPress={() => setActiveTab('user')}
-              >
-                <MaterialIcons
-                  name="person"
-                  size={20}
-                  color={activeTab === 'user' ? '#FFFFFF' : '#999'}
-                />
-                <Text
-                  style={[
-                    profileStyles.tabText,
-                    activeTab === 'user' && profileStyles.activeTabText,
-                  ]}
-                >
-                  User Profile
-                </Text>
-              </TouchableOpacity>
+        <View style={[profileStyles.tabContainer, { marginHorizontal: 16 }]}>
+          <TouchableOpacity
+            style={[
+              profileStyles.tabButton,
+              activeTab === 'user' && profileStyles.activeTab,
+            ]}
+            onPress={() => setActiveTab('user')}
+          >
+            <MaterialIcons
+              name="person"
+              size={20}
+              color={activeTab === 'user' ? '#FFFFFF' : '#999'}
+            />
+            <Text
+              style={[
+                profileStyles.tabText,
+                activeTab === 'user' && profileStyles.activeTabText,
+              ]}
+            >
+              User Profile
+            </Text>
+          </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  profileStyles.tabButton,
-                  activeTab === 'pets' && profileStyles.activeTab,
-                ]}
-                onPress={() => setActiveTab('pets')}
-              >
-                <MaterialIcons
-                  name="pets"
-                  size={20}
-                  color={activeTab === 'pets' ? '#FFFFFF' : '#999'}
-                />
-                <Text
-                  style={[
-                    profileStyles.tabText,
-                    activeTab === 'pets' && profileStyles.activeTabText,
-                  ]}
-                >
-                  My Pets
-                </Text>
-              </TouchableOpacity>
-            </View>
-
+          <TouchableOpacity
+            style={[
+              profileStyles.tabButton,
+              activeTab === 'pets' && profileStyles.activeTab,
+            ]}
+            onPress={() => setActiveTab('pets')}
+          >
+            <MaterialIcons
+              name="pets"
+              size={20}
+              color={activeTab === 'pets' ? '#FFFFFF' : '#999'}
+            />
+            <Text
+              style={[
+                profileStyles.tabText,
+                activeTab === 'pets' && profileStyles.activeTabText,
+              ]}
+            >
+              My Pets
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* User Profile Tab Content */}
         {activeTab === 'user' && (
-              <View style={profileStyles.sectionCard}>
-                <View style={profileStyles.sectionHeader}>
-                  <MaterialIcons
-                    name="person-outline"
-                    size={24}
-                    color="#58B9D0"
-                    style={profileStyles.sectionHeaderIcon}
-                  />
-                  <Text style={profileStyles.sectionHeaderTitle}>Personal Information</Text>
-                </View>
+          <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
+            <View style={profileStyles.sectionHeader}>
+              <MaterialIcons
+                name="person-outline"
+                size={24}
+                color="#58B9D0"
+                style={profileStyles.sectionHeaderIcon}
+              />
+              <Text style={profileStyles.sectionHeaderTitle}>
+                Personal Information
+              </Text>
+            </View>
 
-                <View style={profileStyles.inputGroup}>
-                  <TextInput
-                    mode="outlined"
-                    label="First Name"
-                    placeholder="Enter your first name"
-                    value={firstName}
-                    onChangeText={value => {
-                      setFirstName(value);
-                      clearFieldError('firstName');
-                    }}
-                    style={[profileStyles.textInput, errors.firstName && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.firstName ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                      },
-                    }}
-                    error={!!errors.firstName}
-                    editable={!isSaving}
-                    left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
-                  />
-                  {errors.firstName && (
-                    <Text style={profileStyles.errorText}>{errors.firstName}</Text>
-                  )}
+            <View style={profileStyles.inputGroup}>
+              <TextInput
+                mode="outlined"
+                label="First Name"
+                placeholder="Enter your first name"
+                value={firstName}
+                onChangeText={value => {
+                  setFirstName(value);
+                  clearFieldError('firstName');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.firstName && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.firstName ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.firstName}
+                editable={!isSaving}
+                left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
+              />
+              {errors.firstName && (
+                <Text style={profileStyles.errorText}>{errors.firstName}</Text>
+              )}
 
-                  <TextInput
-                    mode="outlined"
-                    label="Last Name"
-                    placeholder="Enter your last name"
-                    value={lastName}
-                    onChangeText={value => {
-                      setLastName(value);
-                      clearFieldError('lastName');
-                    }}
-                    style={[profileStyles.textInput, errors.lastName && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.lastName ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                      },
-                    }}
-                    error={!!errors.lastName}
-                    editable={!isSaving}
-                    left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
-                  />
-                  {errors.lastName && (
-                    <Text style={profileStyles.errorText}>{errors.lastName}</Text>
-                  )}
+              <TextInput
+                mode="outlined"
+                label="Last Name"
+                placeholder="Enter your last name"
+                value={lastName}
+                onChangeText={value => {
+                  setLastName(value);
+                  clearFieldError('lastName');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.lastName && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.lastName ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.lastName}
+                editable={!isSaving}
+                left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
+              />
+              {errors.lastName && (
+                <Text style={profileStyles.errorText}>{errors.lastName}</Text>
+              )}
 
-                  <TextInput
-                    mode="outlined"
-                    label="Email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChangeText={value => {
-                      setEmail(value);
-                      clearFieldError('email');
-                    }}
-                    style={[profileStyles.textInput, errors.email && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.email ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                      },
-                    }}
-                    error={!!errors.email}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    editable={!isSaving}
-                    left={<TextInput.Icon icon="email" iconColor="#58B9D0" />}
-                  />
-                  {errors.email && (
-                    <Text style={profileStyles.errorText}>{errors.email}</Text>
-                  )}
+              <TextInput
+                mode="outlined"
+                label="Email"
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={value => {
+                  setEmail(value);
+                  clearFieldError('email');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.email && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.email ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!isSaving}
+                left={<TextInput.Icon icon="email" iconColor="#58B9D0" />}
+              />
+              {errors.email && (
+                <Text style={profileStyles.errorText}>{errors.email}</Text>
+              )}
 
-                  <TextInput
-                    mode="outlined"
-                    label="Phone Number"
-                    placeholder="Enter your phone number"
-                    value={phoneNumber}
-                    onChangeText={value => {
-                      setPhoneNumber(value);
-                      clearFieldError('phoneNumber');
-                    }}
-                    style={[profileStyles.textInput, errors.phoneNumber && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.phoneNumber ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                    },
+              <TextInput
+                mode="outlined"
+                label="Phone Number"
+                placeholder="Enter your phone number"
+                value={phoneNumber}
+                onChangeText={value => {
+                  setPhoneNumber(value);
+                  clearFieldError('phoneNumber');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.phoneNumber && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.phoneNumber ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.phoneNumber}
+                keyboardType="phone-pad"
+                editable={!isSaving}
+                left={<TextInput.Icon icon="phone" iconColor="#58B9D0" />}
+              />
+              {errors.phoneNumber && (
+                <Text style={profileStyles.errorText}>
+                  {errors.phoneNumber}
+                </Text>
+              )}
+
+              <TextInput
+                mode="outlined"
+                label="Alternative Phone Number"
+                placeholder="Enter alternative phone number"
+                value={alterNo}
+                onChangeText={value => {
+                  setAlterNo(value);
+                  clearFieldError('alterNo');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.alterNo && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.alterNo ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.alterNo}
+                keyboardType="phone-pad"
+                editable={!isSaving}
+                left={
+                  <TextInput.Icon
+                    icon={() => (
+                      <MaterialIcons name="phone" size={24} color="#58B9D0" />
+                    )}
+                  />
+                }
+              />
+              {errors.alterNo && (
+                <Text style={profileStyles.errorText}>{errors.alterNo}</Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Address Section */}
+        {activeTab === 'user' && (
+          <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
+            <View style={profileStyles.sectionHeader}>
+              <MaterialIcons
+                name="location-on"
+                size={24}
+                color="#58B9D0"
+                style={profileStyles.sectionHeaderIcon}
+              />
+              <Text style={profileStyles.sectionHeaderTitle}>
+                Address Information
+              </Text>
+            </View>
+
+            <View style={profileStyles.inputGroup}>
+              <TextInput
+                mode="outlined"
+                label="Address"
+                placeholder="Enter your address"
+                value={address}
+                onChangeText={value => {
+                  setAddress(value);
+                  clearFieldError('address');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.address && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.address ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.address}
+                editable={!isSaving}
+                left={<TextInput.Icon icon="home" iconColor="#58B9D0" />}
+              />
+              {errors.address && (
+                <Text style={profileStyles.errorText}>{errors.address}</Text>
+              )}
+
+              <TextInput
+                mode="outlined"
+                label="City"
+                placeholder="Enter your city"
+                value={city}
+                onChangeText={value => {
+                  setCity(value);
+                  clearFieldError('city');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.city && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.city ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.city}
+                editable={!isSaving}
+                left={<TextInput.Icon icon="domain" iconColor="#58B9D0" />}
+              />
+              {errors.city && (
+                <Text style={profileStyles.errorText}>{errors.city}</Text>
+              )}
+
+              <TextInput
+                mode="outlined"
+                label="State"
+                placeholder="Enter your state"
+                value={state}
+                onChangeText={value => {
+                  setState(value);
+                  clearFieldError('state');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.state && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.state ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.state}
+                editable={!isSaving}
+                left={<TextInput.Icon icon="map" iconColor="#58B9D0" />}
+              />
+              {errors.state && (
+                <Text style={profileStyles.errorText}>{errors.state}</Text>
+              )}
+
+              <TextInput
+                mode="outlined"
+                label="Zip Code"
+                placeholder="Enter your zip code"
+                value={zipCode}
+                onChangeText={value => {
+                  setZipCode(value);
+                  clearFieldError('zipCode');
+                }}
+                style={[
+                  profileStyles.textInput,
+                  errors.zipCode && profileStyles.inputError,
+                ]}
+                theme={{
+                  roundness: 12,
+                  colors: {
+                    primary: '#58B9D0',
+                    outline: errors.zipCode ? '#FF6B6B' : '#E5E7EB',
+                    background: '#FFFFFF',
+                  },
+                }}
+                error={!!errors.zipCode}
+                keyboardType="numeric"
+                editable={!isSaving}
+                left={<TextInput.Icon icon="mailbox" iconColor="#58B9D0" />}
+              />
+              {errors.zipCode && (
+                <Text style={profileStyles.errorText}>{errors.zipCode}</Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Pets Tab Content */}
+        {activeTab === 'pets' && (
+          <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
+            <View style={profileStyles.sectionHeader}>
+              <MaterialIcons
+                name="pets"
+                size={24}
+                color="#58B9D0"
+                style={profileStyles.sectionHeaderIcon}
+              />
+              <Text style={profileStyles.sectionHeaderTitle}>My Pets</Text>
+              <TouchableOpacity
+                style={profileStyles.addPetButton}
+                onPress={() => navigate('AddPet')}
+              >
+                <MaterialIcons name="add" size={16} color="#FFFFFF" />
+                <Text style={profileStyles.addPetButtonText}>Add Pet</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loadingPets ? (
+              <PetsTabSkeleton />
+            ) : petsError ? (
+              <View
+                style={{
+                  backgroundColor: '#FFF5F5',
+                  borderRadius: 16,
+                  borderWidth: 1.5,
+                  borderColor: '#FEB2B2',
+                  padding: responsiveWidth(6),
+                  alignItems: 'center',
+                  marginTop: responsiveHeight(2),
+                }}
+              >
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    backgroundColor: '#FED7D7',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 16,
                   }}
-                  error={!!errors.phoneNumber}
-                  keyboardType="phone-pad"
-                  editable={!isSaving}
-                  left={<TextInput.Icon icon="phone" iconColor="#58B9D0" />}
-                />
-                {errors.phoneNumber && (
-                  <Text style={profileStyles.errorText}>
-                    {errors.phoneNumber}
-                  </Text>
-                )}
-                </View>
-              </View>
-            )}
-
-            {/* Address Section */}
-            {activeTab === 'user' && (
-              <View style={profileStyles.sectionCard}>
-                <View style={profileStyles.sectionHeader}>
+                >
                   <MaterialIcons
-                    name="location-on"
-                    size={24}
-                    color="#58B9D0"
-                    style={profileStyles.sectionHeaderIcon}
+                    name="error-outline"
+                    size={32}
+                    color="#F56565"
                   />
-                  <Text style={profileStyles.sectionHeaderTitle}>Address Information</Text>
                 </View>
 
-                <View style={profileStyles.inputGroup}>
-                  <TextInput
-                    mode="outlined"
-                    label="Address"
-                    placeholder="Enter your address"
-                    value={address}
-                    onChangeText={value => {
-                      setAddress(value);
-                      clearFieldError('address');
-                    }}
-                    style={[profileStyles.textInput, errors.address && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.address ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                      },
-                    }}
-                    error={!!errors.address}
-                    editable={!isSaving}
-                    left={<TextInput.Icon icon="home" iconColor="#58B9D0" />}
-                  />
-                  {errors.address && (
-                    <Text style={profileStyles.errorText}>{errors.address}</Text>
-                  )}
-
-                  <TextInput
-                    mode="outlined"
-                    label="City"
-                    placeholder="Enter your city"
-                    value={city}
-                    onChangeText={value => {
-                      setCity(value);
-                      clearFieldError('city');
-                    }}
-                    style={[profileStyles.textInput, errors.city && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.city ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                      },
-                    }}
-                    error={!!errors.city}
-                    editable={!isSaving}
-                    left={<TextInput.Icon icon="domain" iconColor="#58B9D0" />}
-                  />
-                  {errors.city && (
-                    <Text style={profileStyles.errorText}>{errors.city}</Text>
-                  )}
-
-                  <TextInput
-                    mode="outlined"
-                    label="State"
-                    placeholder="Enter your state"
-                    value={state}
-                    onChangeText={value => {
-                      setState(value);
-                      clearFieldError('state');
-                    }}
-                    style={[profileStyles.textInput, errors.state && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.state ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                      },
-                    }}
-                    error={!!errors.state}
-                    editable={!isSaving}
-                    left={<TextInput.Icon icon="map" iconColor="#58B9D0" />}
-                  />
-                  {errors.state && (
-                    <Text style={profileStyles.errorText}>{errors.state}</Text>
-                  )}
-
-                  <TextInput
-                    mode="outlined"
-                    label="Zip Code"
-                    placeholder="Enter your zip code"
-                    value={zipCode}
-                    onChangeText={value => {
-                      setZipCode(value);
-                      clearFieldError('zipCode');
-                    }}
-                    style={[profileStyles.textInput, errors.zipCode && profileStyles.inputError]}
-                    theme={{
-                      roundness: 12,
-                      colors: {
-                        primary: '#58B9D0',
-                        outline: errors.zipCode ? '#FF6B6B' : '#E5E7EB',
-                        background: '#FFFFFF',
-                    },
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#C53030',
+                    marginBottom: 8,
+                    textAlign: 'center',
                   }}
-                  error={!!errors.zipCode}
-                  keyboardType="numeric"
-                  editable={!isSaving}
-                  left={<TextInput.Icon icon="mailbox" iconColor="#58B9D0" />}
-                />
-                {errors.zipCode && (
-                  <Text style={profileStyles.errorText}>{errors.zipCode}</Text>
-                )}
-                </View>
-              </View>
-            )}
+                >
+                  Unable to Load Pets
+                </Text>
 
-            {/* Pets Tab Content */}
-            {activeTab === 'pets' && (
-              <View style={profileStyles.sectionCard}>
-                <View style={profileStyles.sectionHeader}>
-                  <MaterialIcons
-                    name="pets"
-                    size={24}
-                    color="#58B9D0"
-                    style={profileStyles.sectionHeaderIcon}
-                  />
-                  <Text style={profileStyles.sectionHeaderTitle}>My Pets</Text>
-                  <TouchableOpacity
-                    style={profileStyles.addPetButton}
-                    onPress={() => navigate('AddPet')}
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: '#742A2A',
+                    marginBottom: 20,
+                    textAlign: 'center',
+                    lineHeight: 20,
+                  }}
+                >
+                  We couldn't fetch your pet profiles.{'\n'}
+                  Please check your connection and try again.
+                </Text>
+
+                <TouchableOpacity
+                  onPress={fetchPetProfiles}
+                  style={{
+                    backgroundColor: '#F56565',
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    borderRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    elevation: 2,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                  }}
+                >
+                  <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontSize: 16,
+                      fontWeight: '600',
+                    }}
                   >
-                    <MaterialIcons name="add" size={16} color="#FFFFFF" />
-                    <Text style={profileStyles.addPetButtonText}>Add Pet</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {loadingPets ? (
-                  <PetsTabSkeleton />
-                ) : petProfiles.length === 0 ? (
+                    Try Again
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : petProfiles.length === 0 ? (
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  padding: responsiveWidth(6),
+                  alignItems: 'center',
+                  marginTop: responsiveHeight(2),
+                }}
+              >
+                <MaterialIcons name="pets" size={40} color="#ccc" />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '500',
+                    color: '#999',
+                    marginTop: 12,
+                    textAlign: 'center',
+                  }}
+                >
+                  No pets added yet
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: '#ccc',
+                    marginTop: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  Add your first pet to get started
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={{
+                  gap: responsiveHeight(1.5),
+                  marginTop: responsiveHeight(1),
+                }}
+              >
+                {petProfiles.map((pet, index) => (
                   <View
+                    key={pet.id || index}
                     style={{
                       backgroundColor: '#FFFFFF',
-                      borderRadius: 12,
+                      borderRadius: 16,
                       borderWidth: 1,
-                      borderColor: '#E2E2E2',
-                      padding: responsiveWidth(6),
+                      borderColor: '#E5E7EB',
+                      padding: responsiveWidth(4),
+                      flexDirection: 'row',
                       alignItems: 'center',
-                      marginTop: responsiveHeight(2),
                     }}
                   >
-                    <MaterialIcons name="pets" size={40} color="#ccc" />
-                    <Text
+                    {/* Pet Avatar */}
+                    <View
                       style={{
-                        fontSize: 16,
-                        fontWeight: '500',
-                        color: '#999',
-                        marginTop: 12,
-                        textAlign: 'center',
+                        width: 64,
+                        height: 64,
+                        borderRadius: 32,
+                        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: responsiveWidth(4),
                       }}
                     >
-                      No pets added yet
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        color: '#ccc',
-                        marginTop: 4,
-                        textAlign: 'center',
-                      }}
-                    >
-                      Add your first pet to get started
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={{
-                    gap: responsiveHeight(1.5),
-                    marginTop: responsiveHeight(1)
-                  }}>
-                    {petProfiles.map((pet, index) => (
-                      <View
-                        key={pet.id || index}
+                      <MaterialIcons name="pets" size={32} color="#58B9D0" />
+                    </View>
+
+                    {/* Pet Info */}
+                    <View style={{ flex: 1 }}>
+                      <Text
                         style={{
-                          backgroundColor: '#FFFFFF',
-                          borderRadius: 16,
-                          borderWidth: 1,
-                          borderColor: '#E5E7EB',
-                          padding: responsiveWidth(4),
+                          fontSize: 18,
+                          fontWeight: '600',
+                          color: '#1F2937',
+                          marginBottom: 4,
+                        }}
+                      >
+                        {pet.petName || 'Unnamed Pet'}
+                      </Text>
+
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: 4,
+                        }}
+                      >
+                        <MaterialIcons
+                          name="category"
+                          size={16}
+                          color="#6B7280"
+                        />
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            color: '#6B7280',
+                            marginLeft: 6,
+                          }}
+                        >
+                          {pet.category?.catName || 'Unknown Category'}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={{
                           flexDirection: 'row',
                           alignItems: 'center',
                         }}
                       >
-                        {/* Pet Avatar */}
-                        <View
+                        <MaterialIcons
+                          name="straighten"
+                          size={16}
+                          color="#6B7280"
+                        />
+                        <Text
                           style={{
-                            width: 64,
-                            height: 64,
-                            borderRadius: 32,
-                            backgroundColor: 'rgba(88, 185, 208, 0.1)',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginRight: responsiveWidth(4),
+                            fontSize: 14,
+                            color: '#6B7280',
+                            marginLeft: 6,
                           }}
                         >
-                          <MaterialIcons name="pets" size={32} color="#58B9D0" />
-                        </View>
-
-                        {/* Pet Info */}
-                        <View style={{ flex: 1 }}>
-                          <Text
-                            style={{
-                              fontSize: 18,
-                              fontWeight: '600',
-                              color: '#1F2937',
-                              marginBottom: 4,
-                            }}
-                          >
-                            {pet.petName || 'Unnamed Pet'}
-                          </Text>
-
-                          <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            marginBottom: 4,
-                          }}>
-                            <MaterialIcons name="category" size={16} color="#6B7280" />
-                            <Text
-                              style={{
-                                fontSize: 14,
-                                color: '#6B7280',
-                                marginLeft: 6,
-                              }}
-                            >
-                              {pet.category?.catName || 'Unknown Category'}
-                            </Text>
-                          </View>
-
-                          <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                          }}>
-                            <MaterialIcons name="straighten" size={16} color="#6B7280" />
-                            <Text
-                              style={{
-                                fontSize: 14,
-                                color: '#6B7280',
-                                marginLeft: 6,
-                              }}
-                            >
-                              {pet.size?.size || 'Unknown Size'}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {/* Edit Button */}
-                        <TouchableOpacity
-                          onPress={() => navigate('EditPet', { pet })}
-                          style={{
-                            backgroundColor: '#58B9D0',
-                            paddingVertical: 10,
-                            paddingHorizontal: 16,
-                            borderRadius: 8,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <MaterialIcons name="edit" size={18} color="#FFFFFF" />
-                        </TouchableOpacity>
+                          {pet.size?.size || 'Unknown Size'}
+                        </Text>
                       </View>
-                    ))}
+                    </View>
+
+                    {/* Edit Button */}
+                    <TouchableOpacity
+                      onPress={() => navigate('EditPet', { pet })}
+                      style={{
+                        backgroundColor: '#58B9D0',
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MaterialIcons name="edit" size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
                   </View>
-                )}
+                ))}
               </View>
             )}
+          </View>
+        )}
 
         {/* Message Display */}
         {message && (
-          <View style={profileStyles.sectionCard}>
+          <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
             <View
               style={[
                 signupstyles.messageContainer,
@@ -1137,7 +1464,7 @@ const Profile: React.FC = () => {
         )}
 
         {/* Action Buttons - Always visible */}
-        <View style={profileStyles.actionButtonsContainer}>
+        <View style={[profileStyles.actionButtonsContainer, { marginHorizontal: 16 }]}>
           {/* Save Button */}
           <TouchableOpacity
             onPress={handleSave}
@@ -1151,7 +1478,12 @@ const Profile: React.FC = () => {
             {isSaving ? (
               <View style={profileStyles.loadingContainer}>
                 <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextPrimary]}>
+                <Text
+                  style={[
+                    profileStyles.commonButtonText,
+                    profileStyles.commonButtonTextPrimary,
+                  ]}
+                >
                   Saving...
                 </Text>
               </View>
@@ -1163,7 +1495,12 @@ const Profile: React.FC = () => {
                   color="#FFFFFF"
                   style={profileStyles.commonButtonIcon}
                 />
-                <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextPrimary]}>
+                <Text
+                  style={[
+                    profileStyles.commonButtonText,
+                    profileStyles.commonButtonTextPrimary,
+                  ]}
+                >
                   Save Changes
                 </Text>
               </>
@@ -1183,7 +1520,12 @@ const Profile: React.FC = () => {
             {isLoggingOut ? (
               <View style={profileStyles.loadingContainer}>
                 <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextDanger]}>
+                <Text
+                  style={[
+                    profileStyles.commonButtonText,
+                    profileStyles.commonButtonTextDanger,
+                  ]}
+                >
                   Signing Out...
                 </Text>
               </View>
@@ -1195,7 +1537,12 @@ const Profile: React.FC = () => {
                   color="#FFFFFF"
                   style={profileStyles.commonButtonIcon}
                 />
-                <Text style={[profileStyles.commonButtonText, profileStyles.commonButtonTextDanger]}>
+                <Text
+                  style={[
+                    profileStyles.commonButtonText,
+                    profileStyles.commonButtonTextDanger,
+                  ]}
+                >
                   Sign Out
                 </Text>
               </>
