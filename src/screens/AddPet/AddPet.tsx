@@ -8,11 +8,20 @@ import {
   Alert,
   StatusBar,
   Image,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { Dropdown } from 'react-native-element-dropdown';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  launchImageLibrary,
+  MediaType,
+  ImagePickerResponse,
+} from 'react-native-image-picker';
+import ReactNativeBlobUtil from 'react-native-blob-util';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   responsiveHeight,
   responsiveWidth,
@@ -42,31 +51,249 @@ interface PetGender {
   name: string;
 }
 
+interface PetBreed {
+  id: number;
+  name: string;
+  category?: string; // 'dog' or 'cat'
+}
+
+interface UploadedFile {
+  uri: string;
+  type: 'image' | 'video';
+  name: string;
+  size: number;
+  s3Url?: string;
+  uploading?: boolean;
+  progress?: number;
+}
+
 interface ValidationErrors {
   petName?: string;
-  ageInYears?: string;
-  ageInMonths?: string;
   category?: string;
   size?: string;
   gender?: string;
+  dob?: string;
 }
+
+// Comprehensive breed list for dogs and cats popular in India
+const getComprehensiveBreedList = (): PetBreed[] => {
+  return [
+    // Dog Breeds - Popular & International
+    { id: 1001, name: 'Labrador Retriever', category: 'dog' },
+    { id: 1002, name: 'German Shepherd', category: 'dog' },
+    { id: 1003, name: 'Golden Retriever', category: 'dog' },
+    { id: 1004, name: 'Beagle', category: 'dog' },
+    { id: 1005, name: 'Pug', category: 'dog' },
+    { id: 1006, name: 'Shih Tzu', category: 'dog' },
+    { id: 1007, name: 'Cocker Spaniel', category: 'dog' },
+    { id: 1008, name: 'Dachshund', category: 'dog' },
+    { id: 1009, name: 'Pomeranian', category: 'dog' },
+    { id: 1010, name: 'Rottweiler', category: 'dog' },
+    { id: 1011, name: 'Doberman Pinscher', category: 'dog' },
+    { id: 1012, name: 'Great Dane', category: 'dog' },
+    { id: 1013, name: 'Boxer', category: 'dog' },
+    { id: 1014, name: 'Saint Bernard', category: 'dog' },
+    { id: 1015, name: 'Siberian Husky', category: 'dog' },
+    { id: 1016, name: 'Bulldog (English)', category: 'dog' },
+    { id: 1017, name: 'Yorkshire Terrier', category: 'dog' },
+    { id: 1018, name: 'Chihuahua', category: 'dog' },
+    { id: 1019, name: 'Maltese', category: 'dog' },
+    { id: 1020, name: 'Dalmatian', category: 'dog' },
+    { id: 1021, name: 'Basset Hound', category: 'dog' },
+    { id: 1022, name: 'Border Collie', category: 'dog' },
+    { id: 1023, name: 'Australian Shepherd', category: 'dog' },
+    { id: 1024, name: 'Poodle (Standard)', category: 'dog' },
+    { id: 1025, name: 'Poodle (Miniature)', category: 'dog' },
+    { id: 1026, name: 'Poodle (Toy)', category: 'dog' },
+    { id: 1027, name: 'Miniature Pinscher', category: 'dog' },
+    { id: 1028, name: 'Lhasa Apso', category: 'dog' },
+    { id: 1029, name: 'English Mastiff', category: 'dog' },
+    { id: 1030, name: 'Bull Terrier', category: 'dog' },
+    { id: 1031, name: 'American Bully', category: 'dog' },
+    { id: 1032, name: 'French Bulldog', category: 'dog' },
+    { id: 1033, name: 'Alaskan Malamute', category: 'dog' },
+    { id: 1034, name: 'Akita', category: 'dog' },
+    { id: 1035, name: 'Chow Chow', category: 'dog' },
+    { id: 1036, name: 'Shar Pei', category: 'dog' },
+    { id: 1037, name: 'Bichon Frise', category: 'dog' },
+    { id: 1038, name: 'Schnauzer (Miniature)', category: 'dog' },
+    { id: 1039, name: 'Schnauzer (Standard)', category: 'dog' },
+    { id: 1040, name: 'Schnauzer (Giant)', category: 'dog' },
+    { id: 1041, name: 'Jack Russell Terrier', category: 'dog' },
+    { id: 1042, name: 'Cavalier King Charles Spaniel', category: 'dog' },
+    { id: 1043, name: 'Pembroke Welsh Corgi', category: 'dog' },
+    { id: 1044, name: 'Samoyed', category: 'dog' },
+    { id: 1045, name: 'Shiba Inu', category: 'dog' },
+    { id: 1046, name: 'Newfoundland', category: 'dog' },
+    { id: 1047, name: 'Bernese Mountain Dog', category: 'dog' },
+    { id: 1048, name: 'Bloodhound', category: 'dog' },
+    { id: 1049, name: 'English Springer Spaniel', category: 'dog' },
+    { id: 1050, name: 'Weimaraner', category: 'dog' },
+    { id: 1051, name: 'Rhodesian Ridgeback', category: 'dog' },
+    { id: 1052, name: 'Vizsla', category: 'dog' },
+    { id: 1053, name: 'Cane Corso', category: 'dog' },
+    { id: 1054, name: 'Staffordshire Bull Terrier', category: 'dog' },
+    { id: 1055, name: 'American Staffordshire Terrier', category: 'dog' },
+    { id: 1056, name: 'Bullmastiff', category: 'dog' },
+    { id: 1057, name: 'Neapolitan Mastiff', category: 'dog' },
+    { id: 1058, name: 'Tibetan Mastiff', category: 'dog' },
+    { id: 1059, name: 'Havanese', category: 'dog' },
+    { id: 1060, name: 'Papillon', category: 'dog' },
+    { id: 1061, name: 'Boston Terrier', category: 'dog' },
+    { id: 1062, name: 'Cairn Terrier', category: 'dog' },
+    { id: 1063, name: 'West Highland White Terrier', category: 'dog' },
+    { id: 1064, name: 'Scottish Terrier', category: 'dog' },
+    { id: 1065, name: 'Airedale Terrier', category: 'dog' },
+    { id: 1066, name: 'Fox Terrier', category: 'dog' },
+    { id: 1067, name: 'Belgian Malinois', category: 'dog' },
+    { id: 1068, name: 'Belgian Shepherd', category: 'dog' },
+    { id: 1069, name: 'Old English Sheepdog', category: 'dog' },
+    { id: 1070, name: 'Collie (Rough)', category: 'dog' },
+    { id: 1071, name: 'Collie (Smooth)', category: 'dog' },
+    { id: 1072, name: 'Shetland Sheepdog', category: 'dog' },
+    { id: 1073, name: 'Australian Cattle Dog', category: 'dog' },
+    { id: 1074, name: 'Keeshond', category: 'dog' },
+    { id: 1075, name: 'Finnish Spitz', category: 'dog' },
+    { id: 1076, name: 'Basenji', category: 'dog' },
+    { id: 1077, name: 'Whippet', category: 'dog' },
+    { id: 1078, name: 'Greyhound', category: 'dog' },
+    { id: 1079, name: 'Italian Greyhound', category: 'dog' },
+    { id: 1080, name: 'Saluki', category: 'dog' },
+    { id: 1081, name: 'Afghan Hound', category: 'dog' },
+    { id: 1082, name: 'Irish Setter', category: 'dog' },
+    { id: 1083, name: 'English Setter', category: 'dog' },
+    { id: 1084, name: 'Gordon Setter', category: 'dog' },
+    { id: 1085, name: 'Pointer', category: 'dog' },
+    { id: 1086, name: 'Brittany Spaniel', category: 'dog' },
+    { id: 1087, name: 'Clumber Spaniel', category: 'dog' },
+    { id: 1088, name: 'Irish Water Spaniel', category: 'dog' },
+    { id: 1089, name: 'Chesapeake Bay Retriever', category: 'dog' },
+    { id: 1090, name: 'Flat-Coated Retriever', category: 'dog' },
+    { id: 1091, name: 'Curly-Coated Retriever', category: 'dog' },
+    { id: 1092, name: 'Nova Scotia Duck Tolling Retriever', category: 'dog' },
+    { id: 1093, name: 'Pekingese', category: 'dog' },
+    { id: 1094, name: 'Japanese Chin', category: 'dog' },
+    { id: 1095, name: 'Brussels Griffon', category: 'dog' },
+    { id: 1096, name: 'Affenpinscher', category: 'dog' },
+    { id: 1097, name: 'Chinese Crested', category: 'dog' },
+    { id: 1098, name: 'Toy Fox Terrier', category: 'dog' },
+    { id: 1099, name: 'Silky Terrier', category: 'dog' },
+    { id: 1100, name: 'Australian Terrier', category: 'dog' },
+
+    // Indian Native Dog Breeds
+    { id: 1101, name: 'Indian Pariah Dog', category: 'dog' },
+    { id: 1102, name: 'Rajapalayam', category: 'dog' },
+    { id: 1103, name: 'Mudhol Hound (Caravan Hound)', category: 'dog' },
+    { id: 1104, name: 'Rampur Greyhound', category: 'dog' },
+    { id: 1105, name: 'Kombai', category: 'dog' },
+    { id: 1106, name: 'Chippiparai', category: 'dog' },
+    { id: 1107, name: 'Kanni', category: 'dog' },
+    { id: 1108, name: 'Indian Spitz', category: 'dog' },
+    { id: 1109, name: 'Gaddi Kutta', category: 'dog' },
+    { id: 1110, name: 'Bakharwal Dog', category: 'dog' },
+    { id: 1111, name: 'Bully Kutta (Indian Mastiff)', category: 'dog' },
+    { id: 1112, name: 'Jonangi', category: 'dog' },
+    { id: 1113, name: 'Pandikona', category: 'dog' },
+    { id: 1114, name: 'Vikhan Sheepdog', category: 'dog' },
+    { id: 1115, name: 'Kashmir Sheepdog', category: 'dog' },
+    { id: 1116, name: 'Mixed Breed Dog', category: 'dog' },
+
+    // Cat Breeds - Popular & International
+    { id: 2001, name: 'Persian Cat', category: 'cat' },
+    { id: 2002, name: 'Siamese Cat', category: 'cat' },
+    { id: 2003, name: 'Maine Coon', category: 'cat' },
+    { id: 2004, name: 'British Shorthair', category: 'cat' },
+    { id: 2005, name: 'Scottish Fold', category: 'cat' },
+    { id: 2006, name: 'Ragdoll', category: 'cat' },
+    { id: 2007, name: 'Bengal Cat', category: 'cat' },
+    { id: 2008, name: 'Sphynx', category: 'cat' },
+    { id: 2009, name: 'American Shorthair', category: 'cat' },
+    { id: 2010, name: 'Abyssinian', category: 'cat' },
+    { id: 2011, name: 'Russian Blue', category: 'cat' },
+    { id: 2012, name: 'Exotic Shorthair', category: 'cat' },
+    { id: 2013, name: 'Birman', category: 'cat' },
+    { id: 2014, name: 'Norwegian Forest Cat', category: 'cat' },
+    { id: 2015, name: 'Oriental Shorthair', category: 'cat' },
+    { id: 2016, name: 'Burmese Cat', category: 'cat' },
+    { id: 2017, name: 'Turkish Angora', category: 'cat' },
+    { id: 2018, name: 'Himalayan Cat', category: 'cat' },
+    { id: 2019, name: 'Manx', category: 'cat' },
+    { id: 2020, name: 'Somali Cat', category: 'cat' },
+    { id: 2021, name: 'Tonkinese', category: 'cat' },
+    { id: 2022, name: 'Balinese', category: 'cat' },
+    { id: 2023, name: 'Egyptian Mau', category: 'cat' },
+    { id: 2024, name: 'Devon Rex', category: 'cat' },
+    { id: 2025, name: 'Cornish Rex', category: 'cat' },
+    { id: 2026, name: 'Bombay Cat', category: 'cat' },
+    { id: 2027, name: 'Chartreux', category: 'cat' },
+    { id: 2028, name: 'Ragamuffin', category: 'cat' },
+    { id: 2029, name: 'Japanese Bobtail', category: 'cat' },
+    { id: 2030, name: 'Singapura', category: 'cat' },
+    { id: 2031, name: 'Turkish Van', category: 'cat' },
+    { id: 2032, name: 'Siberian Cat', category: 'cat' },
+    { id: 2033, name: 'Ocicat', category: 'cat' },
+    { id: 2034, name: 'Savannah Cat', category: 'cat' },
+    { id: 2035, name: 'Selkirk Rex', category: 'cat' },
+    { id: 2036, name: 'LaPerm', category: 'cat' },
+    { id: 2037, name: 'Munchkin', category: 'cat' },
+    { id: 2038, name: 'American Curl', category: 'cat' },
+    { id: 2039, name: 'Korat', category: 'cat' },
+    { id: 2040, name: 'Havana Brown', category: 'cat' },
+    { id: 2041, name: 'Snowshoe', category: 'cat' },
+    { id: 2042, name: 'Nebelung', category: 'cat' },
+    { id: 2043, name: 'Pixie-Bob', category: 'cat' },
+    { id: 2044, name: 'Chausie', category: 'cat' },
+    { id: 2045, name: 'York Chocolate', category: 'cat' },
+    { id: 2046, name: 'Australian Mist', category: 'cat' },
+    { id: 2047, name: 'Burmilla', category: 'cat' },
+    { id: 2048, name: 'Colorpoint Shorthair', category: 'cat' },
+    { id: 2049, name: 'European Shorthair', category: 'cat' },
+    { id: 2050, name: 'Khao Manee', category: 'cat' },
+    { id: 2051, name: 'American Bobtail', category: 'cat' },
+    { id: 2052, name: 'Cymric', category: 'cat' },
+    { id: 2053, name: 'Javanese', category: 'cat' },
+    { id: 2054, name: 'Toyger', category: 'cat' },
+    { id: 2055, name: 'Ragdoll (Mitted)', category: 'cat' },
+    { id: 2056, name: 'Ragdoll (Bicolor)', category: 'cat' },
+    { id: 2057, name: 'Ragdoll (Colorpoint)', category: 'cat' },
+    { id: 2058, name: 'Scottish Straight', category: 'cat' },
+    { id: 2059, name: 'British Longhair', category: 'cat' },
+    { id: 2060, name: 'Peterbald', category: 'cat' },
+    { id: 2061, name: 'Don Sphynx (Donskoy)', category: 'cat' },
+    { id: 2062, name: 'Ukrainian Levkoy', category: 'cat' },
+    { id: 2063, name: 'Sokoke', category: 'cat' },
+    { id: 2064, name: 'Serengeti', category: 'cat' },
+    { id: 2065, name: 'Ojos Azules', category: 'cat' },
+
+    // Common Indian Cat Breeds
+    { id: 2066, name: 'Indian Billi (Desi Cat)', category: 'cat' },
+    { id: 2067, name: 'Indian Street Cat', category: 'cat' },
+    { id: 2068, name: 'Mixed Breed Cat', category: 'cat' },
+  ];
+};
 
 const AddPet: React.FC = () => {
   // Form states
   const [petName, setPetName] = useState('');
-  const [ageInYears, setAgeInYears] = useState('');
-  const [ageInMonths, setAgeInMonths] = useState('');
+  const [dob, setDob] = useState('');
+  const [dobDate, setDobDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [category, setCategory] = useState<number | null>(null);
+  const [exoticType, setExoticType] = useState('');
   const [size, setSize] = useState<number | null>(null);
   const [gender, setGender] = useState<number | null>(null);
+  const [breed, setBreed] = useState<number | null>(null);
+  const [breedOthers, setBreedOthers] = useState('');
   const [weight, setWeight] = useState('');
-  const [height, setHeight] = useState('');
   const [treats, setTreats] = useState('');
-  const [feedCount, setFeedCount] = useState('');
+  const [feedCount, setFeedCount] = useState<number | null>(null);
   const [medicalHistory, setMedicalHistory] = useState('');
-  const [cookie, setCookie] = useState('');
+  const [foodType, setFoodType] = useState<string | null>(null);
+  const [favouriteGames, setFavouriteGames] = useState('');
   const [allergies, setAllergies] = useState('');
   const [disability, setDisability] = useState('');
+  const [uploads, setUploads] = useState<UploadedFile[]>([]);
+  const [selectedProfileImg, setSelectedProfileImg] = useState<string>('');
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -77,6 +304,7 @@ const AddPet: React.FC = () => {
   const [petCategories, setPetCategories] = useState<PetCategory[]>([]);
   const [petSizes, setPetSizes] = useState<PetSize[]>([]);
   const [petGenders, setPetGenders] = useState<PetGender[]>([]);
+  const [petBreeds, setPetBreeds] = useState<PetBreed[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -89,6 +317,248 @@ const AddPet: React.FC = () => {
     }
   };
 
+  // Fetch breeds based on selected category
+  const fetchBreedsByCategory = async (categoryId: number) => {
+    try {
+      const token = await storageService.getUserToken();
+      if (!token) return;
+
+      console.log('🔄 Fetching breeds from API...');
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/breed`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Breeds fetched:', data);
+
+        if (data.body) {
+          // Filter breeds based on selected category
+          const selectedCat = petCategories.find(c => c.id === categoryId);
+          const categoryName = selectedCat?.catName?.toLowerCase();
+
+          const filteredBreeds = data.body.filter((breed: any) =>
+            breed.pet?.catName?.toLowerCase() === categoryName
+          );
+
+          console.log('📋 Filtered breeds for', categoryName, ':', filteredBreeds);
+          setPetBreeds(filteredBreeds);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error fetching breeds:', error);
+    }
+  };
+
+  // Date picker handler
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDobDate(selectedDate);
+      // Format date as YYYY-MM-DD
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      setDob(formattedDate);
+      clearFieldError('dob');
+    }
+  };
+
+  const showDatepicker = () => {
+    setShowDatePicker(true);
+  };
+
+  // File upload helper functions
+  const pickMediaFiles = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert(
+            'Permission denied',
+            'Storage permission is required to access files.',
+          );
+          return;
+        }
+      }
+
+      // Check current upload limits
+      const imageCount = uploads.filter(f => f.type === 'image').length;
+      const videoCount = uploads.filter(f => f.type === 'video').length;
+
+      if (uploads.length >= 5) {
+        Alert.alert('Limit Reached', 'Maximum 5 files allowed');
+        return;
+      }
+
+      const options = {
+        mediaType: 'mixed' as MediaType,
+        quality: 0.8,
+        selectionLimit: 5 - uploads.length,
+      };
+
+      launchImageLibrary(options, (response: ImagePickerResponse) => {
+        if (response.didCancel || response.errorMessage) {
+          return;
+        }
+
+        if (response.assets) {
+          const newFiles: UploadedFile[] = [];
+
+          for (const asset of response.assets) {
+            if (!asset.uri || !asset.fileName || !asset.fileSize) continue;
+
+            const fileType = asset.type?.startsWith('video') ? 'video' : 'image';
+            const currentImageCount = imageCount + newFiles.filter(f => f.type === 'image').length;
+            const currentVideoCount = videoCount + newFiles.filter(f => f.type === 'video').length;
+
+            // Check file type limits
+            if (fileType === 'image' && currentImageCount >= 3) {
+              Alert.alert('Limit Reached', 'Maximum 3 images allowed');
+              continue;
+            }
+            if (fileType === 'video' && currentVideoCount >= 2) {
+              Alert.alert('Limit Reached', 'Maximum 2 videos allowed');
+              continue;
+            }
+
+            // Check file size
+            const maxSize = fileType === 'image' ? 5 * 1024 * 1024 : 20 * 1024 * 1024; // 5MB for images, 20MB for videos
+            if (asset.fileSize > maxSize) {
+              Alert.alert(
+                'File Too Large',
+                `${fileType === 'image' ? 'Images' : 'Videos'} must be less than ${fileType === 'image' ? '5MB' : '20MB'}`,
+              );
+              continue;
+            }
+
+            newFiles.push({
+              uri: asset.uri,
+              type: fileType,
+              name: asset.fileName,
+              size: asset.fileSize,
+              uploading: false,
+              progress: 0,
+            });
+          }
+
+          if (newFiles.length > 0) {
+            setUploads(prev => [...prev, ...newFiles]);
+            // Start uploading files
+            newFiles.forEach(file => uploadFileToS3(file));
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error picking files:', error);
+      Alert.alert('Error', 'Failed to open file picker');
+    }
+  };
+
+  const uploadFileToS3 = async (file: UploadedFile) => {
+    try {
+      // Mark file as uploading
+      setUploads(prev =>
+        prev.map(f => (f.uri === file.uri ? { ...f, uploading: true, progress: 0 } : f)),
+      );
+
+      const token = await storageService.getUserToken();
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `pet-${file.type}-${timestamp}.${fileExtension}`;
+      const fileType = file.type === 'image' ? 'image/jpeg' : 'video/mp4';
+
+      console.log('🔄 Step 1: Getting presigned URL...', { fileName, fileType });
+
+      // Get presigned URL
+      const presignedResponse = await fetch(
+        `${API_CONFIG.BASE_URL}/api/aws-s3/presigned-url`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileType: fileType,
+            fileName: fileName,
+          }),
+        },
+      );
+
+      console.log('📥 Presigned URL Response Status:', presignedResponse.status);
+
+      if (!presignedResponse.ok) {
+        const errorText = await presignedResponse.text();
+        console.error('❌ Presigned URL Error:', errorText);
+        throw new Error(`Failed to get presigned URL: ${presignedResponse.status}`);
+      }
+
+      const presignedData = await presignedResponse.json();
+      console.log('✅ Presigned URL Response:', presignedData);
+
+      if (presignedData.statusCode === 201 && presignedData.body) {
+        const presignedUrl = presignedData.body;
+        console.log('🔄 Step 2: Uploading file to S3...');
+
+        // Upload to S3
+        const uploadResult = await ReactNativeBlobUtil.fetch(
+          'PUT',
+          presignedUrl,
+          {
+            'Content-Type': fileType,
+          },
+          ReactNativeBlobUtil.wrap(file.uri.replace('file://', '')),
+        );
+
+        console.log('📤 Upload Result Status:', uploadResult.info().status);
+
+        if (uploadResult.info().status === 200) {
+          const s3Url = presignedUrl.split('?')[0];
+          console.log('✅ File successfully uploaded to S3:', s3Url);
+
+          // Update file with S3 URL
+          setUploads(prev =>
+            prev.map(f =>
+              f.uri === file.uri
+                ? { ...f, s3Url, uploading: false, progress: 100 }
+                : f,
+            ),
+          );
+        } else {
+          throw new Error(`Upload failed with status: ${uploadResult.info().status}`);
+        }
+      } else {
+        console.error('❌ Invalid presigned URL response:', presignedData);
+        throw new Error('Invalid presigned URL response');
+      }
+    } catch (error) {
+      console.error('🔥 Error uploading file:', error);
+      console.error('🔥 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+      // Mark upload as failed
+      setUploads(prev =>
+        prev.map(f => (f.uri === file.uri ? { ...f, uploading: false } : f)),
+      );
+      Alert.alert('Upload Failed', `Failed to upload file: ${error.message}`);
+    }
+  };
+
+  const removeFile = (uri: string) => {
+    setUploads(prev => prev.filter(f => f.uri !== uri));
+  };
+
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
 
@@ -96,32 +566,22 @@ const AddPet: React.FC = () => {
       newErrors.petName = 'Pet name is required';
     }
 
-    if (!ageInYears.trim()) {
-      newErrors.ageInYears = 'Age in years is required';
-    } else if (isNaN(Number(ageInYears)) || Number(ageInYears) < 0) {
-      newErrors.ageInYears = 'Please enter a valid age';
-    }
-
-    if (!ageInMonths.trim()) {
-      newErrors.ageInMonths = 'Age in months is required';
-    } else if (
-      isNaN(Number(ageInMonths)) ||
-      Number(ageInMonths) < 0 ||
-      Number(ageInMonths) > 11
-    ) {
-      newErrors.ageInMonths = 'Please enter months (0-11)';
+    if (!dob.trim()) {
+      newErrors.dob = 'Date of birth is required';
     }
 
     if (!category) {
       newErrors.category = 'Please select a category';
     }
 
-    if (!size) {
-      newErrors.size = 'Please select a size';
-    }
-
     if (!gender) {
       newErrors.gender = 'Please select a gender';
+    }
+
+    // Size is required only for dogs
+    const isDog = petCategories.find(c => c.id === category)?.catName?.toLowerCase() === 'dog';
+    if (isDog && !size) {
+      newErrors.size = 'Please select a size for dog';
     }
 
     setErrors(newErrors);
@@ -146,7 +606,13 @@ const AddPet: React.FC = () => {
       );
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json();
-        setPetCategories(categoriesData.body || []);
+        // Filter to only Cat, Dog, and Exotic from API
+        const allowedCategories = ['cat', 'dog', 'exotic'];
+        const filteredCategories = (categoriesData.body || []).filter(
+          (cat: PetCategory) => allowedCategories.includes(cat.catName?.toLowerCase())
+        );
+
+        setPetCategories(filteredCategories);
       }
 
       // Fetch pet sizes
@@ -167,6 +633,10 @@ const AddPet: React.FC = () => {
         const gendersData = await gendersResponse.json();
         setPetGenders(gendersData.body || []);
       }
+
+      // Don't fetch breeds initially - they will be fetched when cat/dog is selected
+      // Initialize with empty array
+      setPetBreeds([]);
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
       setMessage({ type: 'error', text: 'Failed to load form data' });
@@ -237,22 +707,26 @@ const AddPet: React.FC = () => {
       const ownerId = ownerData.body.id;
       console.log('👤 Owner ID retrieved:', ownerId);
 
+      // Get category name to check if exotic
+      const selectedCategory = petCategories.find(c => c.id === category);
+      const isExotic = selectedCategory?.catName?.toLowerCase() === 'exotic';
+
       const petData = {
         petName: petName.trim(),
-        ageInYears: parseInt(ageInYears),
-        ageInMonths: parseInt(ageInMonths),
-        category: category,
-        size: size,
+        dob: dob.trim(),
+        category: category, // Send category ID directly
+        size: size || '',
         gender: gender,
+        breed: breed === 0 ? null : breed || null, // Send breed ID or null if "Other" or not selected
         weight: weight.trim() ? parseFloat(weight) : null,
-        height: height.trim() || null,
         treats: treats.trim() || null,
         ownerId: ownerId,
-        profileImg: '',
-        dailyFeedCount: feedCount.trim() ? parseInt(feedCount) : null,
-        cookie: cookie.trim() || null,
+        profileImg: selectedProfileImg || uploads.find(f => f.type === 'image')?.s3Url || '',
+        uploads: uploads.filter(f => f.s3Url).map(f => f.s3Url),
+        dailyFeedCount: feedCount || null,
         allergies: allergies.trim() || null,
         disability: disability.trim() || null,
+        // otherBreedName: isExotic ? exoticType.trim() : (breed === 0 ? breedOthers.trim() : null) // Send exotic type or custom breed name
       };
 
       const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile`;
@@ -459,66 +933,48 @@ const AddPet: React.FC = () => {
                 },
               }}
               error={!!errors.petName}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="pets" size={20} color="#58B9D0" />} />}
             />
             {errors.petName && (
               <Text style={signupstyles.errorText}>{errors.petName}</Text>
             )}
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  mode="outlined"
-                  label="Age (Years)"
-                  placeholder="0"
-                  value={ageInYears}
-                  onChangeText={value => {
-                    setAgeInYears(value);
-                    clearFieldError('ageInYears');
-                  }}
-                  keyboardType="numeric"
-                  theme={{
-                    roundness: 12,
-                    colors: {
-                      primary: '#58B9D0',
-                      outline: errors.ageInYears ? '#FF6B6B' : '#E2E2E2',
-                    },
-                  }}
-                  error={!!errors.ageInYears}
-                />
-                {errors.ageInYears && (
-                  <Text style={signupstyles.errorText}>
-                    {errors.ageInYears}
-                  </Text>
-                )}
+            <TouchableOpacity
+              onPress={showDatepicker}
+              style={{
+                height: 56,
+                borderColor: errors.dob ? '#FF6B6B' : '#E2E2E2',
+                borderWidth: 1,
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                backgroundColor: '#fff',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialIcons name="cake" size={20} color="#58B9D0" />
+                <Text style={{ fontSize: 16, color: dob ? '#333' : '#666' }}>
+                  {dob || 'Select Date of Birth'}
+                </Text>
               </View>
+              <MaterialIcons name="calendar-today" size={20} color="#58B9D0" />
+            </TouchableOpacity>
+            {errors.dob && (
+              <Text style={signupstyles.errorText}>{errors.dob}</Text>
+            )}
 
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  mode="outlined"
-                  label="Age (Months)"
-                  placeholder="0-11"
-                  value={ageInMonths}
-                  onChangeText={value => {
-                    setAgeInMonths(value);
-                    clearFieldError('ageInMonths');
-                  }}
-                  keyboardType="numeric"
-                  theme={{
-                    roundness: 12,
-                    colors: {
-                      primary: '#58B9D0',
-                      outline: errors.ageInMonths ? '#FF6B6B' : '#E2E2E2',
-                    },
-                  }}
-                  error={!!errors.ageInMonths}
-                />
-                {errors.ageInMonths && (
-                  <Text style={signupstyles.errorText}>
-                    {errors.ageInMonths}
-                  </Text>
-                )}
-              </View>
-            </View>
+            {showDatePicker && (
+              <DateTimePicker
+                value={dobDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                maximumDate={new Date()}
+                minimumDate={new Date(1990, 0, 1)}
+              />
+            )}
 
             <View>
               <Dropdown
@@ -535,7 +991,7 @@ const AddPet: React.FC = () => {
                 placeholderStyle={{ fontSize: 16, color: '#666' }}
                 selectedTextStyle={{ fontSize: 16, color: '#333' }}
                 itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{ 
+                containerStyle={{
                   backgroundColor: '#fff',
                   borderRadius: 12,
                   borderWidth: 1,
@@ -558,54 +1014,93 @@ const AddPet: React.FC = () => {
                 onChange={item => {
                   setCategory(item.value);
                   clearFieldError('category');
+                  // Reset related fields when changing category
+                  setExoticType('');
+                  setBreed(null);
+                  setBreedOthers('');
+                  setSize(null);
+
+                  // Fetch breeds if cat or dog is selected
+                  const selectedCat = petCategories.find(c => c.id === item.value);
+                  if (selectedCat?.catName?.toLowerCase() === 'cat' || selectedCat?.catName?.toLowerCase() === 'dog') {
+                    fetchBreedsByCategory(item.value);
+                  } else {
+                    // Clear breeds for exotic
+                    setPetBreeds([]);
+                  }
                 }}
+                renderLeftIcon={() => (
+                  <MaterialIcons name="category" size={20} color="#58B9D0" style={{ marginRight: 8 }} />
+                )}
               />
               {errors.category && (
                 <Text style={signupstyles.errorText}>{errors.category}</Text>
               )}
             </View>
 
-            <View>
-              <Dropdown
-                style={[
-                  {
-                    height: 56,
-                    borderColor: errors.size ? '#FF6B6B' : '#E2E2E2',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    backgroundColor: '#fff',
-                  },
-                ]}
-                placeholderStyle={{ fontSize: 16, color: '#666' }}
-                selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{ 
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#E2E2E2',
-                  marginTop: 5,
+            {/* Exotic Type field - Only show for Exotic */}
+            {category && petCategories.find(c => c.id === category)?.catName?.toLowerCase() === 'exotic' && (
+              <TextInput
+                mode="outlined"
+                label="Exotic Type"
+                placeholder="e.g. Rabbit, Turtle, Reptile, Fish"
+                value={exoticType}
+                onChangeText={setExoticType}
+                theme={{
+                  roundness: 12,
+                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
                 }}
-                itemContainerStyle={{
-                  backgroundColor: '#fff',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#F0F0F0',
-                }}
-                data={petSizes.map(s => ({ label: s.size, value: s.id }))}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Size"
-                value={size}
-                onChange={item => {
-                  setSize(item.value);
-                  clearFieldError('size');
-                }}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="pets" size={20} color="#58B9D0" />} />}
               />
-              {errors.size && (
-                <Text style={signupstyles.errorText}>{errors.size}</Text>
-              )}
-            </View>
+            )}
+
+            {/* Size field - Only show for Dogs */}
+            {category && petCategories.find(c => c.id === category)?.catName?.toLowerCase() === 'dog' && (
+              <View>
+                <Dropdown
+                  style={[
+                    {
+                      height: 56,
+                      borderColor: errors.size ? '#FF6B6B' : '#E2E2E2',
+                      borderWidth: 1,
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      backgroundColor: '#fff',
+                    },
+                  ]}
+                  placeholderStyle={{ fontSize: 16, color: '#666' }}
+                  selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                  itemTextStyle={{ fontSize: 16, color: '#333' }}
+                  containerStyle={{
+                    backgroundColor: '#fff',
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: '#E2E2E2',
+                    marginTop: 5,
+                  }}
+                  itemContainerStyle={{
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#F0F0F0',
+                  }}
+                  data={petSizes.map(s => ({ label: s.size, value: s.id }))}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Select Size"
+                  value={size}
+                  onChange={item => {
+                    setSize(item.value);
+                    clearFieldError('size');
+                  }}
+                  renderLeftIcon={() => (
+                    <MaterialIcons name="photo-size-select-large" size={20} color="#58B9D0" style={{ marginRight: 8 }} />
+                  )}
+                />
+                {errors.size && (
+                  <Text style={signupstyles.errorText}>{errors.size}</Text>
+                )}
+              </View>
+            )}
 
             <View>
               <Dropdown
@@ -622,7 +1117,7 @@ const AddPet: React.FC = () => {
                 placeholderStyle={{ fontSize: 16, color: '#666' }}
                 selectedTextStyle={{ fontSize: 16, color: '#333' }}
                 itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{ 
+                containerStyle={{
                   backgroundColor: '#fff',
                   borderRadius: 12,
                   borderWidth: 1,
@@ -643,67 +1138,191 @@ const AddPet: React.FC = () => {
                   setGender(item.value);
                   clearFieldError('gender');
                 }}
+                renderLeftIcon={() => (
+                  <MaterialIcons name="wc" size={20} color="#58B9D0" style={{ marginRight: 8 }} />
+                )}
               />
               {errors.gender && (
                 <Text style={signupstyles.errorText}>{errors.gender}</Text>
               )}
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  mode="outlined"
-                  label="Weight (kg)"
-                  placeholder="e.g. 18.5"
-                  value={weight}
-                  onChangeText={setWeight}
-                  keyboardType="numeric"
-                  theme={{
-                    roundness: 12,
-                    colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+            {/* Breed field - Only show for Cat and Dog */}
+            {category && (petCategories.find(c => c.id === category)?.catName?.toLowerCase() === 'cat' ||
+                         petCategories.find(c => c.id === category)?.catName?.toLowerCase() === 'dog') && (
+              <View>
+                <Dropdown
+                  style={[
+                    {
+                      height: 56,
+                      borderColor: '#E2E2E2',
+                      borderWidth: 1,
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      backgroundColor: '#fff',
+                    },
+                  ]}
+                  placeholderStyle={{ fontSize: 16, color: '#666' }}
+                  selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                  itemTextStyle={{ fontSize: 16, color: '#333' }}
+                  containerStyle={{
+                    backgroundColor: '#fff',
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: '#E2E2E2',
+                    marginTop: 5,
+                    maxHeight: 300,
                   }}
+                  itemContainerStyle={{
+                    backgroundColor: '#fff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#F0F0F0',
+                  }}
+                  data={[
+                    ...petBreeds.map(b => ({ label: b.name, value: b.id })),
+                    { label: 'Other', value: 0 } // Add "Other" option with value 0
+                  ]}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Select Breed"
+                  value={breed}
+                  onChange={item => {
+                    setBreed(item.value);
+                    // Clear breedOthers if not selecting "Other"
+                    if (item.value !== 0) {
+                      setBreedOthers('');
+                    }
+                  }}
+                  renderLeftIcon={() => (
+                    <MaterialIcons name="pets" size={20} color="#58B9D0" style={{ marginRight: 8 }} />
+                  )}
                 />
               </View>
+            )}
 
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  mode="outlined"
-                  label="Height"
-                  placeholder="e.g. 45cm"
-                  value={height}
-                  onChangeText={setHeight}
-                  theme={{
-                    roundness: 12,
-                    colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                  }}
-                />
-              </View>
-            </View>
+            {/* Breed (Others) field - Only show when "Other" breed is selected */}
+            {breed === 0 && (
+              <TextInput
+                mode="outlined"
+                label="Breed (Others)"
+                placeholder="Enter breed name"
+                value={breedOthers}
+                onChangeText={setBreedOthers}
+                theme={{
+                  roundness: 12,
+                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+                }}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="edit" size={20} color="#58B9D0" />} />}
+              />
+            )}
 
             <TextInput
               mode="outlined"
-              label="Daily Feed Count"
-              placeholder="e.g. 2"
-              value={feedCount}
-              onChangeText={setFeedCount}
+              label="Weight (kg)"
+              placeholder="e.g. 18.5"
+              value={weight}
+              onChangeText={setWeight}
               keyboardType="numeric"
               theme={{
                 roundness: 12,
                 colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="monitor-weight" size={20} color="#58B9D0" />} />}
             />
 
-            <TextInput
-              mode="outlined"
-              label="Cookie/Food Type"
-              placeholder="e.g. grain, meat-based"
-              value={cookie}
-              onChangeText={setCookie}
-              theme={{
-                roundness: 12,
-                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-              }}
-            />
+            <View>
+              <Dropdown
+                style={[
+                  {
+                    height: 56,
+                    borderColor: '#E2E2E2',
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    backgroundColor: '#fff',
+                  },
+                ]}
+                placeholderStyle={{ fontSize: 16, color: '#666' }}
+                selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                itemTextStyle={{ fontSize: 16, color: '#333' }}
+                containerStyle={{
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  marginTop: 5,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: '#fff',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F0F0F0',
+                }}
+                data={[
+                  { label: '1', value: 1 },
+                  { label: '2', value: 2 },
+                  { label: '3', value: 3 },
+                  { label: '4', value: 4 },
+                  { label: '5', value: 5 },
+                  { label: '6', value: 6 },
+                ]}
+                labelField="label"
+                valueField="value"
+                placeholder="Daily Feed Count"
+                value={feedCount}
+                onChange={item => {
+                  setFeedCount(item.value);
+                }}
+                renderLeftIcon={() => (
+                  <MaterialIcons name="restaurant" size={20} color="#58B9D0" style={{ marginRight: 8 }} />
+                )}
+              />
+            </View>
+
+            <View>
+              <Dropdown
+                style={[
+                  {
+                    height: 56,
+                    borderColor: '#E2E2E2',
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    backgroundColor: '#fff',
+                  },
+                ]}
+                placeholderStyle={{ fontSize: 16, color: '#666' }}
+                selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                itemTextStyle={{ fontSize: 16, color: '#333' }}
+                containerStyle={{
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  marginTop: 5,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: '#fff',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F0F0F0',
+                }}
+                data={[
+                  { label: 'Raw meat', value: 'Raw meat' },
+                  { label: 'Cooked chicken rice', value: 'Cooked chicken rice' },
+                  { label: 'Kibbles', value: 'Kibbles' },
+                  { label: 'Curd rice', value: 'Curd rice' },
+                ]}
+                labelField="label"
+                valueField="value"
+                placeholder="Food Type"
+                value={foodType}
+                onChange={item => {
+                  setFoodType(item.value);
+                }}
+                renderLeftIcon={() => (
+                  <MaterialIcons name="fastfood" size={20} color="#58B9D0" style={{ marginRight: 8 }} />
+                )}
+              />
+            </View>
 
             <TextInput
               mode="outlined"
@@ -717,6 +1336,7 @@ const AddPet: React.FC = () => {
                 roundness: 12,
                 colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="warning" size={20} color="#FF9800" />} />}
             />
 
             <TextInput
@@ -731,6 +1351,7 @@ const AddPet: React.FC = () => {
                 roundness: 12,
                 colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="accessible" size={20} color="#58B9D0" />} />}
             />
 
             <TextInput
@@ -745,6 +1366,22 @@ const AddPet: React.FC = () => {
                 roundness: 12,
                 colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="favorite" size={20} color="#E91E63" />} />}
+            />
+
+            <TextInput
+              mode="outlined"
+              label="Favourite Games"
+              placeholder="e.g. Tug, Fetch"
+              value={favouriteGames}
+              onChangeText={setFavouriteGames}
+              multiline
+              numberOfLines={2}
+              theme={{
+                roundness: 12,
+                colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+              }}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="sports-esports" size={20} color="#4CAF50" />} />}
             />
 
             <TextInput
@@ -759,10 +1396,303 @@ const AddPet: React.FC = () => {
                 roundness: 12,
                 colors: { primary: '#58B9D0', outline: '#E2E2E2' },
               }}
+              left={<TextInput.Icon icon={() => <MaterialIcons name="medical-services" size={20} color="#F44336" />} />}
             />
+
+            {/* Photo/Video Upload Section */}
+            <View style={{
+              marginTop: responsiveHeight(2),
+              backgroundColor: '#FFFFFF',
+              borderRadius: 12,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 12,
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <MaterialIcons name="cloud-upload" size={24} color="#58B9D0" />
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#1F2937',
+                  }}>
+                    Photos & Videos
+                  </Text>
+                </View>
+                <Text style={{
+                  fontSize: 12,
+                  color: '#6B7280',
+                }}>
+                  {uploads.length}/5
+                </Text>
+              </View>
+
+              <Text style={{
+                fontSize: 13,
+                color: '#6B7280',
+                marginBottom: 8,
+                lineHeight: 18,
+              }}>
+                Upload up to 3 images (max 5MB each) and 2 videos (max 20MB each)
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                color: '#FF9800',
+                marginBottom: 12,
+                lineHeight: 16,
+                fontWeight: '500',
+              }}>
+                ⭐ Tap the star icon on any image to set it as profile picture
+              </Text>
+
+              {/* Upload Grid */}
+              <View style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'flex-start',
+                marginHorizontal: -4,
+              }}>
+                {uploads.map((file, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      width: '31.33%',
+                      aspectRatio: 1,
+                      marginHorizontal: '1%',
+                      marginBottom: 8,
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      position: 'relative',
+                      backgroundColor: '#F8F9FB',
+                      borderWidth: selectedProfileImg === file.s3Url ? 3 : 0,
+                      borderColor: '#FFD700',
+                    }}
+                  >
+                    {file.type === 'image' ? (
+                      <Image
+                        source={{ uri: file.uri }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={{
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: '#1F2937',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                        <MaterialIcons name="videocam" size={32} color="#FFFFFF" />
+                        <Text style={{
+                          fontSize: 10,
+                          color: '#FFFFFF',
+                          marginTop: 4,
+                        }}>
+                          VIDEO
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Uploading Overlay */}
+                    {file.uploading && (
+                      <View style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                        <Text style={{
+                          fontSize: 10,
+                          color: '#FFFFFF',
+                          marginTop: 4,
+                        }}>
+                          Uploading...
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Upload Success */}
+                    {file.s3Url && !file.uploading && (
+                      <View style={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 4,
+                        backgroundColor: '#10B981',
+                        borderRadius: 12,
+                        padding: 4,
+                      }}>
+                        <MaterialIcons name="check" size={12} color="#FFFFFF" />
+                      </View>
+                    )}
+
+                    {/* Set as Profile Button - Only for images */}
+                    {file.type === 'image' && file.s3Url && !file.uploading && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSelectedProfileImg(file.s3Url === selectedProfileImg ? '' : file.s3Url || '');
+                        }}
+                        style={{
+                          position: 'absolute',
+                          bottom: 4,
+                          right: 4,
+                          backgroundColor: selectedProfileImg === file.s3Url ? '#FFD700' : 'rgba(0, 0, 0, 0.6)',
+                          borderRadius: 12,
+                          padding: 6,
+                        }}
+                      >
+                        <MaterialIcons
+                          name={selectedProfileImg === file.s3Url ? 'star' : 'star-border'}
+                          size={14}
+                          color="#FFFFFF"
+                        />
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Remove Button */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        // Clear profile image selection if removing the selected profile image
+                        if (selectedProfileImg === file.s3Url) {
+                          setSelectedProfileImg('');
+                        }
+                        removeFile(file.uri);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        backgroundColor: '#EF4444',
+                        borderRadius: 12,
+                        padding: 4,
+                      }}
+                    >
+                      <MaterialIcons name="close" size={12} color="#FFFFFF" />
+                    </TouchableOpacity>
+
+                    {/* File Type Badge */}
+                    <View style={{
+                      position: 'absolute',
+                      bottom: 4,
+                      left: 4,
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                      borderRadius: 6,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                    }}>
+                      <Text style={{
+                        fontSize: 9,
+                        color: '#FFFFFF',
+                        fontWeight: '600',
+                      }}>
+                        {file.type === 'image' ? 'IMG' : 'VID'}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+
+                {/* Add Button */}
+                {uploads.length < 5 && (
+                  <TouchableOpacity
+                    onPress={pickMediaFiles}
+                    style={{
+                      width: '31.33%',
+                      aspectRatio: 1,
+                      marginHorizontal: '1%',
+                      marginBottom: 8,
+                      borderRadius: 12,
+                      borderWidth: 2,
+                      borderColor: '#58B9D0',
+                      borderStyle: 'dashed',
+                      backgroundColor: 'rgba(88, 185, 208, 0.05)',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <MaterialIcons name="add" size={28} color="#58B9D0" />
+                    <Text style={{
+                      fontSize: 10,
+                      color: '#58B9D0',
+                      marginTop: 4,
+                      fontWeight: '500',
+                    }}>
+                      Add
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Upload Stats */}
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                marginTop: 12,
+                paddingTop: 12,
+                borderTopWidth: 1,
+                borderTopColor: '#F3F4F6',
+              }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{
+                    fontSize: 12,
+                    color: '#6B7280',
+                    marginBottom: 2,
+                  }}>
+                    Images
+                  </Text>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#58B9D0',
+                  }}>
+                    {uploads.filter(f => f.type === 'image').length}/3
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{
+                    fontSize: 12,
+                    color: '#6B7280',
+                    marginBottom: 2,
+                  }}>
+                    Videos
+                  </Text>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#58B9D0',
+                  }}>
+                    {uploads.filter(f => f.type === 'video').length}/2
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{
+                    fontSize: 12,
+                    color: '#6B7280',
+                    marginBottom: 2,
+                  }}>
+                    Uploaded
+                  </Text>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#10B981',
+                  }}>
+                    {uploads.filter(f => f.s3Url).length}/{uploads.length}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
           </View>
-            
+
           {/* Submit Button inside ScrollView */}
           <TouchableOpacity
               onPress={handleSubmit}

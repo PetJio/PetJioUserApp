@@ -44,6 +44,14 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
     const [isLoginLoading, setIsLoginLoading] = useState<boolean>(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+    const [devModeTaps, setDevModeTaps] = useState<number>(0);
+    const [showDevMode, setShowDevMode] = useState<boolean>(false);
+
+    // Development test credentials
+    const DEV_CREDENTIALS = {
+      email: 'test@petjio.com',
+      password: 'Test@123'
+    };
 
     const validateForm = (): boolean => {
       const newErrors: ValidationErrors = {};
@@ -69,15 +77,54 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
       }
 
       setIsLoginLoading(true);
-      
+
       try {
+        // FRONTEND BYPASS: Check if using test credentials
+        if (emailPhone === DEV_CREDENTIALS.email && password === DEV_CREDENTIALS.password) {
+          console.log('🔧 DEV MODE: Bypassing API, using mock test user data');
+
+          // Mock test user data
+          const mockUser = {
+            id: 'test-user-001',
+            email: 'test@petjio.com',
+            firstName: 'Test',
+            lastName: 'User',
+            mobile: '1234567890',
+            address: 'Test Address, Test City',
+            city: 'Test City',
+            state: 'Test State',
+            pinCode: '123456',
+            lat: 0,
+            lng: 0,
+            roles: ['user']
+          };
+
+          const mockToken = 'mock-jwt-token-for-testing-' + Date.now();
+
+          // Store mock data
+          await storageService.setUserData(mockUser);
+          await storageService.setUserToken(mockToken);
+          await storageService.setItem(STORAGE_KEYS.IS_LOGGED_IN, true);
+
+          console.log('✅ Mock test user data stored successfully');
+          setMessage({type: 'success', text: '🔧 Test Account - Login Bypassed'});
+
+          setTimeout(() => {
+            navigation.navigate('Main');
+          }, 1000);
+
+          setIsLoginLoading(false);
+          return;
+        }
+
+        // Normal API login flow
         const loginData: LoginRequest = {
           emailPhone,
           password
         };
 
         const response = await loginUser(loginData);
-        
+
         if (response.success && response.user && response.token) {
           // Store user data and token directly
           console.log('🔄 Storing login data:', {
@@ -85,7 +132,7 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
             hasToken: !!response.token,
             userName: response.user.firstName
           });
-          
+
           await storageService.setUserData(response.user);
           await storageService.setUserToken(response.token);
           await storageService.setItem(STORAGE_KEYS.IS_LOGGED_IN, true);
@@ -143,11 +190,11 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
     const handleGoogleSignIn = async () => {
       setIsGoogleLoading(true);
       setMessage(null);
-      
+
       try {
         console.log('🚀 Starting Google Sign-In...');
         const response: GoogleSignInResponse = await googleSignInService.signIn();
-        
+
         if (response.success && response.user && response.token) {
           console.log('✅ Google Sign-In successful:', response.user.name);
 
@@ -185,19 +232,42 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
         } else {
           console.log('❌ Google Sign-In failed:', response.error);
           setMessage({
-            type: 'error', 
+            type: 'error',
             text: response.error || 'Google Sign-In failed'
           });
         }
       } catch (error) {
         console.error('🔥 Google Sign-In error:', error);
         setMessage({
-          type: 'error', 
+          type: 'error',
           text: 'Failed to sign in with Google. Please try again.'
         });
       } finally {
         setIsGoogleLoading(false);
       }
+    };
+
+    // Dev mode: Triple tap on logo to activate
+    const handleLogoPress = () => {
+      const newTapCount = devModeTaps + 1;
+      setDevModeTaps(newTapCount);
+
+      if (newTapCount === 3) {
+        setShowDevMode(true);
+        setMessage({type: 'success', text: '🔧 Dev Mode Activated'});
+        setTimeout(() => setMessage(null), 2000);
+      }
+
+      // Reset tap count after 2 seconds
+      setTimeout(() => setDevModeTaps(0), 2000);
+    };
+
+    // Auto-fill test credentials
+    const useTestCredentials = () => {
+      setEmailPhone(DEV_CREDENTIALS.email);
+      setPassword(DEV_CREDENTIALS.password);
+      setMessage({type: 'success', text: '✅ Test credentials loaded'});
+      setTimeout(() => setMessage(null), 2000);
     };
 
   return (
@@ -210,9 +280,12 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
       </TouchableOpacity>
 
       <ScrollView style={loginstyles.container} showsVerticalScrollIndicator={false}>
-       <View style={loginstyles.setLeftIconposition}>
+       <TouchableOpacity
+         style={loginstyles.setLeftIconposition}
+         onPress={handleLogoPress}
+         activeOpacity={0.9}>
             <Image source={images.signupImage} style={loginstyles.topImage} />
-       </View>
+       </TouchableOpacity>
 
       <View style={loginstyles.formContainer}>
         <View style={{alignItems:'center'}}>
@@ -281,7 +354,16 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
           <Text style={loginstyles.forgotText}>Forget Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        {/* Dev Mode: Quick Test Login Button */}
+        {showDevMode && (
+          <TouchableOpacity
+            onPress={useTestCredentials}
+            style={[loginstyles.loginButton, {backgroundColor: '#FF9800', marginBottom: 10}]}>
+            <Text style={loginstyles.loginText}>🔧 Use Test Credentials</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
          onPress={handleLogin}
          style={[loginstyles.loginButton, isLoginLoading && {opacity: 0.7}]}
          disabled={isLoginLoading || isGoogleLoading}>

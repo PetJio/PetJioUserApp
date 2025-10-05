@@ -524,10 +524,17 @@ const History: React.FC = () => {
           </View>
         ) : error ? (
           <View style={historyStyles.errorContainer}>
-            <MaterialIcons name="error-outline" size={48} color="#E74C3C" />
-            <Text style={historyStyles.errorText}>{error}</Text>
-            <TouchableOpacity style={historyStyles.retryButton} onPress={initializeAndLoadData}>
-              <Text style={historyStyles.retryButtonText}>Retry</Text>
+            <View style={historyStyles.errorIconContainer}>
+              <MaterialIcons name="cloud-off" size={56} color="#58B9D0" />
+            </View>
+            <Text style={historyStyles.errorTitle}>Oops! Something went wrong</Text>
+            <Text style={historyStyles.errorMessage}>{error}</Text>
+            <TouchableOpacity
+              style={historyStyles.retryButton}
+              onPress={initializeAndLoadData}
+              activeOpacity={0.8}>
+              <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
+              <Text style={historyStyles.retryButtonText}>Try Again</Text>
             </TouchableOpacity>
           </View>
         ) : (

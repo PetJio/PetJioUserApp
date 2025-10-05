@@ -285,15 +285,34 @@ const styles = StyleSheet.create({
     
     errorContainer: {
         alignItems: 'center',
-        paddingVertical: responsiveHeight(4),
-        paddingHorizontal: responsiveWidth(4),
-        backgroundColor: '#FFFFFF',
+        paddingVertical: responsiveHeight(2),
+        paddingHorizontal: responsiveWidth(5),
+        backgroundColor: '#FFF5F5',
         borderRadius: responsiveWidth(3),
-        marginTop: responsiveHeight(1),
+        marginTop: responsiveHeight(0.5),
         borderWidth: 1,
-        borderColor: '#FFE5E5',
+        borderColor: 'rgba(88, 185, 208, 0.2)',
+        marginHorizontal: responsiveWidth(1),
     },
-    
+
+    errorIconWrapper: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        backgroundColor: 'rgba(88, 185, 208, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: responsiveHeight(1.2),
+    },
+
+    errorTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1F2937',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(0.5),
+    },
+
     errorText: {
         fontSize: 14,
         color: '#FF6B6B',
@@ -301,14 +320,30 @@ const styles = StyleSheet.create({
         marginTop: responsiveHeight(1),
         marginBottom: responsiveHeight(2),
     },
-    
+
+    errorMessage: {
+        fontSize: 13,
+        color: '#6B7280',
+        textAlign: 'center',
+        lineHeight: 18,
+        marginBottom: responsiveHeight(1.5),
+    },
+
     retryButton: {
         backgroundColor: '#58B9D0',
-        paddingHorizontal: responsiveWidth(6),
+        paddingHorizontal: responsiveWidth(8),
         paddingVertical: responsiveHeight(1),
-        borderRadius: responsiveWidth(2),
+        borderRadius: responsiveWidth(3),
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        shadowColor: '#58B9D0',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    
+
     retryButtonText: {
         color: '#FFFFFF',
         fontSize: 14,

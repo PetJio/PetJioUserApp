@@ -376,7 +376,21 @@ const Home: React.FC = () => {
               <PetSkeleton />
             ) : petsError ? (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Error loading pets</Text>
+                <View style={styles.errorIconWrapper}>
+                  <MaterialIcons name="pets" size={40} color="#58B9D0" />
+                </View>
+                <Text style={styles.errorTitle}>Unable to load pets</Text>
+                <Text style={styles.errorMessage}>
+                  We couldn't fetch your pet profiles. Please check your connection and try again.
+                </Text>
+                <TouchableOpacity
+                  style={styles.retryButton}
+                  onPress={fetchPets}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="refresh" size={18} color="#FFFFFF" />
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               <>
