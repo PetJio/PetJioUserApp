@@ -119,6 +119,7 @@ const Profile: React.FC = () => {
   const [loadingPets, setLoadingPets] = useState(false);
   const [petsError, setPetsError] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const clearFieldError = (fieldName: keyof ValidationErrors) => {
     if (errors[fieldName]) {
@@ -313,6 +314,8 @@ const Profile: React.FC = () => {
       setLoadingPets(false);
     }
   };
+
+  
 
   // Helper function to generate curl command for debugging
   const generateCurlCommand = (url: string, token: string, data: any) => {
@@ -882,16 +885,45 @@ const Profile: React.FC = () => {
         {/* User Profile Tab Content */}
         {activeTab === 'user' && (
           <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
-            <View style={profileStyles.sectionHeader}>
-              <MaterialIcons
-                name="person-outline"
-                size={24}
-                color="#58B9D0"
-                style={profileStyles.sectionHeaderIcon}
-              />
-              <Text style={profileStyles.sectionHeaderTitle}>
-                Personal Information
-              </Text>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: responsiveHeight(2),
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <MaterialIcons
+                  name="person-outline"
+                  size={24}
+                  color="#58B9D0"
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={{
+                  fontSize: 18,
+                  fontWeight: '600',
+                  color: '#1F2937',
+                }}>
+                  Personal Information
+                </Text>
+              </View>
+              {!isEditingProfile && (
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#58B9D0',
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                  onPress={() => setIsEditingProfile(true)}
+                >
+                  <MaterialIcons name="edit" size={16} color="#FFFFFF" />
+                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                    Edit
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={profileStyles.inputGroup}>
@@ -917,7 +949,7 @@ const Profile: React.FC = () => {
                   },
                 }}
                 error={!!errors.firstName}
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
               />
               {errors.firstName && (
@@ -946,7 +978,7 @@ const Profile: React.FC = () => {
                   },
                 }}
                 error={!!errors.lastName}
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
               />
               {errors.lastName && (
@@ -977,7 +1009,7 @@ const Profile: React.FC = () => {
                 error={!!errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="email" iconColor="#58B9D0" />}
               />
               {errors.email && (
@@ -1007,7 +1039,7 @@ const Profile: React.FC = () => {
                 }}
                 error={!!errors.phoneNumber}
                 keyboardType="phone-pad"
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="phone" iconColor="#58B9D0" />}
               />
               {errors.phoneNumber && (
@@ -1039,7 +1071,7 @@ const Profile: React.FC = () => {
                 }}
                 error={!!errors.alterNo}
                 keyboardType="phone-pad"
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={
                   <TextInput.Icon
                     icon={() => (
@@ -1058,14 +1090,22 @@ const Profile: React.FC = () => {
         {/* Address Section */}
         {activeTab === 'user' && (
           <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
-            <View style={profileStyles.sectionHeader}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: responsiveHeight(2),
+            }}>
               <MaterialIcons
                 name="location-on"
                 size={24}
                 color="#58B9D0"
-                style={profileStyles.sectionHeaderIcon}
+                style={{ marginRight: 10 }}
               />
-              <Text style={profileStyles.sectionHeaderTitle}>
+              <Text style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: '#1F2937',
+              }}>
                 Address Information
               </Text>
             </View>
@@ -1093,7 +1133,7 @@ const Profile: React.FC = () => {
                   },
                 }}
                 error={!!errors.address}
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="home" iconColor="#58B9D0" />}
               />
               {errors.address && (
@@ -1122,7 +1162,7 @@ const Profile: React.FC = () => {
                   },
                 }}
                 error={!!errors.city}
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="domain" iconColor="#58B9D0" />}
               />
               {errors.city && (
@@ -1151,7 +1191,7 @@ const Profile: React.FC = () => {
                   },
                 }}
                 error={!!errors.state}
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="map" iconColor="#58B9D0" />}
               />
               {errors.state && (
@@ -1181,7 +1221,7 @@ const Profile: React.FC = () => {
                 }}
                 error={!!errors.zipCode}
                 keyboardType="numeric"
-                editable={!isSaving}
+                editable={isEditingProfile && !isSaving}
                 left={<TextInput.Icon icon="mailbox" iconColor="#58B9D0" />}
               />
               {errors.zipCode && (
@@ -1340,107 +1380,190 @@ const Profile: React.FC = () => {
                 }}
               >
                 {petProfiles.map((pet, index) => (
-                  <View
+                  <TouchableOpacity
                     key={pet.id || index}
-                    style={{
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 16,
-                      borderWidth: 1,
-                      borderColor: '#E5E7EB',
-                      padding: responsiveWidth(4),
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}
+                    onPress={() => navigate('EditPet', { pet })}
+                    activeOpacity={0.7}
                   >
-                    {/* Pet Avatar */}
                     <View
                       style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 32,
-                        backgroundColor: 'rgba(88, 185, 208, 0.1)',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: responsiveWidth(4),
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 16,
+                        borderWidth: 1,
+                        borderColor: '#E5E7EB',
+                        overflow: 'hidden',
                       }}
                     >
-                      <MaterialIcons name="pets" size={32} color="#58B9D0" />
-                    </View>
-
-                    {/* Pet Info */}
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontSize: 18,
-                          fontWeight: '600',
-                          color: '#1F2937',
-                          marginBottom: 4,
-                        }}
-                      >
-                        {pet.petName || 'Unnamed Pet'}
-                      </Text>
-
                       <View
                         style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginBottom: 4,
-                        }}
-                      >
-                        <MaterialIcons
-                          name="category"
-                          size={16}
-                          color="#6B7280"
-                        />
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            color: '#6B7280',
-                            marginLeft: 6,
-                          }}
-                        >
-                          {pet.category?.catName || 'Unknown Category'}
-                        </Text>
-                      </View>
-
-                      <View
-                        style={{
+                          padding: responsiveWidth(4),
                           flexDirection: 'row',
                           alignItems: 'center',
                         }}
                       >
-                        <MaterialIcons
-                          name="straighten"
-                          size={16}
-                          color="#6B7280"
-                        />
-                        <Text
+                        {/* Pet Avatar with Image */}
+                        <View
                           style={{
-                            fontSize: 14,
-                            color: '#6B7280',
-                            marginLeft: 6,
+                            width: 72,
+                            height: 72,
+                            borderRadius: 36,
+                            marginRight: responsiveWidth(3.5),
+                            overflow: 'hidden',
+                            borderWidth: 2,
+                            borderColor: '#E5E7EB',
                           }}
                         >
-                          {pet.size?.size || 'Unknown Size'}
-                        </Text>
+                          {pet.profileImg ? (
+                            <Image
+                              source={{ uri: pet.profileImg }}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                              }}
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor: 'rgba(88, 185, 208, 0.1)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <MaterialIcons name="pets" size={36} color="#58B9D0" />
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Pet Info */}
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: '700',
+                              color: '#1F2937',
+                              marginBottom: 6,
+                            }}
+                          >
+                            {pet.petName || 'Unnamed Pet'}
+                          </Text>
+
+                          {/* Category and Size Row */}
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 12,
+                              marginBottom: 6,
+                            }}
+                          >
+                            {/* Category Badge */}
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#F0F9FF',
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 8,
+                                gap: 4,
+                              }}
+                            >
+                              <MaterialIcons
+                                name="pets"
+                                size={14}
+                                color="#0284C7"
+                              />
+                              <Text
+                                style={{
+                                  fontSize: 13,
+                                  color: '#0284C7',
+                                  fontWeight: '600',
+                                  textTransform: 'capitalize',
+                                }}
+                              >
+                                {pet.category?.catName || 'Unknown'}
+                              </Text>
+                            </View>
+
+                            {/* Size Badge */}
+                            {pet.size?.size && (
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  backgroundColor: '#F0FDF4',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 4,
+                                  borderRadius: 8,
+                                  gap: 4,
+                                }}
+                              >
+                                <MaterialIcons
+                                  name="straighten"
+                                  size={14}
+                                  color="#16A34A"
+                                />
+                                <Text
+                                  style={{
+                                    fontSize: 13,
+                                    color: '#16A34A',
+                                    fontWeight: '600',
+                                    textTransform: 'capitalize',
+                                  }}
+                                >
+                                  {pet.size.size}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {/* Gender Row */}
+                          {pet.gender?.name && (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              <MaterialIcons
+                                name="wc"
+                                size={14}
+                                color="#9CA3AF"
+                              />
+                              <Text
+                                style={{
+                                  fontSize: 13,
+                                  color: '#6B7280',
+                                  textTransform: 'capitalize',
+                                }}
+                              >
+                                {pet.gender.name}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Edit Button */}
+                        <TouchableOpacity
+                          onPress={() => navigate('EditPet', { pet })}
+                          style={{
+                            backgroundColor: '#58B9D0',
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+                        </TouchableOpacity>
                       </View>
                     </View>
-
-                    {/* Edit Button */}
-                    <TouchableOpacity
-                      onPress={() => navigate('EditPet', { pet })}
-                      style={{
-                        backgroundColor: '#58B9D0',
-                        paddingVertical: 10,
-                        paddingHorizontal: 16,
-                        borderRadius: 8,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <MaterialIcons name="edit" size={18} color="#FFFFFF" />
-                    </TouchableOpacity>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             )}
@@ -1463,51 +1586,93 @@ const Profile: React.FC = () => {
           </View>
         )}
 
-        {/* Action Buttons - Always visible */}
-        <View style={[profileStyles.actionButtonsContainer, { marginHorizontal: 16 }]}>
-          {/* Save Button */}
-          <TouchableOpacity
-            onPress={handleSave}
-            style={[
-              profileStyles.commonButton,
-              profileStyles.commonButtonPrimary,
-              isSaving && { opacity: 0.7 },
-            ]}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <View style={profileStyles.loadingContainer}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text
-                  style={[
-                    profileStyles.commonButtonText,
-                    profileStyles.commonButtonTextPrimary,
-                  ]}
-                >
-                  Saving...
-                </Text>
-              </View>
-            ) : (
-              <>
-                <MaterialIcons
-                  name="save"
-                  size={20}
-                  color="#FFFFFF"
-                  style={profileStyles.commonButtonIcon}
-                />
-                <Text
-                  style={[
-                    profileStyles.commonButtonText,
-                    profileStyles.commonButtonTextPrimary,
-                  ]}
-                >
-                  Save Changes
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
+        {/* Action Buttons - Conditional based on tab and edit mode */}
+        {activeTab === 'user' && isEditingProfile && (
+          <View style={{
+            marginHorizontal: 16,
+            flexDirection: 'row',
+            gap: 12,
+            marginTop: responsiveHeight(2),
+            marginBottom: responsiveHeight(1),
+          }}>
+            {/* Save Button */}
+            <TouchableOpacity
+              onPress={() => {
+                handleSave();
+                setIsEditingProfile(false);
+              }}
+              style={[
+                profileStyles.commonButton,
+                profileStyles.commonButtonPrimary,
+                { flex: 1 },
+                isSaving && { opacity: 0.7 },
+              ]}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <View style={profileStyles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text
+                    style={[
+                      profileStyles.commonButtonText,
+                      profileStyles.commonButtonTextPrimary,
+                    ]}
+                  >
+                    Saving...
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <MaterialIcons
+                    name="save"
+                    size={20}
+                    color="#FFFFFF"
+                    style={profileStyles.commonButtonIcon}
+                  />
+                  <Text
+                    style={[
+                      profileStyles.commonButtonText,
+                      profileStyles.commonButtonTextPrimary,
+                    ]}
+                  >
+                    Save Changes
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
 
-          {/* Logout Button */}
+            {/* Cancel Button */}
+            <TouchableOpacity
+              onPress={() => {
+                setIsEditingProfile(false);
+                // Reset form values
+                fetchUserProfile();
+              }}
+              style={[
+                profileStyles.commonButton,
+                { flex: 1, backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#6B7280' },
+              ]}
+            >
+              <MaterialIcons
+                name="close"
+                size={20}
+                color="#6B7280"
+                style={profileStyles.commonButtonIcon}
+              />
+              <Text
+                style={[
+                  profileStyles.commonButtonText,
+                  { color: '#6B7280' },
+                ]}
+              >
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Logout Button - Always visible */}
+        <View style={[profileStyles.actionButtonsContainer, { marginHorizontal: 16 }]}>
           <TouchableOpacity
             onPress={handleLogout}
             style={[

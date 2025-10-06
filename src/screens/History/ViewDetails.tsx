@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Modal,
+  TextInput,
 } from 'react-native';
 import {
   responsiveWidth,
@@ -98,6 +100,11 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [ownerId, setOwnerId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Pet handover modal states
+  const [showHandoverModal, setShowHandoverModal] = useState<boolean>(false);
+  const [customerProvides, setCustomerProvides] = useState<string>('');
+  const [submittingHandover, setSubmittingHandover] = useState<boolean>(false);
 
   // Simulate initial data loading
   React.useEffect(() => {
@@ -225,7 +232,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
       case 8:
         return {
           text: 'Handover Pet',
-          action: () => updateBookingStatus(bookingId, 3),
+          action: () => setShowHandoverModal(true),
           color: '#58B9D0'
         };
       case 5:
@@ -302,6 +309,53 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         return 'Pet pickup completed! Thank you for using our boarding service.';
       default:
         return 'Status updated successfully';
+    }
+  };
+
+  // Function to submit pet extras (items provided)
+  const submitPetExtras = async (bookingId: number) => {
+    if (!customerProvides.trim()) {
+      Alert.alert('Error', 'Please enter items you are providing');
+      return;
+    }
+
+    setSubmittingHandover(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert('Error', 'Authentication token not found');
+        return;
+      }
+
+      // Call pet-extras API
+      const petExtrasResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-extras`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerProvides: customerProvides.trim(),
+          bookingId: bookingId
+        })
+      });
+
+      if (!petExtrasResponse.ok) {
+        Alert.alert('Error', 'Failed to save items provided');
+        return;
+      }
+
+      // After successful pet extras submission, update status to handover (status 3)
+      await updateBookingStatus(bookingId, 3);
+
+      // Close modal and reset
+      setShowHandoverModal(false);
+      setCustomerProvides('');
+    } catch (error) {
+      console.error('Error submitting pet extras:', error);
+      Alert.alert('Error', 'Failed to process handover');
+    } finally {
+      setSubmittingHandover(false);
     }
   };
 
@@ -565,6 +619,159 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Pet Handover Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showHandoverModal}
+        onRequestClose={() => setShowHandoverModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'flex-end',
+        }}>
+          <View style={{
+            backgroundColor: '#FFFFFF',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            paddingHorizontal: 20,
+            paddingTop: 8,
+            paddingBottom: 20,
+          }}>
+            {/* Bottom Sheet Handle */}
+            <View style={{
+              width: 40,
+              height: 4,
+              backgroundColor: '#D1D5DB',
+              borderRadius: 2,
+              alignSelf: 'center',
+              marginTop: 8,
+              marginBottom: 12,
+            }} />
+
+            {/* Header */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 20,
+            }}>
+              <View>
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: '700',
+                  color: '#111827',
+                }}>Pet Handover</Text>
+                <Text style={{
+                  fontSize: 13,
+                  color: '#6B7280',
+                  marginTop: 2,
+                }}>Provide items for your pet</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowHandoverModal(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: '#F3F4F6',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <MaterialIcons name="close" size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Items Input */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: 8,
+              }}>Items You're Providing</Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                  borderRadius: 12,
+                  padding: 12,
+                  fontSize: 14,
+                  color: '#1F2937',
+                  backgroundColor: '#F9FAFB',
+                  minHeight: 100,
+                  textAlignVertical: 'top',
+                }}
+                placeholder="e.g., Food bowl, favorite toy, blanket..."
+                placeholderTextColor="#9CA3AF"
+                value={customerProvides}
+                onChangeText={setCustomerProvides}
+                multiline
+                numberOfLines={4}
+              />
+              <Text style={{
+                fontSize: 12,
+                color: '#6B7280',
+                marginTop: 4,
+              }}>List all items you're providing for your pet</Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={{
+              flexDirection: 'row',
+              gap: 12,
+            }}>
+              <TouchableOpacity
+                onPress={() => setShowHandoverModal(false)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  backgroundColor: '#F3F4F6',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: '#6B7280',
+                }}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => submitPetExtras(currentBookingData.bookingDetail.id)}
+                disabled={submittingHandover || !customerProvides.trim()}
+                style={{
+                  flex: 1,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  backgroundColor: customerProvides.trim() ? '#58B9D0' : '#D1D5DB',
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                {submittingHandover ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <MaterialIcons name="pets" size={20} color="#FFFFFF" />
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: '600',
+                      color: '#FFFFFF',
+                    }}>Handover Pet</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

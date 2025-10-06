@@ -51,6 +51,7 @@ type RootStackParamList = {
     city: string;
     boardDetails?: any;
     mode?: number;
+    selectedPets?: number[];
   };
   BoardingReview: undefined;
   BoardingRegistrationform: undefined;
@@ -134,9 +135,13 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
       return;
     }
 
+    const providerNameWithLocation = bookingDetailsData.facilityName 
+      ? `${bookingDetailsData.facilityName} (${bookingDetailsData.city || 'Location'})`
+      : 'Provider';
+
     const chatUser = {
       id: bookingDetailsData.userId?.toString() || 'unknown',
-      name: bookingDetailsData.facilityName || 'Provider',
+      name: providerNameWithLocation,
       avatar: bookingDetailsData.profileImg
         ? `${API_CONFIG.BASE_URL}${bookingDetailsData.profileImg}`
         : `https://ui-avatars.com/api/?name=${encodeURIComponent(bookingDetailsData.facilityName || 'Provider')}&background=58B9D0&color=fff`,
@@ -191,7 +196,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
             Boarding Details
           </Text>
           <Text style={serviceStyles.stickyHeaderSubtitle}>
-            {bookingDetailsData?.facilityName || 'Facility information'}
+            {bookingDetailsData?.facilityName ? `${bookingDetailsData.facilityName} (${bookingDetailsData.city || 'Location'})` : 'Facility information'}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -276,7 +281,9 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
                 marginBottom: 6,
                 lineHeight: 24,
               }} numberOfLines={1}>
-                {bookingDetailsData?.facilityName || 'John Orthon'}
+                {bookingDetailsData?.facilityName 
+                  ? `${bookingDetailsData.facilityName} (${bookingDetailsData.city || 'Location'})`
+                  : 'Boarding Provider'}
               </Text>
 
               {/* Rating */}
@@ -483,6 +490,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         setModalVisible={setModalVisible}
         boardingId={bookingDetailsData?.id}
         bordingUserId={bookingDetailsData?.userId}
+        preSelectedPets={routeParams?.selectedPets}
       />
     </View>
   );

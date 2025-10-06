@@ -107,11 +107,12 @@ type ModalComponentProps = {
     mode?: number;
     boardingId?: number;
     bordingUserId?: number;
+    preSelectedPets?: number[];
 };
 
 
 
-const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modalVisible,setModalVisible, mode, boardingId, bordingUserId}) => {
+const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modalVisible,setModalVisible, mode, boardingId, bordingUserId, preSelectedPets}) => {
    const navigation = useNavigation<BoardingModalScreenNavigationProp>();
     const [activeTab, setActiveTab] = useState<string>('NormalWalking');
     const [showDateModal, setShowDateModal] = useState<boolean>(false);
@@ -532,14 +533,24 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
     // Fetch pets and boarding services when modal opens
     useEffect(() => {
         if (modalVisible) {
-            // Reset selected pets when modal opens to ensure they start unchecked
-            setSelectedPets(new Set());
+            // If preSelectedPets are provided, use them and skip to date selection
+            if (preSelectedPets && preSelectedPets.length > 0) {
+                setSelectedPets(new Set(preSelectedPets));
+                // Close the main modal and show date modal immediately
+                setModalVisible(false);
+                setTimeout(() => {
+                    setShowDateModal(true);
+                }, 100); // Small delay for smooth transition
+            } else {
+                // Reset selected pets when modal opens to ensure they start unchecked
+                setSelectedPets(new Set());
+            }
             fetchPets();
             if (boardingId) {
                 fetchBoardingServices();
             }
         }
-    }, [modalVisible, boardingId]);
+    }, [modalVisible, boardingId, preSelectedPets]);
 
     // Fetch owner ID when component mounts
     useEffect(() => {
@@ -554,10 +565,11 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
 
     return (
         <View style={boardingmodalstyles.container}>
+            {/* Pet Selection Modal - Only show if no preSelectedPets */}
             <Modal
                 animationType="slide"
                 transparent={true}
-                visible={modalVisible}
+                visible={modalVisible && (!preSelectedPets || preSelectedPets.length === 0)}
                 onRequestClose={() => setModalVisible(false)}>
                 <View style={{
                     flex: 1,

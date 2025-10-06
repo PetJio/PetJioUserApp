@@ -21,17 +21,24 @@ type RootStackParamList = {
 type InSiteServiceProps = {
   navigation?: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
   mode?: number;
+  boardingResults?: any[];
+  selectedPets?: number[];
 };
 
-const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
+const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResults, navigation: navProp, selectedPets }) => {
   const [getCommercialData, setGetCommercialData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const navigation = useNavigation<any>();
+  const navigation = navProp || useNavigation<any>();
 
   useEffect(() => {
-    fetchCommercialDetails();
-  }, []);
+    if (boardingResults && boardingResults.length > 0) {
+      setGetCommercialData(boardingResults);
+      setLoading(false);
+    } else {
+      fetchCommercialDetails();
+    }
+  }, [boardingResults]);
 
   const fetchCommercialDetails = async () => {
     try {
@@ -125,7 +132,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
             <TouchableOpacity
               key={item?.id}
               onPress={() =>
-                navigation.navigate('BoardingDetails', { boardDetails: item, mode: mode || 10 })
+                navigation.navigate('BoardingDetails', { boardDetails: item, mode: mode || 10, selectedPets: selectedPets })
               }
             >
               <View
@@ -172,7 +179,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode }) => {
                         }}
                         numberOfLines={1}
                       >
-                        {item?.facilityName || 'Facility Name Not Available'}
+                        {item?.facilityName ? `${item.facilityName} (${item.city || 'Location'})` : 'Facility Name Not Available'}
                       </Text>
                       <View
                         style={{

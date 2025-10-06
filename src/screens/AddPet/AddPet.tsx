@@ -711,22 +711,26 @@ const AddPet: React.FC = () => {
       const selectedCategory = petCategories.find(c => c.id === category);
       const isExotic = selectedCategory?.catName?.toLowerCase() === 'exotic';
 
+      // Prepare pet data in the exact format required by API
       const petData = {
         petName: petName.trim(),
         dob: dob.trim(),
-        category: category, // Send category ID directly
-        size: size || '',
-        gender: gender,
-        breed: breed === 0 ? null : breed || null, // Send breed ID or null if "Other" or not selected
-        weight: weight.trim() ? parseFloat(weight) : null,
-        treats: treats.trim() || null,
+        category: category, // Category ID
+        size: size, // Size ID
         ownerId: ownerId,
         profileImg: selectedProfileImg || uploads.find(f => f.type === 'image')?.s3Url || '',
-        uploads: uploads.filter(f => f.s3Url).map(f => f.s3Url),
+        otherPetName: isExotic ? exoticType.trim() : (breed === 0 ? breedOthers.trim() : ''),
+        uploads: uploads.filter(f => f.s3Url).map(f => f.s3Url || ''),
+        gender: gender, // Gender ID
+        weight: weight.trim() ? parseFloat(weight) : null,
         dailyFeedCount: feedCount || null,
-        allergies: allergies.trim() || null,
-        disability: disability.trim() || null,
-        // otherBreedName: isExotic ? exoticType.trim() : (breed === 0 ? breedOthers.trim() : null) // Send exotic type or custom breed name
+        treats: treats.trim() || '',
+        breed: breed === 0 ? null : breed || null, // Breed ID or null
+        allergies: allergies.trim() || '',
+        disability: disability.trim() || '',
+        foodType: foodType ? parseInt(foodType) : null, // Food type ID
+        medicalHistory: medicalHistory.trim() || '',
+        favGames: favouriteGames.trim() || '',
       };
 
       const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile`;

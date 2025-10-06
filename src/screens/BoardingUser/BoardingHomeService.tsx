@@ -21,19 +21,28 @@ type RootStackParamList = {
 type InSiteServiceProps = {
   navigation: StackNavigationProp<RootStackParamList, 'BoardingDetails'>;
   mode?: number;
+  boardingResults?: any[];
+  selectedPets?: number[];
 };
 
 const BoardingHomeService: React.FC<InSiteServiceProps> = ({
   navigation,
   mode,
+  boardingResults,
+  selectedPets,
 }) => {
   const [getHomeSerData, setGetHomeSerData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    fetchHomeSerDetails();
-  }, []);
+    if (boardingResults && boardingResults.length > 0) {
+      setGetHomeSerData(boardingResults);
+      setLoading(false);
+    } else {
+      fetchHomeSerDetails();
+    }
+  }, [boardingResults]);
 
   const fetchHomeSerDetails = async () => {
     try {
@@ -137,6 +146,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({
                 navigation.navigate('BoardingDetails', {
                   boardDetails: item,
                   mode: mode,
+                  selectedPets: selectedPets,
                 })
               }
             >
@@ -185,7 +195,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({
                         }}
                         numberOfLines={1}
                       >
-                        {item?.facilityName || 'Facility Name Not Available'}
+                        {item?.facilityName ? `${item.facilityName} (${item.city || 'Location'})` : 'Facility Name Not Available'}
                       </Text>
                       <View
                         style={{

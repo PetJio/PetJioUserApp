@@ -408,10 +408,23 @@ const Home: React.FC = () => {
                             backgroundColor: '#58B9D0',
                             alignItems: 'center',
                             justifyContent: 'center',
+                            overflow: 'hidden',
                           },
                         ]}
                       >
-                        <MaterialIcons name="pets" size={24} color="#FFFFFF" />
+                        {item.profileImg ? (
+                          <Image
+                            source={{ uri: item.profileImg }}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              borderRadius: responsiveWidth(7.5),
+                            }}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <MaterialIcons name="pets" size={24} color="#FFFFFF" />
+                        )}
                       </View>
                       <Text style={styles.dogname}>{item.petName}</Text>
                     </View>
