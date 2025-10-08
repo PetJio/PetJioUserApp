@@ -29,27 +29,30 @@ const Mart: React.FC = () => {
         StatusBar.setBackgroundColor('#FFFFFF', true);
         StatusBar.setBarStyle('dark-content', true);
       }
-    }, [])
+    }, []),
   );
 
   const services = [
-    // { id: '1', name: 'Veterinary', image: images.serviceveterinaryImage },
-    // { id: '2', name: 'Grooming', image: images.GroomingService },
-    // { id: '3', name: 'Walking', image: images.Walking },
     { id: '4', name: 'Boarding', image: images.Boarding },
-    // { id: '5', name: 'ParaVet', image: images.ParaVet },
-    // { id: '6', name: 'Training', image: images.Training },
-    // { id: '7', name: 'NGO', image: images.NGOs },
+    { id: '1', name: 'Veterinary', image: images.serviceveterinaryImage },
+    { id: '2', name: 'Grooming', image: images.GroomingService },
+    { id: '3', name: 'Walking', image: images.Walking },
+    { id: '5', name: 'ParaVet', image: images.ParaVet },
+    { id: '6', name: 'Training', image: images.Training },
+    { id: '7', name: 'NGO', image: images.NGOs },
   ];
 
   const funcName = (type: { name: string }) => {
     // Navigate directly to BoardingUser instead of Boarding (Date and Time page)
     if (type.name === 'Boarding') {
-      naviagtion.navigate('BoardingUser' as never, {
-        selectedDate: new Date().toISOString().split('T')[0],
-        selectedTime: '10:00:00',
-        city: 'Bardhaman'
-      } as never);
+      naviagtion.navigate(
+        'BoardingUser' as never,
+        {
+          selectedDate: new Date().toISOString().split('T')[0],
+          selectedTime: '10:00:00',
+          city: 'Bardhaman',
+        } as never,
+      );
     } else {
       naviagtion.navigate(type.name as never);
     }
@@ -63,12 +66,14 @@ const Mart: React.FC = () => {
         translucent={false}
         animated={true}
       />
-      
+
       {/* Sticky Header */}
       <View style={styles.stickyHeader}>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.stickyHeaderTitle}>Services</Text>
-          <Text style={styles.stickyHeaderSubtitle}>Find the perfect care for your pet</Text>
+          <Text style={styles.stickyHeaderSubtitle}>
+            Find the perfect care for your pet
+          </Text>
         </View>
       </View>
 
@@ -80,68 +85,84 @@ const Mart: React.FC = () => {
           backgroundColor: '#F8F9FB',
         }}
       >
-
-      <View style={styles.searchContainer}>
-        <TextInput
-          mode="outlined"
-          placeholder="Search for services"
-          theme={{
-            roundness: 16,
-            colors: { primary: '#58B9D0', outline: '#E8E8E8' },
-          }}
-          style={styles.textInput}
-          contentStyle={styles.inputContent}
-          outlineStyle={styles.inputOutline}
-          left={
-            <TextInput.Icon
-              icon={() => (
-                <MaterialIcons name="search" size={20} color="#666" />
-              )}
-            />
-          }
-        />
-        <TouchableOpacity style={styles.filterButton}>
-          <MaterialIcons name="tune" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: responsiveHeight(10),
-          flexGrow: 1,
-        }}
-      >
-        <View style={styles.card}>
-          <View style={styles.cardindex}>
-            {services?.map((item, index) =>
-              index % 2 !== 0 ? (
-                <View key={index} />
-              ) : (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => funcName({ name: item.name })}
-                >
-                  <Image source={item.image} style={styles.image} />
-                </TouchableOpacity>
-              ),
-            )}
-          </View>
-          <View style={styles.cardindex}>
-            {services?.map((item, index) =>
-              index % 2 === 0 ? (
-                <View key={index} />
-              ) : (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => funcName({ name: item.name })}
-                >
-                  <Image source={item.image} style={styles.image} />
-                </TouchableOpacity>
-              ),
-            )}
-          </View>
+        <View style={styles.searchContainer}>
+          <TextInput
+            mode="outlined"
+            placeholder="Search for services"
+            theme={{
+              roundness: 16,
+              colors: { primary: '#58B9D0', outline: '#E8E8E8' },
+            }}
+            style={styles.textInput}
+            contentStyle={styles.inputContent}
+            outlineStyle={styles.inputOutline}
+            left={
+              <TextInput.Icon
+                icon={() => (
+                  <MaterialIcons name="search" size={20} color="#666" />
+                )}
+              />
+            }
+          />
+          <TouchableOpacity style={styles.filterButton}>
+            <MaterialIcons name="tune" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+          }}
+        >
+          <View style={styles.card}>
+            <View style={styles.cardindex}>
+              {services?.map((item, index) =>
+                index % 2 !== 0 ? (
+                  <View key={index} />
+                ) : (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => item.name === 'Boarding' ? funcName({ name: item.name }) : null}
+                    disabled={item.name !== 'Boarding'}
+                    activeOpacity={item.name === 'Boarding' ? 0.7 : 1}
+                  >
+                    <View style={styles.serviceImageContainer}>
+                      <Image source={item.image} style={styles.image} />
+                      {item.name !== 'Boarding' && (
+                        <View style={styles.comingSoonOverlay}>
+                          <Text style={styles.comingSoonText}>Coming Soon</Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ),
+              )}
+            </View>
+            <View style={styles.cardindex}>
+              {services?.map((item, index) =>
+                index % 2 === 0 ? (
+                  <View key={index} />
+                ) : (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => item.name === 'Boarding' ? funcName({ name: item.name }) : null}
+                    disabled={item.name !== 'Boarding'}
+                    activeOpacity={item.name === 'Boarding' ? 0.7 : 1}
+                  >
+                    <View style={styles.serviceImageContainer}>
+                      <Image source={item.image} style={styles.image} />
+                      {item.name !== 'Boarding' && (
+                        <View style={styles.comingSoonOverlay}>
+                          <Text style={styles.comingSoonText}>Coming Soon</Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ),
+              )}
+            </View>
+          </View>
+        </ScrollView>
       </View>
     </View>
   );

@@ -187,7 +187,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({
                     >
                       <Text
                         style={{
-                          fontSize: 18,
+                          fontSize: 15,
                           fontWeight: '700',
                           color: '#111827',
                           marginBottom: 4,
@@ -195,7 +195,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({
                         }}
                         numberOfLines={1}
                       >
-                        {item?.facilityName ? `${item.facilityName} (${item.city || 'Location'})` : 'Facility Name Not Available'}
+                        {item?.facilityName ? `Petjio Boarder (${item.city || 'Location'})` : 'Facility Name Not Available'}
                       </Text>
                       <View
                         style={{

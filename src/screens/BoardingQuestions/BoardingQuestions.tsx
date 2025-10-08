@@ -437,7 +437,7 @@ const BoardingQuestions: React.FC = () => {
           </View>
 
           {/* On-Site Doctor */}
-          <View style={boardingQuestionStyles.questionCard}>
+          {/* <View style={boardingQuestionStyles.questionCard}>
             <View style={boardingQuestionStyles.questionHeader}>
               <View style={boardingQuestionStyles.iconContainer}>
                 <MaterialIcons name="local-hospital" size={24} color="#58B9D0" />
@@ -491,10 +491,10 @@ const BoardingQuestions: React.FC = () => {
                 ]}>No</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
           {/* Swimming Pool */}
-          <View style={boardingQuestionStyles.questionCard}>
+          {/* <View style={boardingQuestionStyles.questionCard}>
             <View style={boardingQuestionStyles.questionHeader}>
               <View style={boardingQuestionStyles.iconContainer}>
                 <MaterialIcons name="pool" size={24} color="#58B9D0" />
@@ -548,7 +548,7 @@ const BoardingQuestions: React.FC = () => {
                 ]}>No</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
           {/* Walks Per Day */}
           <View style={boardingQuestionStyles.questionCard}>

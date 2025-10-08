@@ -196,10 +196,10 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
             Boarding Details
           </Text>
           <Text style={serviceStyles.stickyHeaderSubtitle}>
-            {bookingDetailsData?.facilityName ? `${bookingDetailsData.facilityName} (${bookingDetailsData.city || 'Location'})` : 'Facility information'}
+            {bookingDetailsData?.facilityName ? `Petjio Boarder (${bookingDetailsData.city || 'Location'})` : 'Facility information'}
           </Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+        {/* <View style={{ flexDirection: 'row', gap: 12 }}>
           <TouchableOpacity style={{
             width: 40,
             height: 40,
@@ -220,7 +220,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           }}>
             <MaterialIcons name="favorite-border" size={20} color="#E74C3C" />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
 
       
@@ -275,14 +275,14 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
             <View style={{ flex: 1 }}>
               {/* Facility Name */}
               <Text style={{
-                fontSize: 20,
+                fontSize: 17,
                 fontWeight: '700',
                 color: '#111827',
                 marginBottom: 6,
                 lineHeight: 24,
               }} numberOfLines={1}>
                 {bookingDetailsData?.facilityName 
-                  ? `${bookingDetailsData.facilityName} (${bookingDetailsData.city || 'Location'})`
+                  ? `Petjio Boarder (${bookingDetailsData.city || 'Location'})`
                   : 'Boarding Provider'}
               </Text>
 

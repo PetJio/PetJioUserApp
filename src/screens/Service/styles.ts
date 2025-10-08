@@ -107,6 +107,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  serviceImageContainer: {
+    position: 'relative',
+    width: responsiveWidth(44),
+    marginBottom: responsiveWidth(3),
+  },
+
+  comingSoonOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: responsiveWidth(2),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  comingSoonText: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: typography.fontWeight.bold,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
+
 
 });
 
