@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Image,
+  Dimensions,
+  Linking,
 } from 'react-native';
 import {
   responsiveWidth,
@@ -84,6 +87,15 @@ interface BookingHistoryItem {
   flowHistories: FlowHistory[];
 }
 
+interface BookingDay {
+  id: number;
+  date: string;
+  uploads: string[] | null;
+  uploadsWithUrls?: Array<{filename: string; url: string; isVideo: boolean;}>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface ViewDetailsProps {
   route: {
     params: {
@@ -100,6 +112,12 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [ownerId, setOwnerId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [bookingDays, setBookingDays] = useState<BookingDay[]>([]);
+  const [loadingDays, setLoadingDays] = useState<boolean>(false);
+
+  // Full screen media viewer states
+  const [showMediaViewer, setShowMediaViewer] = useState<boolean>(false);
+  const [selectedMedia, setSelectedMedia] = useState<{url: string; isVideo: boolean; filename: string} | null>(null);
 
   // Pet handover modal states
   const [showHandoverModal, setShowHandoverModal] = useState<boolean>(false);
@@ -114,6 +132,14 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Fetch booking days when component mounts
+  useEffect(() => {
+    if (currentBookingData?.bookingDetail?.id) {
+      console.log('📋 Fetching booking days for booking ID:', currentBookingData.bookingDetail.id);
+      fetchBookingDays(currentBookingData.bookingDetail.id);
+    }
+  }, [currentBookingData?.bookingDetail?.id]);
 
   // Helper functions from History.tsx
   const formatDate = (dateString: string) => {
@@ -243,6 +269,165 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         };
       default:
         return null;
+    }
+  };
+
+  // Function to get presigned URL for a file
+  const getPresignedUrl = async (filename: string, token: string): Promise<string> => {
+    try {
+      console.log(`🔗 Getting presigned URL for: ${filename}`);
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/aws-s3/get-presigned-url`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileName: filename }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Presigned URL response for ${filename}:`, data);
+
+        if (data.statusCode === 200 && data.body) {
+          console.log(`✅ Presigned URL obtained: ${data.body.substring(0, 50)}...`);
+          return data.body;
+        }
+      }
+
+      console.error(`❌ Failed to get presigned URL for ${filename}`);
+      // Return the direct S3 URL as fallback (though it may not work)
+      return `https://petjio-stage-bucket.s3.ap-south-1.amazonaws.com/${filename}`;
+    } catch (error) {
+      console.error(`🔥 Error getting presigned URL for ${filename}:`, error);
+      return `https://petjio-stage-bucket.s3.ap-south-1.amazonaws.com/${filename}`;
+    }
+  };
+
+  // Function to fetch booking days with photos/videos
+  const fetchBookingDays = async (bookingId: number) => {
+    try {
+      setLoadingDays(true);
+      console.log('🔄 Starting fetchBookingDays...');
+      console.log('📋 Booking ID:', bookingId);
+
+      const token = await getAuthToken();
+      console.log('🔑 Token retrieved:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
+
+      if (!token) {
+        console.error('❌ No authentication token found');
+        return;
+      }
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-days/booking/${bookingId}`;
+      console.log('🌐 API URL:', apiUrl);
+
+      // Generate CURL command for debugging
+      const curlCommand = `curl -X GET "${apiUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json" \\
+  -v`;
+
+      console.log('🔧 CURL command for booking days API:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      console.log('📡 Sending request to booking days API...');
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', response.headers);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Booking days raw response:', JSON.stringify(data, null, 2));
+        console.log('📊 Response statusCode:', data.statusCode);
+        console.log('📊 Response message:', data.message);
+        console.log('📊 Number of days in response:', data.body ? data.body.length : 0);
+
+        if (data.statusCode === 200 && data.body) {
+          console.log('📋 Raw booking days:', data.body);
+
+          // Filter out future days and days without uploads, then sort by date descending (newest first)
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+          console.log('📅 Today\'s date:', today);
+
+          const pastAndTodayDays = data.body
+            .filter((day: BookingDay) => {
+              const isPastOrToday = day.date <= today;
+              const hasUploads = day.uploads && day.uploads.length > 0;
+              console.log(`🔍 Day ${day.date}: isPastOrToday = ${isPastOrToday}, hasUploads = ${hasUploads}, uploads =`, day.uploads);
+              // Only include days that are past/today AND have uploads
+              return isPastOrToday && hasUploads;
+            })
+            .sort((a: BookingDay, b: BookingDay) =>
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+
+          console.log('✅ Filtered and sorted days:', pastAndTodayDays.length);
+          console.log('📊 Filtered days data:', JSON.stringify(pastAndTodayDays, null, 2));
+
+          // Process uploads - they already contain full S3 URLs
+          console.log('🔗 Processing uploads (full S3 URLs)...');
+          const daysWithUrls = pastAndTodayDays.map((day: BookingDay) => {
+            if (!day.uploads || day.uploads.length === 0) {
+              return day;
+            }
+
+            console.log(`📋 Processing day ${day.date} with ${day.uploads.length} uploads`);
+
+            const uploadsWithUrls = day.uploads.map((fileUrl) => {
+              // Check if it's a video based on file extension
+              const isVideo = fileUrl.toLowerCase().endsWith('.mp4') ||
+                             fileUrl.toLowerCase().endsWith('.mov') ||
+                             fileUrl.toLowerCase().endsWith('.avi');
+              
+              // Extract filename from URL for display
+              const filename = fileUrl.split('/').pop() || fileUrl;
+              
+              console.log(`  ✅ ${filename} (isVideo: ${isVideo})`);
+              console.log(`     URL: ${fileUrl.substring(0, 80)}...`);
+              
+              return { filename, url: fileUrl, isVideo };
+            });
+
+            return {
+              ...day,
+              uploadsWithUrls
+            };
+          });
+
+          console.log('✅ All uploads processed successfully');
+          setBookingDays(daysWithUrls);
+          console.log('✅ Booking days state updated successfully');
+        } else {
+          console.error('❌ Invalid response structure or non-200 statusCode');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch booking days');
+        console.error('❌ Status:', response.status);
+        console.error('❌ Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('🔥 Error fetching booking days:', error);
+      console.error('🔥 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+    } finally {
+      setLoadingDays(false);
+      console.log('✅ fetchBookingDays completed');
     }
   };
 
@@ -587,6 +772,158 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           </View>
         )}
 
+        {/* Daily Updates Section */}
+        <View style={historyStyles.detailsCard}>
+          <Text style={historyStyles.cardTitle}>Daily Updates</Text>
+          {loadingDays ? (
+            <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+              <ActivityIndicator size="large" color="#58B9D0" />
+              <Text style={{ marginTop: 12, color: '#666', fontSize: 14 }}>Loading updates...</Text>
+            </View>
+          ) : bookingDays.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingVertical: 30 }}>
+              <MaterialIcons name="photo-library" size={48} color="#CBD5E1" />
+              <Text style={{ marginTop: 12, fontSize: 14, fontWeight: '600', color: '#1F2937' }}>
+                No Updates Yet
+              </Text>
+              <Text style={{ marginTop: 6, fontSize: 13, color: '#6B7280', textAlign: 'center' }}>
+                Daily photos and videos will appear here{'\n'}
+                Check back later for updates from your boarder
+              </Text>
+            </View>
+          ) : (
+            <View style={{ marginTop: 12 }}>
+              {bookingDays.map((day, index) => {
+                const now = new Date();
+                const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+                const isToday = day.date === todayDate;
+
+                return (
+                  <View
+                    key={day.id}
+                    style={{
+                      marginBottom: 16,
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: isToday ? '#58B9D0' : '#E5E7EB',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* Date Header */}
+                    <View
+                      style={{
+                        backgroundColor: isToday ? '#58B9D0' : '#F8F9FB',
+                        paddingVertical: 10,
+                        paddingHorizontal: 14,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: '600',
+                          color: isToday ? '#FFFFFF' : '#1F2937',
+                        }}
+                      >
+                        {new Date(day.date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                        {isToday && ' (Today)'}
+                      </Text>
+                    </View>
+
+                    {/* Content */}
+                    <View style={{ padding: 12 }}>
+                      {/* Show message if this is today's update */}
+                      {isToday && day.uploadsWithUrls && day.uploadsWithUrls.length > 0 && (
+                        <View style={{
+                          backgroundColor: '#EFF6FF',
+                          borderRadius: 8,
+                          padding: 12,
+                          marginBottom: 12,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}>
+                          <MaterialIcons name="check-circle" size={20} color="#3B82F6" />
+                          <Text style={{
+                            marginLeft: 8,
+                            fontSize: 13,
+                            color: '#1E40AF',
+                            flex: 1,
+                          }}>
+                            New update uploaded today!
+                          </Text>
+                        </View>
+                      )}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          marginHorizontal: -4,
+                        }}
+                      >
+                        {day.uploadsWithUrls && day.uploadsWithUrls.map((upload, uploadIndex) => {
+                          return (
+                            <TouchableOpacity
+                              key={uploadIndex}
+                              style={{
+                                width: '48%',
+                                aspectRatio: 1,
+                                marginHorizontal: '1%',
+                                marginBottom: 8,
+                                borderRadius: 8,
+                                overflow: 'hidden',
+                                backgroundColor: '#F8F9FB',
+                              }}
+                              onPress={() => {
+                                setSelectedMedia(upload);
+                                setShowMediaViewer(true);
+                              }}
+                              activeOpacity={0.8}
+                            >
+                              {upload.isVideo ? (
+                                <View
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    backgroundColor: '#1F2937',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialIcons name="play-circle-filled" size={40} color="#FFFFFF" />
+                                  <Text
+                                    style={{
+                                      fontSize: 11,
+                                      color: '#FFFFFF',
+                                      marginTop: 6,
+                                    }}
+                                  >
+                                    VIDEO
+                                  </Text>
+                                </View>
+                              ) : (
+                                <Image
+                                  source={{ uri: upload.url }}
+                                  style={{ width: '100%', height: '100%' }}
+                                  resizeMode="cover"
+                                />
+                              )}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
         {/* Pets Summary */}
         <View style={historyStyles.detailsCard}>
           <Text style={historyStyles.cardTitle}>Pets</Text>
@@ -770,6 +1107,138 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* Full Screen Media Viewer Modal */}
+      <Modal
+        visible={showMediaViewer}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMediaViewer(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: '#000000',
+        }}>
+          {/* Close Button */}
+          <TouchableOpacity
+            onPress={() => setShowMediaViewer(false)}
+            style={{
+              position: 'absolute',
+              top: 50,
+              right: 20,
+              zIndex: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              borderRadius: 20,
+              width: 40,
+              height: 40,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <MaterialIcons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Media Content */}
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            {selectedMedia && (
+              selectedMedia.isVideo ? (
+                <View style={{
+                  width: '100%',
+                  height: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                  {/* Video Placeholder with Play Button */}
+                  <View style={{
+                    backgroundColor: '#1F2937',
+                    borderRadius: 16,
+                    padding: 40,
+                    alignItems: 'center',
+                  }}>
+                    <MaterialIcons name="play-circle-filled" size={80} color="#58B9D0" />
+                    <Text style={{
+                      color: '#FFFFFF',
+                      fontSize: 16,
+                      marginTop: 20,
+                      marginBottom: 30,
+                      textAlign: 'center',
+                    }}>
+                      Tap to open video in browser
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Linking.openURL(selectedMedia.url).catch(err =>
+                          Alert.alert('Error', 'Could not open video')
+                        );
+                      }}
+                      style={{
+                        backgroundColor: '#58B9D0',
+                        paddingVertical: 12,
+                        paddingHorizontal: 24,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{
+                        color: '#FFFFFF',
+                        fontSize: 16,
+                        fontWeight: '600',
+                      }}>
+                        Open Video
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <ScrollView
+                  maximumZoomScale={3}
+                  minimumZoomScale={1}
+                  showsHorizontalScrollIndicator={false}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Image
+                    source={{ uri: selectedMedia.url }}
+                    style={{
+                      width: Dimensions.get('window').width,
+                      height: Dimensions.get('window').height,
+                    }}
+                    resizeMode="contain"
+                  />
+                </ScrollView>
+              )
+            )}
+          </View>
+
+          {/* Filename/Info Footer */}
+          {selectedMedia && (
+            <View style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+            }}>
+              <Text style={{
+                color: '#FFFFFF',
+                fontSize: 14,
+                textAlign: 'center',
+              }} numberOfLines={1}>
+                {selectedMedia.filename}
+              </Text>
+            </View>
+          )}
         </View>
       </Modal>
     </View>

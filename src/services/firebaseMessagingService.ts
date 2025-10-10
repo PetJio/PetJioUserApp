@@ -170,6 +170,12 @@ export class FirebaseMessagingService {
         return false;
       }
     } catch (error) {
+      // Handle network errors gracefully - save token for later registration
+      if (error instanceof TypeError && error.message.includes('Network request failed')) {
+        console.warn('⚠️ Network unavailable - FCM token will be registered later');
+        await AsyncStorage.setItem('pending_fcm_token', fcmToken);
+        return false;
+      }
       console.error('Error registering device token:', error);
       return false;
     }
@@ -288,8 +294,7 @@ export class FirebaseMessagingService {
         console.log('Firebase messaging initialization complete');
         console.log('Device is now ready to receive push notifications!');
       } else {
-        console.error('Failed to register device token with backend');
-        console.error('Push notifications may not work properly');
+        console.warn('⚠️ FCM token registration pending - will retry when network is available');
       }
 
     } catch (error) {

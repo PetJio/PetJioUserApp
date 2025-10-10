@@ -19,7 +19,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import { storageService } from '../../utils/storage';
 import { API_CONFIG } from '../../config/api';
-import { navigate } from '../../utils/navigationService';
+import { navigate, reset } from '../../utils/navigationService';
 import { useFocusEffect } from '@react-navigation/native';
 import { PetSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
@@ -65,6 +65,19 @@ const Home: React.FC = () => {
   const [pets, setPets] = useState<PetProfile[]>([]);
   const [loadingPets, setLoadingPets] = useState<boolean>(true);
   const [petsError, setPetsError] = useState<string | null>(null);
+
+  // Logout handler for 401 errors
+  const handleUnauthorized = async () => {
+    try {
+      console.log('🚪 Unauthorized access detected - logging out user');
+      await storageService.logout();
+      reset('Login'); // Reset navigation stack to Login screen
+    } catch (error) {
+      console.error('❌ Error during logout:', error);
+      // Still navigate to login even if logout fails
+      reset('Login');
+    }
+  };
 
   // Force status bar to be white whenever Home screen is focused
   useFocusEffect(
@@ -142,6 +155,14 @@ const Home: React.FC = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ API Error Response:', errorText);
+        
+        // Check for 401 Unauthorized status
+        if (response.status === 401) {
+          console.log('🔒 401 Unauthorized - User session expired');
+          await handleUnauthorized();
+          return null;
+        }
+        
         return null;
       }
 
@@ -216,6 +237,14 @@ const Home: React.FC = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Pet Profiles API Error:', errorText);
+        
+        // Check for 401 Unauthorized status
+        if (response.status === 401) {
+          console.log('🔒 401 Unauthorized on Pet Profiles - User session expired');
+          await handleUnauthorized();
+          return;
+        }
+        
         throw new Error(
           `HTTP error! status: ${response.status}, message: ${errorText}`,
         );

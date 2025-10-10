@@ -21,13 +21,13 @@ import {
 import boardingdetailstyles from './boardingdetails.styles';
 import BoardingAbout from './BoardingAbout';
 import BoardingReview from './BoardingReview';
-import BoardingModal from '../BoardingModal/BoardingModal';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
 import boardinguserstyles from '../BoardingUser/boardinguser.styles';
 import serviceStyles from '../Service/styles';
 import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
+import { storageService } from '../../utils/storage';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
@@ -46,9 +46,9 @@ type RootStackParamList = {
   BoardingUser: { section: string };
   BoardingDetails: {
     providerId?: number;
-    selectedDate: string;
-    selectedTime: string;
-    city: string;
+    startDate?: string;
+    endDate?: string;
+    city?: string;
     boardDetails?: any;
     mode?: number;
     selectedPets?: number[];
@@ -85,6 +85,14 @@ interface BoardingDetailsProps {
   route: WalkingDetailsScreenRouteProp;
 }
 
+interface BookingDay {
+  id: number;
+  date: string;
+  uploads: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   navigation,
   route,
@@ -94,7 +102,11 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [bookingDetailsData, setBookingDetailsData] = useState<any>(null);
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [bookingDays, setBookingDays] = useState<BookingDay[]>([]);
+  const [loadingDays, setLoadingDays] = useState<boolean>(false);
+  const [pets, setPets] = useState<any[]>([]);
+  const [boardingServices, setBoardingServices] = useState<any[]>([]);
+  const [petOwnerId, setPetOwnerId] = useState<number | null>(null);
 
   const { height: screenHeight } = Dimensions.get('window');
 
@@ -102,16 +114,120 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   const routeParams = route?.params as any;
   const {
     providerId = 1,
-    selectedDate,
-    selectedTime,
+    startDate,
+    endDate,
     city,
     boardDetails,
+    mode,
+    selectedPets,
   } = routeParams || {
     providerId: 1,
-    selectedDate: new Date().toISOString().split('T')[0],
-    selectedTime: '10:00 AM',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
     city: 'Kolkata',
     boardDetails: null,
+    mode: 9,
+    selectedPets: [],
+  };
+
+  // Fetch booking days with photos/videos
+  const fetchBookingDays = async (bookingId: number) => {
+    try {
+      setLoadingDays(true);
+      console.log('🔄 Starting fetchBookingDays...');
+      console.log('📋 Booking ID:', bookingId);
+
+      const token = await storageService.getUserToken();
+      console.log('🔑 Token retrieved:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
+
+      if (!token) {
+        console.error('❌ No authentication token found');
+        return;
+      }
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-days/booking/123`;
+      console.log('🌐 API URL:', apiUrl);
+
+      // Generate CURL command for debugging
+      const curlCommand = `curl -X GET "${apiUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json" \\
+  -v`;
+
+      console.log('🔧 CURL command for booking days API:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      console.log('📡 Sending request to booking days API...');
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', response.headers);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Booking days raw response:', JSON.stringify(data, null, 2));
+        console.log('📊 Response statusCode:', data.statusCode);
+        console.log('📊 Response message:', data.message);
+        console.log('📊 Number of days in response:', data.body ? data.body.length : 0);
+
+        if (data.statusCode === 200 && data.body) {
+          console.log('📋 Raw booking days:', data.body);
+
+          // Filter out future days (days with null uploads) and sort by date descending (newest first)
+          const today = new Date().toISOString().split('T')[0];
+          console.log('📅 Today\'s date:', today);
+
+          const pastAndTodayDays = data.body
+            .filter((day: BookingDay) => {
+              const isPastOrToday = day.date <= today;
+              console.log(`🔍 Day ${day.date}: isPastOrToday = ${isPastOrToday}, hasUploads = ${!!day.uploads}`);
+              return isPastOrToday;
+            })
+            .sort((a: BookingDay, b: BookingDay) =>
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+
+          console.log('✅ Filtered and sorted days:', pastAndTodayDays.length);
+          pastAndTodayDays.forEach((day: BookingDay, index: number) => {
+            console.log(`  ${index + 1}. Date: ${day.date}, Uploads: ${day.uploads?.length || 0}`);
+            if (day.uploads) {
+              day.uploads.forEach((upload, uploadIndex) => {
+                const s3Url = `https://petjio-stage-bucket.s3.ap-south-1.amazonaws.com/${upload}`;
+                console.log(`     ${uploadIndex + 1}. ${upload} -> ${s3Url}`);
+              });
+            }
+          });
+
+          setBookingDays(pastAndTodayDays);
+          console.log('✅ Booking days state updated successfully');
+        } else {
+          console.error('❌ Invalid response structure or non-200 statusCode');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch booking days');
+        console.error('❌ Status:', response.status);
+        console.error('❌ Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('🔥 Error fetching booking days:', error);
+      console.error('🔥 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+    } finally {
+      setLoadingDays(false);
+      console.log('✅ fetchBookingDays completed');
+    }
   };
 
   useEffect(() => {
@@ -121,11 +237,97 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
     // fetchBoardingDetails();
     if (boardDetailsData) {
       setBookingDetailsData(boardDetailsData);
+
+      // Fetch boarding days if booking ID is available
+      if (boardDetailsData.id) {
+        fetchBookingDays(boardDetailsData.id);
+      }
+
+      // Fetch boarding services for this provider
+      if (boardDetailsData.boardingServices) {
+        setBoardingServices(boardDetailsData.boardingServices);
+      }
     }
+
+    // Fetch pets data
+    fetchPetsData();
   }, [route?.params]);
+
+  // Fetch pets data
+  const fetchPetsData = async () => {
+    try {
+      const token = await storageService.getUserToken();
+      if (!token) return;
+
+      // Fetch pet owner ID
+      const ownerResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (!ownerResponse.ok) return;
+      const ownerResult = await ownerResponse.json();
+      const ownerId = ownerResult.statusCode === 200 ? ownerResult.body.id : null;
+      
+      if (!ownerId) return;
+
+      // Save petOwnerId to state
+      setPetOwnerId(ownerId);
+      console.log('✅ BoardingDetails - Fetched petOwnerId:', ownerId);
+
+      // Fetch all pets for this owner
+      const petsResponse = await fetch(
+        `${API_CONFIG.BASE_URL}/api/pet-profile/owner/${ownerId}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (petsResponse.ok) {
+        const petsResult = await petsResponse.json();
+        if (petsResult.statusCode === 200) {
+          setPets(petsResult.body || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching pets data:', error);
+    }
+  };
 
   const handleTabPress = (tab: string, screen?: keyof RootStackParamList) => {
     setActiveTab(tab);
+  };
+
+  // Calculate serviceBookings based on selected pets and their sizes
+  const calculateServiceBookings = (): number[] => {
+    if (!selectedPets || selectedPets.length === 0) {
+      return [];
+    }
+
+    const serviceBookings: number[] = [];
+    
+    selectedPets.forEach(petId => {
+      const pet = pets.find(p => p.id === petId);
+      if (pet && boardingServices.length > 0) {
+        // Find service ID for this pet's size
+        const serviceForPet = boardingServices.find(
+          service => service.breed?.size?.toLowerCase() === pet.size?.size?.toLowerCase()
+        );
+        
+        if (serviceForPet) {
+          serviceBookings.push(serviceForPet.id);
+        } else {
+          // Fallback to mode if no matching service found
+          serviceBookings.push(mode || 9);
+        }
+      } else {
+        // Fallback to mode if pet or services not found
+        serviceBookings.push(mode || 9);
+      }
+    });
+
+    console.log('🎯 Calculated serviceBookings:', serviceBookings);
+    console.log('📊 Selected pets:', selectedPets);
+    console.log('📦 Boarding services:', boardingServices);
+    
+    return serviceBookings;
   };
 
   // Handle chat navigation
@@ -424,6 +626,25 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
               Reviews ({bookingDetailsData?.reviewCount || 0})
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('updates')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              alignItems: 'center',
+              backgroundColor: activeTab === 'updates' ? '#58B9D0' : 'transparent',
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: activeTab === 'updates' ? '#FFFFFF' : '#6B7280',
+            }}>
+              Updates
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Tab Content */}
@@ -436,6 +657,150 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
               rating={bookingDetailsData?.reviewAvg ? parseFloat(bookingDetailsData.reviewAvg) : 0}
               reviews={bookingDetailsData?.reviewCount || 0}
             />
+          )}
+          {activeTab === 'updates' && (
+            <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
+              {loadingDays ? (
+                <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                  <ActivityIndicator size="large" color="#58B9D0" />
+                  <Text style={{ marginTop: 12, color: '#666' }}>Loading updates...</Text>
+                </View>
+              ) : bookingDays.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 60 }}>
+                  <MaterialIcons name="photo-library" size={60} color="#CBD5E1" />
+                  <Text style={{ marginTop: 16, fontSize: 16, fontWeight: '600', color: '#1F2937' }}>
+                    No Updates Yet
+                  </Text>
+                  <Text style={{ marginTop: 8, fontSize: 14, color: '#6B7280', textAlign: 'center' }}>
+                    Daily photos and videos will appear here
+                  </Text>
+                </View>
+              ) : (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {bookingDays.map((day, index) => {
+                    const isToday = day.date === new Date().toISOString().split('T')[0];
+                    const hasUploads = day.uploads && day.uploads.length > 0;
+
+                    return (
+                      <View
+                        key={day.id}
+                        style={{
+                          marginBottom: 20,
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: isToday ? '#58B9D0' : '#E5E7EB',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {/* Date Header */}
+                        <View
+                          style={{
+                            backgroundColor: isToday ? '#58B9D0' : '#F8F9FB',
+                            paddingVertical: 12,
+                            paddingHorizontal: 16,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontWeight: '600',
+                              color: isToday ? '#FFFFFF' : '#1F2937',
+                            }}
+                          >
+                            {new Date(day.date).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                            {isToday && ' (Today)'}
+                          </Text>
+                        </View>
+
+                        {/* Content */}
+                        <View style={{ padding: 16 }}>
+                          {!hasUploads ? (
+                            <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                              <MaterialIcons name="photo-camera" size={40} color="#CBD5E1" />
+                              <Text style={{ marginTop: 12, fontSize: 14, color: '#6B7280' }}>
+                                No photos or videos for this day
+                              </Text>
+                            </View>
+                          ) : (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                flexWrap: 'wrap',
+                                marginHorizontal: -4,
+                              }}
+                            >
+                              {day.uploads!.map((fileUrl, uploadIndex) => {
+                                const isVideo = fileUrl.toLowerCase().endsWith('.mp4') ||
+                                               fileUrl.toLowerCase().endsWith('.mov') ||
+                                               fileUrl.toLowerCase().endsWith('.avi');
+                                
+                                console.log('📷 Rendering upload:', { fileUrl, isVideo });
+
+                                return (
+                                  <View
+                                    key={uploadIndex}
+                                    style={{
+                                      width: '48%',
+                                      aspectRatio: 1,
+                                      marginHorizontal: '1%',
+                                      marginBottom: 8,
+                                      borderRadius: 8,
+                                      overflow: 'hidden',
+                                      backgroundColor: '#F8F9FB',
+                                    }}
+                                  >
+                                    {isVideo ? (
+                                      <TouchableOpacity
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          backgroundColor: '#1F2937',
+                                          justifyContent: 'center',
+                                          alignItems: 'center',
+                                        }}
+                                        onPress={() => {
+                                          // Handle video playback
+                                          Alert.alert('Video', `Play: ${fileUrl}`, [
+                                            { text: 'OK' }
+                                          ]);
+                                        }}
+                                      >
+                                        <MaterialIcons name="play-circle-filled" size={48} color="#FFFFFF" />
+                                        <Text
+                                          style={{
+                                            fontSize: 12,
+                                            color: '#FFFFFF',
+                                            marginTop: 8,
+                                          }}
+                                        >
+                                          VIDEO
+                                        </Text>
+                                      </TouchableOpacity>
+                                    ) : (
+                                      <Image
+                                        source={{ uri: fileUrl }}
+                                        style={{ width: '100%', height: '100%' }}
+                                        resizeMode="cover"
+                                      />
+                                    )}
+                                  </View>
+                                );
+                              })}
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              )}
+            </View>
           )}
         </View>
         </ScrollView>
@@ -470,7 +835,33 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
               justifyContent: 'center',
               minHeight: 50,
             }}
-            onPress={() => setModalVisible(true)}
+            onPress={() => {
+              // Calculate serviceBookings based on selected pets
+              const serviceBookings = calculateServiceBookings();
+              
+              console.log('🚀 BoardingDetails - Navigating to BoardingQuestions with params:', {
+                startDate,
+                endDate,
+                mode: mode || 9,
+                boardingId: bookingDetailsData?.userId,
+                bordingUserId: bookingDetailsData?.userId,
+                selectedPets: selectedPets || [],
+                petOwnerId: petOwnerId,
+                serviceBookings: serviceBookings.length > 0 ? serviceBookings : [mode || 9],
+              });
+              
+              // Navigate directly to BoardingQuestions with the dates and pets
+              navigation.navigate('BoardingQuestions' as any, {
+                startDate,
+                endDate,
+                mode: mode || 9,
+                boardingId: bookingDetailsData?.userId,
+                bordingUserId: bookingDetailsData?.userId,
+                selectedPets: selectedPets || [],
+                petOwnerId: petOwnerId,
+                serviceBookings: serviceBookings.length > 0 ? serviceBookings : [mode || 9],
+              });
+            }}
           >
             <Text style={{
               fontSize: 16,
@@ -483,15 +874,6 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         </View>
         </View>
       </View>
-
-      {/* Boarding Modal */}
-      <BoardingModal
-        modalVisible={modalVisible}
-        setModalVisible={setModalVisible}
-        boardingId={bookingDetailsData?.id}
-        bordingUserId={bookingDetailsData?.userId}
-        preSelectedPets={routeParams?.selectedPets}
-      />
     </View>
   );
 };

@@ -23,9 +23,12 @@ type InSiteServiceProps = {
   mode?: number;
   boardingResults?: any[];
   selectedPets?: number[];
+  startDate?: string; // ISO datetime string
+  endDate?: string; // ISO datetime string
+  city?: string;
 };
 
-const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResults, navigation: navProp, selectedPets }) => {
+const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResults, navigation: navProp, selectedPets, startDate, endDate, city }) => {
   const [getCommercialData, setGetCommercialData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -132,7 +135,14 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
             <TouchableOpacity
               key={item?.id}
               onPress={() =>
-                navigation.navigate('BoardingDetails', { boardDetails: item, mode: mode || 10, selectedPets: selectedPets })
+                navigation.navigate('BoardingDetails', { 
+                  boardDetails: item, 
+                  mode: mode || 10, 
+                  selectedPets: selectedPets,
+                  startDate: startDate || '',
+                  endDate: endDate || '',
+                  city: city || ''
+                })
               }
             >
               <View

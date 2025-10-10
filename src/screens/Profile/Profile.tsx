@@ -121,6 +121,19 @@ const Profile: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+  // Logout handler for 401 errors
+  const handleUnauthorized = async () => {
+    try {
+      console.log('🚪 Unauthorized access detected - logging out user from Profile');
+      await storageService.logout();
+      reset('Login'); // Reset navigation stack to Login screen
+    } catch (error) {
+      console.error('❌ Error during logout:', error);
+      // Still navigate to login even if logout fails
+      reset('Login');
+    }
+  };
+
   const clearFieldError = (fieldName: keyof ValidationErrors) => {
     if (errors[fieldName]) {
       setErrors(prev => {
@@ -230,6 +243,14 @@ const Profile: React.FC = () => {
       } else {
         const errorText = await response.text();
         console.error('Profile API error:', response.status, errorText);
+        
+        // Check for 401 Unauthorized status
+        if (response.status === 401) {
+          console.log('🔒 401 Unauthorized - User session expired on Profile');
+          await handleUnauthorized();
+          return;
+        }
+        
         setMessage({
           type: 'error',
           text: `Failed to load profile: ${response.status}`,
@@ -270,6 +291,12 @@ const Profile: React.FC = () => {
       );
 
       if (!ownerResponse.ok) {
+        // Check for 401 Unauthorized status
+        if (ownerResponse.status === 401) {
+          console.log('🔒 401 Unauthorized on fetchPetProfiles - User session expired');
+          await handleUnauthorized();
+          return;
+        }
         setPetsError(true);
         return;
       }
@@ -305,6 +332,12 @@ const Profile: React.FC = () => {
           throw new Error(result.message || 'Failed to fetch pet profiles');
         }
       } else {
+        // Check for 401 Unauthorized status
+        if (response.status === 401) {
+          console.log('🔒 401 Unauthorized on pet profiles - User session expired');
+          await handleUnauthorized();
+          return;
+        }
         throw new Error('Failed to fetch pet profiles');
       }
     } catch (error) {

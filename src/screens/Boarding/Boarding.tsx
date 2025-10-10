@@ -27,8 +27,8 @@ type RootStackParamList = {
     HomeService: undefined;
     Main:undefined;
     BoardingUser: {
-        selectedDate: string;
-        selectedTime: string;
+        startDate: string;
+        endDate: string;
         city: string;
     };
 };
@@ -50,63 +50,27 @@ const Boarding: React.FC<LocalityProps> = ({ navigation }) => {
     const { formData } = useAppSelector((state) => state.boarding);
     const { selectedDate, fromTime, toTime, selectedCity } = formData;
 
-    // Local state for UI modals only
-    const [showFromPicker, setShowFromPicker] = useState<boolean>(false);
-    const [showToPicker, setShowToPicker] = useState<boolean>(false);
+    // Local state for start and end dates
+    const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState<string>('');
     const [showCityModal, setShowCityModal] = useState<boolean>(false);
 
-    const handleTimeChange = (
-        event: any,
-        selectedTime: Date | undefined,
-        type: 'from' | 'to',
-    ) => {
-        if (type === 'from') setShowFromPicker(false);
-        else setShowToPicker(false);
-
-        if (selectedTime) {
-            const formattedTime = selectedTime.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-            });
-            if (type === 'from') {
-                dispatch(setFromTime(formattedTime));
-            } else {
-                dispatch(setToTime(formattedTime));
-            }
-        }
-    };
-
-    // Function to convert time from 12-hour to 24-hour format for API
-    const convertTo24Hour = (time12h: string): string => {
-        if (time12h === 'From' || time12h === 'To') return '';
-
-        const [time, modifier] = time12h.split(' ');
-        let [hours, minutes] = time.split(':');
-
-        if (hours === '12') {
-            hours = '00';
-        }
-
-        if (modifier === 'PM') {
-            hours = (parseInt(hours, 10) + 12).toString();
-        }
-
-        return `${hours.padStart(2, '0')}:${minutes}:00`;
-    };
-
     const handleNext = () => {
-        if (!selectedDate || fromTime === 'From' || toTime === 'To') {
-            alert('Please select date, from time, and to time');
+        if (!startDate || !endDate) {
+            alert('Please select both start date and end date');
             return;
         }
 
-        // Format start time to 24-hour format for API (using fromTime as selectedTime)
-        const formattedFromTime = convertTo24Hour(fromTime);
+        // Validate end date is after start date
+        if (new Date(endDate) <= new Date(startDate)) {
+            alert('End date must be after start date');
+            return;
+        }
 
-        // Navigate to BoardingUser with parameters
+        // Navigate to BoardingUser with start and end dates
         navigation.navigate('BoardingUser', {
-            selectedDate,
-            selectedTime: formattedFromTime,
+            startDate,
+            endDate,
             city: selectedCity
         });
     };
@@ -187,7 +151,10 @@ const Boarding: React.FC<LocalityProps> = ({ navigation }) => {
                 <View style={boardingstyles.relative}>
                     <View>
                         <Text style={boardingstyles.selectDateText}>
-                            Select Date
+                            Select Boarding Period
+                        </Text>
+                        <Text style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', marginTop: 4 }}>
+                            Tap to select start date, then tap again for end date
                         </Text>
                     </View>
                 </View>
@@ -201,26 +168,44 @@ const Boarding: React.FC<LocalityProps> = ({ navigation }) => {
                             date?: DateData;
                             state?: string;
                         }) => {
-                            if (!date) return null; // Ensure date is defined
-                            const isSelected = selectedDate === date.dateString;
+                            if (!date) return null;
+                            const isStartDate = startDate === date.dateString;
+                            const isEndDate = endDate === date.dateString;
+                            const isInRange = startDate && endDate && 
+                                date.dateString > startDate && 
+                                date.dateString < endDate;
+                            
                             return (
                                 <TouchableOpacity
-                                    onPress={() =>
-                                        dispatch(setSelectedDate(date.dateString))
-                                    }
+                                    onPress={() => {
+                                        if (!startDate || (startDate && endDate)) {
+                                            // First selection or reset: set as start date
+                                            setStartDate(date.dateString);
+                                            setEndDate('');
+                                        } else if (date.dateString > startDate) {
+                                            // Second selection: set as end date if after start
+                                            setEndDate(date.dateString);
+                                        } else {
+                                            // If selected date is before start, reset and make it start
+                                            setStartDate(date.dateString);
+                                            setEndDate('');
+                                        }
+                                    }}
                                     style={{
-                                        height:responsiveHeight(6),
+                                        height: responsiveHeight(6),
                                         width: responsiveWidth(12),
-                                        borderRadius:responsiveWidth(1),
-                                        backgroundColor: isSelected
+                                        borderRadius: responsiveWidth(1),
+                                        backgroundColor: isStartDate || isEndDate
                                             ? '#58B9D0'
+                                            : isInRange
+                                            ? '#B3E5F4'
                                             : '#EFFCFF',
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                     }}>
                                     <Text
                                         style={{
-                                            color: isSelected
+                                            color: isStartDate || isEndDate
                                                 ? 'white'
                                                 : state === 'disabled'
                                                 ? '#d9e1e8'
@@ -233,105 +218,24 @@ const Boarding: React.FC<LocalityProps> = ({ navigation }) => {
                                 </TouchableOpacity>
                             );
                         }}
+                        minDate={new Date().toISOString().split('T')[0]}
                     />
                 </View>
 
-                <View style={boardingstyles.container}>
-                    <Text style={boardingstyles.label}>Select Time</Text>
-                    <View style={boardingstyles.row}>
-                        <TouchableOpacity
-                            onPress={() => setShowFromPicker(true)}
-                            style={boardingstyles.inputBox}>
-                            <TextInput
-                                value={fromTime}
-                                editable={false}
-                                mode="outlined"
-                                style={boardingstyles.textInput}
-                                left={
-                                    <TextInput.Icon
-                                        icon={() => (
-                                            <Image
-                                                source={Icons.ClockCircle}
-                                                style={{
-                                                    width:responsiveWidth(4.8),
-                                                    height:responsiveHeight(2.5),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                }
-                                right={<TextInput.Icon
-                                        icon={() => (
-                                            <Image
-                                                source={Icons.DownArrow}
-                                                style={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    tintColor:'#898989'
-                                                }}
-                                            />
-                                        )}
-                                         onPress={() => setShowFromPicker(true)}
-                                    />}
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={boardingstyles.inputBox}>
-                            <TextInput
-                                value={toTime}
-                                editable={false}
-                                mode="outlined"
-                                style={boardingstyles.textInput}
-                                left={
-                                    <TextInput.Icon
-                                        icon={() => (
-                                            <Image
-                                                source={Icons.ClockCircle}
-                                                style={{
-                                                    width:responsiveWidth(4.8),
-                                                    height:responsiveHeight(2.5),
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                }
-                                 right={<TextInput.Icon
-                                        icon={() => (
-                                            <Image
-                                                source={Icons.DownArrow}
-                                                style={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    tintColor:'#898989'
-                                                }}
-                                            />
-                                        )}
-                                          onPress={() => setShowToPicker(true)}
-                                    />}
-                            />
-                        </TouchableOpacity>
+                {/* Show selected dates */}
+                <View style={{ paddingHorizontal: responsiveWidth(5), marginTop: responsiveHeight(2), marginBottom: responsiveHeight(2) }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, backgroundColor: '#F8F9FB', padding: 12, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 14, color: '#6B7280', fontWeight: '500' }}>Start Date:</Text>
+                        <Text style={{ fontSize: 14, color: '#1A1D29', fontWeight: '600' }}>
+                            {startDate || 'Not selected'}
+                        </Text>
                     </View>
-
-                    {showFromPicker && (
-                        <DateTimePicker
-                            value={new Date()}
-                            mode="time"
-                            display="default"
-                            onChange={(event, time) =>
-                                handleTimeChange(event, time, 'from')
-                            }
-                        />
-                    )}
-                    {showToPicker && (
-                        <DateTimePicker
-                            value={new Date()}
-                            mode="time"
-                            display="default"
-                            onChange={(event, time) =>
-                                handleTimeChange(event, time, 'to')
-                            }
-                        />
-                    )}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#F8F9FB', padding: 12, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 14, color: '#6B7280', fontWeight: '500' }}>End Date:</Text>
+                        <Text style={{ fontSize: 14, color: '#1A1D29', fontWeight: '600' }}>
+                            {endDate || 'Not selected'}
+                        </Text>
+                    </View>
                 </View>
             </View>
 

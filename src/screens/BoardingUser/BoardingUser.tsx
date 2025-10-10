@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, Modal, FlatList, StatusBar, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, Modal, FlatList, StatusBar, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Calendar, DateData } from 'react-native-calendars';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import images from '../../../assets/images';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -52,7 +54,14 @@ type RootStackParamList = {
     CalendarSheet:undefined;
     TrainingLocalAddress:{section: string};
     Boarding:{section: string}
-    BoardingDetails:undefined
+    BoardingDetails: {
+        providerId?: number;
+        serviceId?: number;
+        startDate: string; // Now ISO datetime string: YYYY-MM-DDTHH:mm:ss.sssZ
+        endDate: string; // Now ISO datetime string: YYYY-MM-DDTHH:mm:ss.sssZ
+        city: string;
+        selectedPets?: number[];
+    }
 };
 
 // Define the navigation prop type
@@ -60,13 +69,20 @@ type UserDetailsScreenNavigationProp = StackNavigationProp<RootStackParamList, '
 
 // Define props interface for the component
 interface UserDetailsProps {
-    navigation: UserDetailsScreenNavigationProp; // Navigation is now required
+    navigation: UserDetailsScreenNavigationProp;
+    route?: {
+        params?: {
+            startDate?: string;
+            endDate?: string;
+            city?: string;
+        };
+    };
 }
 
-const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
+const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
     const [show, setShow] = useState<boolean>(false);
     const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
-    const [selectedCity, setSelectedCity] = useState<string>('Kolkata');
+    const [selectedCity, setSelectedCity] = useState<string>(route?.params?.city || 'Kolkata');
 
     // Pet selection state
     const [showPetModal, setShowPetModal] = useState<boolean>(true); // Open on mount
@@ -75,13 +91,27 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
     const [selectedPets, setSelectedPets] = useState<Set<number>>(new Set());
     const [petsError, setPetsError] = useState<string | null>(null);
 
+    // Date selection bottom sheet state
+    const [showDateSheet, setShowDateSheet] = useState<boolean>(false);
+
+    // Time picker states
+    const [startTime, setStartTime] = useState<Date>(new Date());
+    const [endTime, setEndTime] = useState<Date>(new Date());
+    const [showStartTimePicker, setShowStartTimePicker] = useState<boolean>(false);
+    const [showEndTimePicker, setShowEndTimePicker] = useState<boolean>(false);
+
     // Boarding results state
     const [boardingResults, setBoardingResults] = useState<any[]>([]);
     const [loadingResults, setLoadingResults] = useState<boolean>(false);
     const [resultsError, setResultsError] = useState<string | null>(null);
 
-    // Selected date (you can pass this from previous screen or use current date)
-    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    // Get dates from route params
+    const [startDate, setStartDate] = useState<string>(route?.params?.startDate || '');
+    const [endDate, setEndDate] = useState<string>(route?.params?.endDate || '');
+
+    // Combined datetime strings for passing to booking
+    const [startDateTime, setStartDateTime] = useState<string>('');
+    const [endDateTime, setEndDateTime] = useState<string>('');
 
     const indianCities = [
         'Mumbai',
@@ -232,13 +262,55 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
         });
     };
 
+    const handleStartTimeChange = (event: any, selectedTime?: Date) => {
+        setShowStartTimePicker(false);
+        if (selectedTime) {
+            setStartTime(selectedTime);
+        }
+    };
+
+    const handleEndTimeChange = (event: any, selectedTime?: Date) => {
+        setShowEndTimePicker(false);
+        if (selectedTime) {
+            setEndTime(selectedTime);
+        }
+    };
+
+    const formatTime = (date: Date) => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    };
+
+    const combineDateAndTime = (dateString: string, time: Date) => {
+        // Create ISO 8601 datetime string: YYYY-MM-DDTHH:mm:ss.sssZ
+        const datePart = dateString; // Already in YYYY-MM-DD format
+        const hours = time.getHours().toString().padStart(2, '0');
+        const minutes = time.getMinutes().toString().padStart(2, '0');
+        const seconds = '00';
+        
+        // Return in format: 2025-10-10T14:30:00.000Z
+        return `${datePart}T${hours}:${minutes}:${seconds}.000Z`;
+    };
+
     const searchBoardings = async () => {
         if (selectedPets.size === 0) {
             alert('Please select at least one pet');
             return;
         }
 
+        // Validate dates are present
+        if (!startDate || !endDate) {
+            console.log('📅 Missing dates, opening date selection sheet');
+            setShowPetModal(false);
+            setShowDateSheet(true);
+            return;
+        }
+
+        console.log('📅 Searching with dates:', { startDate, endDate, pets: Array.from(selectedPets) });
+
         setShowPetModal(false);
+        setShowDateSheet(false);
         setLoadingResults(true);
         setResultsError(null);
 
@@ -250,7 +322,7 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
             }
 
             const petIdsString = Array.from(selectedPets).join(',');
-            const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding/search-boardings?date=${selectedDate}&pets=${petIdsString}`;
+            const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding/search-boardings?startDate=${startDate}&endDate=${endDate}&pets=${petIdsString}`;
 
             console.log('🔍 Searching boardings:', apiUrl);
 
@@ -565,9 +637,25 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
             {/* Results */}
             {!loadingResults && boardingResults.length > 0 && (
                 show ? (
-                    <BoardingHomeService navigation={navigation} mode={9} boardingResults={boardingResults} selectedPets={Array.from(selectedPets)} />
+                    <BoardingHomeService 
+                        navigation={navigation} 
+                        mode={9} 
+                        boardingResults={boardingResults} 
+                        selectedPets={Array.from(selectedPets)}
+                        startDate={startDateTime || startDate}
+                        endDate={endDateTime || endDate}
+                        city={selectedCity}
+                    />
                 ) : (
-                    <CommercialService mode={10} boardingResults={boardingResults} navigation={navigation} selectedPets={Array.from(selectedPets)} />
+                    <CommercialService 
+                        mode={10} 
+                        boardingResults={boardingResults} 
+                        navigation={navigation} 
+                        selectedPets={Array.from(selectedPets)}
+                        startDate={startDateTime || startDate}
+                        endDate={endDateTime || endDate}
+                        city={selectedCity}
+                    />
                 )
             )}
 
@@ -656,6 +744,29 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
                                     color: '#6B7280',
                                     marginTop: 2,
                                 }}>Choose pets for boarding</Text>
+                                {/* Display selected boarding period */}
+                                {startDate && endDate && (
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        marginTop: 6,
+                                        backgroundColor: '#EFF6FF',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 4,
+                                        borderRadius: 6,
+                                        alignSelf: 'flex-start',
+                                    }}>
+                                        <MaterialIcons name="event" size={14} color="#3B82F6" />
+                                        <Text style={{
+                                            fontSize: 12,
+                                            color: '#3B82F6',
+                                            marginLeft: 4,
+                                            fontWeight: '500',
+                                        }}>
+                                            {startDate} to {endDate}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
@@ -949,6 +1060,339 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
                         )}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Date Selection Bottom Sheet Modal */}
+            <Modal
+                visible={showDateSheet}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowDateSheet(false)}
+            >
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    justifyContent: 'flex-end',
+                }}>
+                    <View style={{
+                        backgroundColor: '#FFFFFF',
+                        borderTopLeftRadius: 24,
+                        borderTopRightRadius: 24,
+                        maxHeight: '80%',
+                    }}>
+                        {/* Handle Bar */}
+                        <View style={{
+                            alignItems: 'center',
+                            paddingVertical: 12,
+                        }}>
+                            <View style={{
+                                width: 40,
+                                height: 4,
+                                backgroundColor: '#E5E7EB',
+                                borderRadius: 2,
+                            }} />
+                        </View>
+
+                        {/* Header */}
+                        <View style={{
+                            paddingHorizontal: 20,
+                            paddingBottom: 16,
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#F3F4F6',
+                        }}>
+                            <Text style={{
+                                fontSize: 20,
+                                fontWeight: '700',
+                                color: '#111827',
+                            }}>Select Boarding Dates</Text>
+                            <Text style={{
+                                fontSize: 13,
+                                color: '#6B7280',
+                                marginTop: 2,
+                            }}>Tap to select start date, then tap again for end date</Text>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {/* Calendar */}
+                            <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+                                <Calendar
+                                    current={new Date().toISOString().split('T')[0]}
+                                    minDate={new Date().toISOString().split('T')[0]}
+                                    dayComponent={({
+                                        date,
+                                        state,
+                                    }: {
+                                        date?: DateData;
+                                        state?: string;
+                                    }) => {
+                                        if (!date) return null;
+                                        const isStartDate = startDate === date.dateString;
+                                        const isEndDate = endDate === date.dateString;
+                                        const isInRange = startDate && endDate && 
+                                            date.dateString > startDate && 
+                                            date.dateString < endDate;
+                                        
+                                        const today = new Date().toISOString().split('T')[0];
+                                        const isPast = date.dateString < today;
+                                        
+                                        return (
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    if (isPast) return; // Don't allow past dates
+                                                    
+                                                    if (!startDate || (startDate && endDate)) {
+                                                        // First selection or reset: set as start date
+                                                        setStartDate(date.dateString);
+                                                        setEndDate('');
+                                                    } else if (date.dateString > startDate) {
+                                                        // Second selection: set as end date if after start
+                                                        setEndDate(date.dateString);
+                                                    } else {
+                                                        // If selected date is before start, reset and make it start
+                                                        setStartDate(date.dateString);
+                                                        setEndDate('');
+                                                    }
+                                                }}
+                                                disabled={isPast}
+                                                style={{
+                                                    height: 40,
+                                                    width: 40,
+                                                    borderRadius: 8,
+                                                    backgroundColor: isStartDate || isEndDate
+                                                        ? '#58B9D0'
+                                                        : isInRange
+                                                        ? '#B3E5F4'
+                                                        : isPast
+                                                        ? '#F9FAFB'
+                                                        : '#FFFFFF',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                }}>
+                                                <Text
+                                                    style={{
+                                                        color: isStartDate || isEndDate
+                                                            ? '#FFFFFF'
+                                                            : isInRange
+                                                            ? '#0891B2'
+                                                            : isPast
+                                                            ? '#D1D5DB'
+                                                            : state === 'disabled'
+                                                            ? 'gray'
+                                                            : '#374151',
+                                                        fontWeight: isStartDate || isEndDate ? '700' : '500',
+                                                        fontSize: 14,
+                                                    }}>
+                                                    {date.day}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    }}
+                                    theme={{
+                                        backgroundColor: '#FFFFFF',
+                                        calendarBackground: '#FFFFFF',
+                                        textSectionTitleColor: '#6B7280',
+                                        selectedDayBackgroundColor: '#58B9D0',
+                                        selectedDayTextColor: '#FFFFFF',
+                                        todayTextColor: '#58B9D0',
+                                        dayTextColor: '#374151',
+                                        textDisabledColor: '#D1D5DB',
+                                        monthTextColor: '#111827',
+                                        textMonthFontWeight: '700',
+                                        textDayFontSize: 14,
+                                        textMonthFontSize: 16,
+                                        textDayHeaderFontSize: 12,
+                                    }}
+                                />
+                            </View>
+
+                            {/* Date Display */}
+                            {(startDate || endDate) && (
+                                <View style={{
+                                    marginHorizontal: 20,
+                                    marginTop: 20,
+                                    padding: 16,
+                                    backgroundColor: '#F9FAFB',
+                                    borderRadius: 12,
+                                }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        color: '#374151',
+                                        marginBottom: 8,
+                                    }}>Selected Period:</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                        <Text style={{
+                                            fontSize: 16,
+                                            color: '#111827',
+                                            fontWeight: '600',
+                                        }}>
+                                            {startDate || 'Select start date'}
+                                        </Text>
+                                        <MaterialIcons name="arrow-forward" size={16} color="#6B7280" />
+                                        <Text style={{
+                                            fontSize: 16,
+                                            color: endDate ? '#111827' : '#9CA3AF',
+                                            fontWeight: '600',
+                                        }}>
+                                            {endDate || 'Select end date'}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+
+                            {/* Time Selection */}
+                            {startDate && endDate && (
+                                <View style={{
+                                    marginHorizontal: 20,
+                                    marginTop: 16,
+                                    marginBottom: 16,
+                                }}>
+                                    <Text style={{
+                                        fontSize: 16,
+                                        fontWeight: '600',
+                                        color: '#111827',
+                                        marginBottom: 12,
+                                    }}>Select Times</Text>
+
+                                    {/* Start Time */}
+                                    <View style={{ marginBottom: 12 }}>
+                                        <Text style={{
+                                            fontSize: 13,
+                                            color: '#6B7280',
+                                            marginBottom: 6,
+                                        }}>Start Time</Text>
+                                        <TouchableOpacity
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                padding: 14,
+                                                backgroundColor: '#FFFFFF',
+                                                borderRadius: 12,
+                                                borderWidth: 1,
+                                                borderColor: '#E5E7EB',
+                                            }}
+                                            onPress={() => setShowStartTimePicker(true)}
+                                        >
+                                            <MaterialIcons name="access-time" size={20} color="#58B9D0" />
+                                            <Text style={{
+                                                fontSize: 16,
+                                                color: '#111827',
+                                                marginLeft: 12,
+                                                fontWeight: '500',
+                                            }}>
+                                                {formatTime(startTime)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* End Time */}
+                                    <View>
+                                        <Text style={{
+                                            fontSize: 13,
+                                            color: '#6B7280',
+                                            marginBottom: 6,
+                                        }}>End Time</Text>
+                                        <TouchableOpacity
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                padding: 14,
+                                                backgroundColor: '#FFFFFF',
+                                                borderRadius: 12,
+                                                borderWidth: 1,
+                                                borderColor: '#E5E7EB',
+                                            }}
+                                            onPress={() => setShowEndTimePicker(true)}
+                                        >
+                                            <MaterialIcons name="access-time" size={20} color="#58B9D0" />
+                                            <Text style={{
+                                                fontSize: 16,
+                                                color: '#111827',
+                                                marginLeft: 12,
+                                                fontWeight: '500',
+                                            }}>
+                                                {formatTime(endTime)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        {/* Time Pickers */}
+                        {showStartTimePicker && (
+                            <DateTimePicker
+                                value={startTime}
+                                mode="time"
+                                is24Hour={true}
+                                display="default"
+                                onChange={handleStartTimeChange}
+                            />
+                        )}
+                        {showEndTimePicker && (
+                            <DateTimePicker
+                                value={endTime}
+                                mode="time"
+                                is24Hour={true}
+                                display="default"
+                                onChange={handleEndTimeChange}
+                            />
+                        )}
+
+                        {/* Action Button */}
+                        <View style={{
+                            paddingHorizontal: 20,
+                            paddingVertical: 16,
+                            borderTopWidth: 1,
+                            borderTopColor: '#F3F4F6',
+                            backgroundColor: '#FFFFFF',
+                        }}>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: startDate && endDate ? '#58B9D0' : '#D1D5DB',
+                                    paddingVertical: 16,
+                                    borderRadius: 12,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                                onPress={() => {
+                                    if (!startDate || !endDate) {
+                                        alert('Please select both start and end dates');
+                                        return;
+                                    }
+                                    if (new Date(endDate) <= new Date(startDate)) {
+                                        alert('End date must be after start date');
+                                        return;
+                                    }
+                                    // Combine dates and times into ISO datetime strings
+                                    const startISO = combineDateAndTime(startDate, startTime);
+                                    const endISO = combineDateAndTime(endDate, endTime);
+                                    
+                                    console.log('📅 Combined datetime strings:', { 
+                                        startDateTime: startISO, 
+                                        endDateTime: endISO 
+                                    });
+                                    
+                                    // Store the combined datetime strings
+                                    setStartDateTime(startISO);
+                                    setEndDateTime(endISO);
+                                    
+                                    // Close date sheet and trigger search
+                                    searchBoardings();
+                                }}
+                                disabled={!startDate || !endDate}
+                                activeOpacity={0.8}>
+                                <Text style={{
+                                    color: startDate && endDate ? '#FFFFFF' : '#9CA3AF',
+                                    fontWeight: '600',
+                                    fontSize: 16,
+                                }}>
+                                    Confirm Dates & Times
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>

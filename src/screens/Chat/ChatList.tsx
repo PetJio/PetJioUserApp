@@ -164,6 +164,37 @@ const ChatList: React.FC = () => {
     return null;
   };
 
+  // Function to fetch user profile from API and store it
+  const fetchUserProfile = async (token: string): Promise<void> => {
+    try {
+      console.log('🔍 Fetching user profile from API...');
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📄 Profile API response:', data);
+        const profile = data.user || data.body || data;
+
+        // Store the fetched profile data (which includes userId)
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(profile));
+        console.log('✅ User profile stored successfully with userId:', profile.userId);
+      } else {
+        console.error('❌ Profile API error:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user profile:', error);
+    }
+  };
+
   // Function to get current user data
   const getCurrentUser = async (): Promise<CurrentUser | null> => {
     try {
@@ -176,15 +207,18 @@ const ChatList: React.FC = () => {
       if (userData) {
         const user = JSON.parse(userData);
         console.log('✅ Parsed user data:', {
+          userId: user.userId,
           id: user.id,
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email
         });
 
-        if (user.id && user.firstName && user.lastName) {
+        // Use userId from pet-owner profile, fallback to id from auth
+        const userIdentifier = user.userId || user.id;
+        if (userIdentifier && user.firstName && user.lastName) {
           return {
-            id: user.id,
+            id: userIdentifier,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email
@@ -202,9 +236,10 @@ const ChatList: React.FC = () => {
           if (altData) {
             console.log(`🔍 Found user data in alternative key: ${key}`);
             const user = JSON.parse(altData);
-            if (user.id && user.firstName) {
+            const userIdentifier = user.userId || user.id;
+            if (userIdentifier && user.firstName) {
               return {
-                id: user.id,
+                id: userIdentifier,
                 firstName: user.firstName,
                 lastName: user.lastName || '',
                 email: user.email || ''
@@ -273,7 +308,10 @@ const ChatList: React.FC = () => {
         return;
       }
 
-      // Get current user data
+      // Fetch user profile from API to get userId
+      await fetchUserProfile(token);
+
+      // Get current user data (now with userId from profile)
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         setError('User data not found. Please login again.');

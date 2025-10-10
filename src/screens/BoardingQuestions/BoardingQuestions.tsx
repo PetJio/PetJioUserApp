@@ -20,10 +20,10 @@ type RootStackParamList = {
   BoardingSuccess: undefined;
   BoardingModal: undefined;
   BoardingQuestions: {
-    startTime?: string;
-    endTime?: string;
+    startDate?: string;
+    endDate?: string;
     mode?: number;
-    selectedPetIds?: number[];
+    selectedPets?: number[];
     petOwnerId?: number | null;
     boardingId?: number;
     serviceIds?: number[];
@@ -47,6 +47,7 @@ const BoardingQuestions: React.FC = () => {
   
   // New state for additional fields
   const [pets, setPets] = useState<any[]>([]);
+  const [fetchedPetOwnerId, setFetchedPetOwnerId] = useState<number | null>(null);
   const [foodType, setFoodType] = useState<number>(2); // Default to 2
   const [showFoodTypeDropdown, setShowFoodTypeDropdown] = useState<boolean>(false);
   const [onSiteDoc, setOnSiteDoc] = useState<boolean>(false);
@@ -64,43 +65,42 @@ const BoardingQuestions: React.FC = () => {
 
 
   // Get the dates, mode, and dynamic IDs from navigation params
-  const { startTime, endTime, mode, selectedPetIds, petOwnerId, boardingId, serviceIds, serviceBookings } = route.params || {};
+  const { startDate, endDate, mode, selectedPets, petOwnerId, boardingId, bordingUserId, serviceIds, serviceBookings } = route.params || {};
 
   // Fetch pets data on mount to get food type and other preferences
   React.useEffect(() => {
     // Log the received merged dates and dynamic IDs for debugging
     console.log('BoardingQuestions received params:', {
-      startTime,
-      endTime,
+      startDate,
+      endDate,
       mode,
-      selectedPetIds,
+      selectedPets,
       petOwnerId,
       boardingId,
+      bordingUserId,
       serviceIds,
       serviceBookings,
-      startTimeFormatted: startTime ? new Date(startTime).toLocaleString() : 'Not set',
-      endTimeFormatted: endTime ? new Date(endTime).toLocaleString() : 'Not set',
       serviceType: mode === 9 ? 'Home Service' : mode === 10 ? 'Commercial Service' : 'Unknown'
     });
 
     // Validate that serviceIds and serviceBookings have the same count
-    if (selectedPetIds && serviceBookings) {
+    if (selectedPets && serviceBookings) {
       console.log('🔍 Array count validation:');
-      console.log('selectedPetIds count:', selectedPetIds.length);
+      console.log('selectedPets count:', selectedPets.length);
       console.log('serviceBookings count:', serviceBookings.length);
-      console.log('Arrays match:', selectedPetIds.length === serviceBookings.length);
+      console.log('Arrays match:', selectedPets.length === serviceBookings.length);
       
       // Log the mapping
-      selectedPetIds.forEach((petId: number, index: number) => {
+      selectedPets.forEach((petId: number, index: number) => {
         console.log(`Pet ID ${petId} → Service Booking ${serviceBookings[index]}`);
       });
     }
-  }, [startTime, endTime, mode, selectedPetIds, petOwnerId, boardingId, serviceIds, serviceBookings]);
+  }, [startDate, endDate, mode, selectedPets, petOwnerId, boardingId, bordingUserId, serviceIds, serviceBookings]);
 
   // Fetch pets data on mount to get food type and other preferences
   React.useEffect(() => {
     const fetchPetsData = async () => {
-      if (!selectedPetIds || selectedPetIds.length === 0) return;
+      if (!selectedPets || selectedPets.length === 0) return;
       
       try {
         const token = await storageService.getUserToken();
@@ -117,6 +117,10 @@ const BoardingQuestions: React.FC = () => {
         
         if (!ownerId) return;
 
+        // Save petOwnerId to state
+        setFetchedPetOwnerId(ownerId);
+        console.log('✅ Fetched petOwnerId:', ownerId);
+
         // Fetch all pets for this owner
         const petsResponse = await fetch(
           `${API_CONFIG.BASE_URL}/api/pet-profile/owner/${ownerId}`,
@@ -130,7 +134,7 @@ const BoardingQuestions: React.FC = () => {
             setPets(allPets);
             
             // Filter selected pets
-            const selectedPetsData = allPets.filter((p: any) => selectedPetIds.includes(p.id));
+            const selectedPetsData = allPets.filter((p: any) => selectedPets.includes(p.id));
             
             // Auto-select food type from first selected pet (if available)
             if (selectedPetsData.length > 0 && selectedPetsData[0].foodType) {
@@ -146,7 +150,7 @@ const BoardingQuestions: React.FC = () => {
     };
 
     fetchPetsData();
-  }, [selectedPetIds]);
+  }, [selectedPets]);
 
   const [questions, setQuestions] = useState<Question[]>([
     {
@@ -219,27 +223,49 @@ const BoardingQuestions: React.FC = () => {
         return acc;
       }, {} as Record<number, boolean | null>);
 
+      // Convert ISO datetime to "YYYY-MM-DD HH:mm:ss" format
+      const formatDateTime = (isoString: string) => {
+        const date = new Date(isoString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      };
+
       const bookingData = {
-        startTime: startTime,
-        endTime: endTime,
+        startTime: formatDateTime(startDate),
+        endTime: formatDateTime(endDate),
         mode: mode,
-        petIds: selectedPetIds, // Changed from serviceBookings to petIds to match API spec
-        petOwnerId: petOwnerId,
+        petIds: selectedPets,
+        petOwnerId: fetchedPetOwnerId || petOwnerId,
         boardingId: boardingId,
         serviceIds: serviceBookings,
-        possessions: false, // Removed Question 2
-        foodType: 1, // Use auto-selected food type from pet profile
+        possessions: false,
+        foodType: 1,
         onSiteDoc: onSiteDoc,
         swimmingPool: swimmingPool,
         walksPerDay: walksPerDay,
         gromTrim: gromTrim,
-        // Keep backward compatibility with existing question mappings
         backUpFood: questionAnswers[1] ?? false,
         shaveAndTrimming: questionAnswers[3] ?? true,
         groomingBeforeDischarge: questionAnswers[4] ?? true,
       };
 
       console.log('📦 Booking data being sent to API:', bookingData);
+      console.log('📋 Parameter check:', {
+        startDate,
+        endDate,
+        mode,
+        selectedPets,
+        'petOwnerId (from params)': petOwnerId,
+        'fetchedPetOwnerId (from API)': fetchedPetOwnerId,
+        'petOwnerId (used)': fetchedPetOwnerId || petOwnerId,
+        boardingId,
+        serviceBookings,
+      });
       const token = await storageService.getUserToken();
 
       // Generate CURL command for debugging

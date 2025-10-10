@@ -162,14 +162,52 @@ const Chat: React.FC = () => {
     }, 200);
   }, [messages.length]);
 
+  // Fetch user profile from API to get userId
+  const fetchUserProfile = async (token: string): Promise<void> => {
+    try {
+      console.log('🔍 Fetching user profile from API...');
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const profile = data.user || data.body || data;
+
+        // Store the fetched profile data (which includes userId)
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(profile));
+        console.log('✅ User profile stored successfully with userId:', profile.userId);
+      } else {
+        console.error('❌ Profile API error:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user profile:', error);
+    }
+  };
+
   // Get current user ID
   const loadCurrentUser = async () => {
     try {
+      // First fetch the latest profile to ensure we have userId
+      const token = await getAuthToken();
+      if (token) {
+        await fetchUserProfile(token);
+      }
+
       const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
       if (userData) {
         const user = JSON.parse(userData);
-        setCurrentUserId(user.id);
-        console.log('👤 Current user ID:', user.id);
+        // Use userId from profile, fallback to id from auth
+        const userIdentifier = user.userId || user.id;
+        setCurrentUserId(userIdentifier);
+        console.log('👤 Current user ID:', userIdentifier);
       }
     } catch (error) {
       console.error('❌ Error loading current user:', error);

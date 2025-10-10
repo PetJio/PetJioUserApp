@@ -23,6 +23,9 @@ type InSiteServiceProps = {
   mode?: number;
   boardingResults?: any[];
   selectedPets?: number[];
+  startDate?: string; // ISO datetime string
+  endDate?: string; // ISO datetime string
+  city?: string;
 };
 
 const BoardingHomeService: React.FC<InSiteServiceProps> = ({
@@ -30,6 +33,9 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({
   mode,
   boardingResults,
   selectedPets,
+  startDate,
+  endDate,
+  city,
 }) => {
   const [getHomeSerData, setGetHomeSerData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -147,6 +153,9 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({
                   boardDetails: item,
                   mode: mode,
                   selectedPets: selectedPets,
+                  startDate: startDate || '',
+                  endDate: endDate || '',
+                  city: city || '',
                 })
               }
             >
