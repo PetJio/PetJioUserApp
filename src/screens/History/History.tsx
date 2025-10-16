@@ -190,7 +190,7 @@ const History: React.FC = () => {
         return;
       }
 
-      const apiUrl = `http://13.204.155.197/api/service-bookings/booking-details-by-owner/${userId}`;
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/pet-owner/${userId}`;
       console.log('🌐 Fetching booking history from:', apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -211,6 +211,7 @@ const History: React.FC = () => {
 
       const responseText = await response.text();
       console.log('📄 Booking History Raw Response length:', responseText.length);
+      console.log('📄 Booking History Raw Response (first 500 chars):', responseText.substring(0, 500));
 
       let result: ApiResponse;
       try {
@@ -219,20 +220,24 @@ const History: React.FC = () => {
           statusCode: result.statusCode,
           message: result.message,
           bookingCount: result.body ? result.body.length : 0,
+          fullResponse: result,
         });
       } catch (parseError) {
         console.error('❌ Booking History JSON Parse Error:', parseError);
+        console.error('📄 Raw response that failed to parse:', responseText);
         throw new Error(`Invalid JSON response`);
       }
 
-      if (result.statusCode === 200) {
+      // Handle both statusCode 200 and direct success responses
+      if (result.statusCode === 200 || (Array.isArray(result.body) && result.body.length >= 0)) {
         const bookingData = result.body || [];
         console.log('✅ Booking History Success - Data loaded:', bookingData.length, 'bookings');
+        console.log('📊 First booking (if exists):', bookingData[0]);
 
         // Sort bookings by start time in descending order (newest first)
         const sortedBookings = bookingData.sort((a, b) => {
-          const dateA = new Date(a.bookingDetail.startTime);
-          const dateB = new Date(b.bookingDetail.startTime);
+          const dateA = new Date(a.bookingDetail?.startTime || 0);
+          const dateB = new Date(b.bookingDetail?.startTime || 0);
           return dateB.getTime() - dateA.getTime();
         });
 
@@ -243,6 +248,7 @@ const History: React.FC = () => {
         }
       } else {
         console.error('❌ Booking History API returned non-200 status:', result.statusCode);
+        console.error('❌ Full response:', result);
         throw new Error(result.message || 'Failed to fetch booking history');
       }
     } catch (error) {
@@ -259,7 +265,7 @@ const History: React.FC = () => {
       const token = await getAuthToken();
       if (!token) return;
 
-      const response = await fetch('http://13.204.155.197/api/boarding-booking-flow-history-options', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history-options`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -407,7 +413,7 @@ const History: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://13.204.155.197/api/boarding-booking-flow-history', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

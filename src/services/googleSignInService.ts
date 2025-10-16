@@ -7,6 +7,7 @@ import {
 import { fetchWithErrorHandling, StandardApiResponse } from '../utils/apiErrorHandler';
 import { storageService } from '../utils/storage';
 import { STORAGE_KEYS } from '../constants';
+import { API_CONFIG } from '../config/api';
 
 export interface GoogleUserInfo {
   id: string;
@@ -151,13 +152,10 @@ class GoogleSignInService {
       console.log('🚀 Sending Google auth data to backend:', authData);
 
       const result: StandardApiResponse<any> = await fetchWithErrorHandling(
-        'http://13.204.155.197/api/auth/google',
+        `${API_CONFIG.BASE_URL}/auth/google`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
+          headers: API_CONFIG.HEADERS,
           body: JSON.stringify(authData)
         }
       );

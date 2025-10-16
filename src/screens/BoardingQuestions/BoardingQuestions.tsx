@@ -42,8 +42,6 @@ const BoardingQuestions: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
   
   // New state for additional fields
   const [pets, setPets] = useState<any[]>([]);
@@ -241,7 +239,7 @@ const BoardingQuestions: React.FC = () => {
         mode: mode,
         petIds: selectedPets,
         petOwnerId: fetchedPetOwnerId || petOwnerId,
-        boardingId: boardingId,
+        boardingId: bordingUserId, // Using bordingUserId (user ID of the boarder) instead of boardingId
         serviceIds: serviceBookings,
         possessions: false,
         foodType: 1,
@@ -263,7 +261,8 @@ const BoardingQuestions: React.FC = () => {
         'petOwnerId (from params)': petOwnerId,
         'fetchedPetOwnerId (from API)': fetchedPetOwnerId,
         'petOwnerId (used)': fetchedPetOwnerId || petOwnerId,
-        boardingId,
+        'boardingId (entity ID - NOT USED)': boardingId,
+        'bordingUserId (user ID - USED)': bordingUserId,
         serviceBookings,
       });
       const token = await storageService.getUserToken();
@@ -294,28 +293,37 @@ const BoardingQuestions: React.FC = () => {
       console.log('booking added success', result);
 
       if (result.statusCode === 201) {
-        // Success - navigate to success screen
-        navigation.navigate('BoardingSuccess');
+        // Success - extract booking ID and navigate to checkout
+        const bookingId = result.body?.id || result.body?.bookingDetailId;
+        console.log('✅ Booking created with ID:', bookingId);
+
+        // Navigate to checkout screen with booking details
+        navigation.navigate('BoardingCheckout', {
+          bookingId: bookingId,
+          bookingData: bookingData,
+          startDate: startDate,
+          endDate: endDate,
+          petOwnerId: fetchedPetOwnerId || petOwnerId,
+        });
       } else {
         // API returned error
-        setErrorMessage(result.message || 'Booking failed. Please try again.');
-        setShowErrorModal(true);
+        Alert.alert(
+          'Booking Failed',
+          result.message || 'Failed to create boarding service booking',
+          [{ text: 'Try Again', style: 'default' }]
+        );
       }
     } catch (error) {
       // Network or other error
       console.log('error', error);
-      setErrorMessage(
+      Alert.alert(
+        'Booking Failed',
         'Network error. Please check your connection and try again.',
+        [{ text: 'Try Again', style: 'default' }]
       );
-      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const closeErrorModal = () => {
-    setShowErrorModal(false);
-    setErrorMessage('');
   };
 
   return (
@@ -781,28 +789,6 @@ const BoardingQuestions: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Error Modal */}
-      {showErrorModal && (
-        <View style={boardingQuestionStyles.errorModalOverlay}>
-          <View style={boardingQuestionStyles.errorModalContainer}>
-            <Text style={boardingQuestionStyles.errorTitle}>
-              Booking Failed
-            </Text>
-            <Text style={boardingQuestionStyles.errorMessage}>
-              {errorMessage}
-            </Text>
-            <TouchableOpacity
-              style={boardingQuestionStyles.errorButton}
-              onPress={closeErrorModal}
-            >
-              <Text style={boardingQuestionStyles.errorButtonText}>
-                Try Again
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
     </View>
   );
 };

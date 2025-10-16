@@ -53,6 +53,26 @@ type RootStackParamList = {
     mode?: number;
     selectedPets?: number[];
   };
+  BoardingModal: {
+    boardingId: number;
+    startDate?: string;
+    endDate?: string;
+    mode?: number;
+    selectedPets?: number[];
+    serviceBookings?: number[];
+    petOwnerId?: number | null;
+    boardDetails?: any;
+  };
+  BoardingQuestions: {
+    startDate?: string;
+    endDate?: string;
+    mode?: number;
+    selectedPets?: number[];
+    petOwnerId?: number | null;
+    boardingId?: number;
+    serviceIds?: number[];
+    serviceBookings?: number[];
+  };
   BoardingReview: undefined;
   BoardingRegistrationform: undefined;
   Chat: {
@@ -328,6 +348,38 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
     console.log('📦 Boarding services:', boardingServices);
     
     return serviceBookings;
+  };
+
+  // Handle Book Now navigation - Navigate directly to BoardingQuestions
+  const handleBookNow = () => {
+    if (!bookingDetailsData) {
+      Alert.alert('Error', 'Service details not available');
+      return;
+    }
+
+    console.log('📅 Continue clicked with params:', {
+      boardingId: bookingDetailsData.id,
+      startDate,
+      endDate,
+      mode,
+      selectedPets,
+      petOwnerId,
+    });
+
+    // Calculate serviceBookings for the selected pets
+    const serviceBookings = calculateServiceBookings();
+
+    // Navigate directly to BoardingQuestions
+    navigation.navigate('BoardingQuestions', {
+      startDate,
+      endDate,
+      mode,
+      selectedPets: selectedPets || [],
+      petOwnerId,
+      boardingId: bookingDetailsData.id,
+      serviceIds: boardingServices.map(s => s.id),
+      serviceBookings,
+    });
   };
 
   // Handle chat navigation
@@ -627,24 +679,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => setActiveTab('updates')}
-            style={{
-              flex: 1,
-              paddingVertical: 12,
-              alignItems: 'center',
-              backgroundColor: activeTab === 'updates' ? '#58B9D0' : 'transparent',
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{
-              fontSize: 14,
-              fontWeight: '600',
-              color: activeTab === 'updates' ? '#FFFFFF' : '#6B7280',
-            }}>
-              Updates
-            </Text>
-          </TouchableOpacity>
+          {/* Updates tab removed - functionality moved to Booking Details page */}
         </View>
 
         {/* Tab Content */}
@@ -658,154 +693,13 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
               reviews={bookingDetailsData?.reviewCount || 0}
             />
           )}
-          {activeTab === 'updates' && (
-            <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
-              {loadingDays ? (
-                <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-                  <ActivityIndicator size="large" color="#58B9D0" />
-                  <Text style={{ marginTop: 12, color: '#666' }}>Loading updates...</Text>
-                </View>
-              ) : bookingDays.length === 0 ? (
-                <View style={{ alignItems: 'center', paddingVertical: 60 }}>
-                  <MaterialIcons name="photo-library" size={60} color="#CBD5E1" />
-                  <Text style={{ marginTop: 16, fontSize: 16, fontWeight: '600', color: '#1F2937' }}>
-                    No Updates Yet
-                  </Text>
-                  <Text style={{ marginTop: 8, fontSize: 14, color: '#6B7280', textAlign: 'center' }}>
-                    Daily photos and videos will appear here
-                  </Text>
-                </View>
-              ) : (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {bookingDays.map((day, index) => {
-                    const isToday = day.date === new Date().toISOString().split('T')[0];
-                    const hasUploads = day.uploads && day.uploads.length > 0;
-
-                    return (
-                      <View
-                        key={day.id}
-                        style={{
-                          marginBottom: 20,
-                          backgroundColor: '#FFFFFF',
-                          borderRadius: 12,
-                          borderWidth: 1,
-                          borderColor: isToday ? '#58B9D0' : '#E5E7EB',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {/* Date Header */}
-                        <View
-                          style={{
-                            backgroundColor: isToday ? '#58B9D0' : '#F8F9FB',
-                            paddingVertical: 12,
-                            paddingHorizontal: 16,
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontSize: 14,
-                              fontWeight: '600',
-                              color: isToday ? '#FFFFFF' : '#1F2937',
-                            }}
-                          >
-                            {new Date(day.date).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                            {isToday && ' (Today)'}
-                          </Text>
-                        </View>
-
-                        {/* Content */}
-                        <View style={{ padding: 16 }}>
-                          {!hasUploads ? (
-                            <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-                              <MaterialIcons name="photo-camera" size={40} color="#CBD5E1" />
-                              <Text style={{ marginTop: 12, fontSize: 14, color: '#6B7280' }}>
-                                No photos or videos for this day
-                              </Text>
-                            </View>
-                          ) : (
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                flexWrap: 'wrap',
-                                marginHorizontal: -4,
-                              }}
-                            >
-                              {day.uploads!.map((fileUrl, uploadIndex) => {
-                                const isVideo = fileUrl.toLowerCase().endsWith('.mp4') ||
-                                               fileUrl.toLowerCase().endsWith('.mov') ||
-                                               fileUrl.toLowerCase().endsWith('.avi');
-                                
-                                console.log('📷 Rendering upload:', { fileUrl, isVideo });
-
-                                return (
-                                  <View
-                                    key={uploadIndex}
-                                    style={{
-                                      width: '48%',
-                                      aspectRatio: 1,
-                                      marginHorizontal: '1%',
-                                      marginBottom: 8,
-                                      borderRadius: 8,
-                                      overflow: 'hidden',
-                                      backgroundColor: '#F8F9FB',
-                                    }}
-                                  >
-                                    {isVideo ? (
-                                      <TouchableOpacity
-                                        style={{
-                                          width: '100%',
-                                          height: '100%',
-                                          backgroundColor: '#1F2937',
-                                          justifyContent: 'center',
-                                          alignItems: 'center',
-                                        }}
-                                        onPress={() => {
-                                          // Handle video playback
-                                          Alert.alert('Video', `Play: ${fileUrl}`, [
-                                            { text: 'OK' }
-                                          ]);
-                                        }}
-                                      >
-                                        <MaterialIcons name="play-circle-filled" size={48} color="#FFFFFF" />
-                                        <Text
-                                          style={{
-                                            fontSize: 12,
-                                            color: '#FFFFFF',
-                                            marginTop: 8,
-                                          }}
-                                        >
-                                          VIDEO
-                                        </Text>
-                                      </TouchableOpacity>
-                                    ) : (
-                                      <Image
-                                        source={{ uri: fileUrl }}
-                                        style={{ width: '100%', height: '100%' }}
-                                        resizeMode="cover"
-                                      />
-                                    )}
-                                  </View>
-                                );
-                              })}
-                            </View>
-                          )}
-                        </View>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              )}
-            </View>
-          )}
+          {/* Updates tab removed — daily updates are available on the Booking Details page */}
         </View>
-        </ScrollView>
 
-        {/* Chat and Book Now Buttons - Fixed at bottom */}
+        </ScrollView>
+      </View>
+
+      {/* Bottom action area with Continue button */}
       <View style={{
         backgroundColor: '#FFFFFF',
         paddingHorizontal: responsiveWidth(4),
@@ -813,67 +707,28 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         paddingBottom: 20,
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
       }}>
-        <View style={{
-          flexDirection: 'row',
-          gap: 12,
-        }}>
-
-          {/* Book Now Button */}
-          <TouchableOpacity
-            style={{
-              flex: 2,
-              backgroundColor: '#58B9D0',
-              paddingVertical: 16,
-              borderRadius: 8,
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 50,
-            }}
-            onPress={() => {
-              // Calculate serviceBookings based on selected pets
-              const serviceBookings = calculateServiceBookings();
-              
-              console.log('🚀 BoardingDetails - Navigating to BoardingQuestions with params:', {
-                startDate,
-                endDate,
-                mode: mode || 9,
-                boardingId: bookingDetailsData?.userId,
-                bordingUserId: bookingDetailsData?.userId,
-                selectedPets: selectedPets || [],
-                petOwnerId: petOwnerId,
-                serviceBookings: serviceBookings.length > 0 ? serviceBookings : [mode || 9],
-              });
-              
-              // Navigate directly to BoardingQuestions with the dates and pets
-              navigation.navigate('BoardingQuestions' as any, {
-                startDate,
-                endDate,
-                mode: mode || 9,
-                boardingId: bookingDetailsData?.userId,
-                bordingUserId: bookingDetailsData?.userId,
-                selectedPets: selectedPets || [],
-                petOwnerId: petOwnerId,
-                serviceBookings: serviceBookings.length > 0 ? serviceBookings : [mode || 9],
-              });
-            }}
-          >
-            <Text style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#FFFFFF',
-            }}>
-              Book Now
-            </Text>
-          </TouchableOpacity>
-        </View>
-        </View>
+        {/* Continue Button */}
+        <TouchableOpacity
+          onPress={handleBookNow}
+          style={{
+            backgroundColor: '#58B9D0',
+            paddingVertical: 16,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text style={{
+            fontSize: 16,
+            fontWeight: '700',
+            color: '#FFFFFF',
+          }}>
+            Continue
+          </Text>
+        </TouchableOpacity>
       </View>
+
     </View>
   );
 };

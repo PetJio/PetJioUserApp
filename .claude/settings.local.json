@@ -48,7 +48,8 @@
       "Bash(dir:*)",
       "Bash(copy:*)",
       "Bash(timeout 15 adb logcat)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(.\\android\\gradlew.bat clean:*)"
     ],
     "deny": [],
     "ask": [],

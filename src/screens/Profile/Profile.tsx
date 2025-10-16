@@ -120,11 +120,14 @@ const Profile: React.FC = () => {
   const [petsError, setPetsError] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [deletingPetId, setDeletingPetId] = useState<number | null>(null);
 
   // Logout handler for 401 errors
   const handleUnauthorized = async () => {
     try {
-      console.log('🚪 Unauthorized access detected - logging out user from Profile');
+      console.log(
+        '🚪 Unauthorized access detected - logging out user from Profile',
+      );
       await storageService.logout();
       reset('Login'); // Reset navigation stack to Login screen
     } catch (error) {
@@ -176,22 +179,6 @@ const Profile: React.FC = () => {
       // First try to load user data from storage
       const userData = await storageService.getUserData();
 
-      if (userData) {
-        // console.log('Loading profile from storage:', userData);
-        // setPetOwner(userData);
-        // setFirstName(userData.firstName || '');
-        // setLastName(userData.lastName || '');
-        // setEmail(userData.email || '');
-        // setPhoneNumber(userData.phoneNumber || userData.mobile || '');
-        // setAlterNo(userData.alterNo || '');
-        // setAddress(userData.address || '');
-        // setCity(userData.city || '');
-        // setState(userData.state || '');
-        // setZipCode(userData.zipCode || userData.pinCode || '');
-        // return;
-      }
-
-      // If no user data in storage, try to fetch from API
       const token = await storageService.getUserToken();
 
       if (!token) {
@@ -205,8 +192,8 @@ const Profile: React.FC = () => {
 
       // Generate and log CURL command for debugging
       const curlCommand = `curl --location --request GET '${apiUrl}' \\
---header 'Content-Type: application/json' \\
---header 'Authorization: Bearer ${token}'`;
+            --header 'Content-Type: application/json' \\
+            --header 'Authorization: Bearer ${token}'`;
 
       console.log('🔧 CURL command for fetchUserProfile:');
       console.log('=====================================');
@@ -243,14 +230,14 @@ const Profile: React.FC = () => {
       } else {
         const errorText = await response.text();
         console.error('Profile API error:', response.status, errorText);
-        
+
         // Check for 401 Unauthorized status
         if (response.status === 401) {
           console.log('🔒 401 Unauthorized - User session expired on Profile');
           await handleUnauthorized();
           return;
         }
-        
+
         setMessage({
           type: 'error',
           text: `Failed to load profile: ${response.status}`,
@@ -293,7 +280,9 @@ const Profile: React.FC = () => {
       if (!ownerResponse.ok) {
         // Check for 401 Unauthorized status
         if (ownerResponse.status === 401) {
-          console.log('🔒 401 Unauthorized on fetchPetProfiles - User session expired');
+          console.log(
+            '🔒 401 Unauthorized on fetchPetProfiles - User session expired',
+          );
           await handleUnauthorized();
           return;
         }
@@ -334,7 +323,9 @@ const Profile: React.FC = () => {
       } else {
         // Check for 401 Unauthorized status
         if (response.status === 401) {
-          console.log('🔒 401 Unauthorized on pet profiles - User session expired');
+          console.log(
+            '🔒 401 Unauthorized on pet profiles - User session expired',
+          );
           await handleUnauthorized();
           return;
         }
@@ -348,7 +339,82 @@ const Profile: React.FC = () => {
     }
   };
 
-  
+  // Delete pet handler - calls same pet-profile endpoint with DELETE and pet id
+  const handleDeletePet = (petId: number) => {
+    Alert.alert(
+      'Delete Pet',
+      'Are you sure you want to delete this pet? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingPetId(petId);
+              const token = await storageService.getUserToken();
+              if (!token) {
+                setMessage({
+                  type: 'error',
+                  text: 'Authentication token not found',
+                });
+                setDeletingPetId(null);
+                return;
+              }
+
+              const resp = await fetch(
+                `${API_CONFIG.BASE_URL}/api/pet-profile/${petId}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+
+              if (resp.status === 401) {
+                await handleUnauthorized();
+                setDeletingPetId(null);
+                return;
+              }
+
+              if (resp.ok || resp.status === 204) {
+                // Try to parse response body if any
+                try {
+                  const body = await resp.json();
+                  console.log('Delete pet response:', body);
+                } catch (e) {
+                  // ignore JSON parse errors for empty body
+                }
+                setMessage({
+                  type: 'success',
+                  text: 'Pet deleted successfully',
+                });
+                // Refresh list
+                fetchPetProfiles();
+              } else {
+                const text = await resp.text();
+                console.error('Failed to delete pet:', resp.status, text);
+                setMessage({
+                  type: 'error',
+                  text: `Failed to delete pet: ${resp.status}`,
+                });
+              }
+            } catch (err: any) {
+              console.error('Error deleting pet:', err);
+              setMessage({
+                type: 'error',
+                text: `Failed to delete pet: ${err?.message || err}`,
+              });
+            } finally {
+              setDeletingPetId(null);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   // Helper function to generate curl command for debugging
   const generateCurlCommand = (url: string, token: string, data: any) => {
@@ -518,18 +584,7 @@ const Profile: React.FC = () => {
       }
 
       const updateData = {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        mobile: phoneNumber.trim(),
-        alterNo: alterNo.trim(),
-        address: address.trim(),
-        city: city.trim(),
-        state: state.trim(),
-        pinCode: zipCode.trim(),
-        profileImg: petOwner.profileImg || '',
-        lat: petOwner.lat || 0,
-        lng: petOwner.lng || 0,
+        email: firstName.trim(),
       };
 
       const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/update-profile`;
@@ -751,18 +806,20 @@ const Profile: React.FC = () => {
         }}
       >
         {/* Profile Info Card - Centered Layout */}
-        <View style={{
-          backgroundColor: '#FFFFFF',
-          paddingVertical: responsiveHeight(2.5),
-          paddingHorizontal: responsiveWidth(5),
-          alignItems: 'center',
-          gap: 12,
-          marginHorizontal: 16,
-          marginBottom: responsiveHeight(2),
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: '#E5E7EB',
-        }}>
+        <View
+          style={{
+            backgroundColor: '#FFFFFF',
+            paddingVertical: responsiveHeight(2.5),
+            paddingHorizontal: responsiveWidth(5),
+            alignItems: 'center',
+            gap: 12,
+            marginHorizontal: 16,
+            marginBottom: responsiveHeight(2),
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+          }}
+        >
           {/* Profile Photo */}
           <TouchableOpacity
             onPress={pickImage}
@@ -781,88 +838,102 @@ const Profile: React.FC = () => {
                   }}
                 />
               ) : (
-                <View style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  backgroundColor: '#F8F9FB',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+                <View
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    backgroundColor: '#F8F9FB',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <MaterialIcons name="person" size={40} color="#CCCCCC" />
                 </View>
               )}
 
               {isUploading && (
-                <View style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  borderRadius: 40,
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    borderRadius: 40,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 </View>
               )}
 
               {/* Camera Icon */}
-              <View style={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                backgroundColor: '#58B9D0',
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: '#FFFFFF',
-              }}>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: '#58B9D0',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 2,
+                  borderColor: '#FFFFFF',
+                }}
+              >
                 <MaterialIcons name="camera-alt" size={14} color="#FFFFFF" />
               </View>
             </View>
           </TouchableOpacity>
 
           {/* Profile Name */}
-          <Text style={{
-            fontSize: 20,
-            fontWeight: '600',
-            color: '#1F2937',
-            textAlign: 'center',
-          }}>
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: '600',
+              color: '#1F2937',
+              textAlign: 'center',
+            }}
+          >
             {`${petOwner.firstName} ${petOwner.lastName}` || 'User Name'}
           </Text>
 
           {/* Email */}
-          <Text style={{
-            fontSize: 14,
-            color: '#6B7280',
-            textAlign: 'center',
-          }}>
+          <Text
+            style={{
+              fontSize: 14,
+              color: '#6B7280',
+              textAlign: 'center',
+            }}
+          >
             {petOwner.email}
           </Text>
 
           {/* Verified Badge */}
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 6,
-            backgroundColor: '#F0FDF4',
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 12,
-          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: '#F0FDF4',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 12,
+            }}
+          >
             <MaterialIcons name="verified" size={16} color="#4CAF50" />
-            <Text style={{
-              fontSize: 14,
-              color: '#16A34A',
-              fontWeight: '500',
-            }}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: '#16A34A',
+                fontWeight: '500',
+              }}
+            >
               Verified
             </Text>
           </View>
@@ -918,23 +989,29 @@ const Profile: React.FC = () => {
         {/* User Profile Tab Content */}
         {activeTab === 'user' && (
           <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginBottom: responsiveHeight(2),
-            }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: responsiveHeight(2),
+              }}
+            >
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+              >
                 <MaterialIcons
                   name="person-outline"
                   size={24}
                   color="#58B9D0"
                   style={{ marginRight: 10 }}
                 />
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: '600',
-                  color: '#1F2937',
-                }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '600',
+                    color: '#1F2937',
+                  }}
+                >
                   Personal Information
                 </Text>
               </View>
@@ -952,7 +1029,13 @@ const Profile: React.FC = () => {
                   onPress={() => setIsEditingProfile(true)}
                 >
                   <MaterialIcons name="edit" size={16} color="#FFFFFF" />
-                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontSize: 14,
+                      fontWeight: '600',
+                    }}
+                  >
                     Edit
                   </Text>
                 </TouchableOpacity>
@@ -1123,22 +1206,26 @@ const Profile: React.FC = () => {
         {/* Address Section */}
         {activeTab === 'user' && (
           <View style={[profileStyles.sectionCard, { marginHorizontal: 16 }]}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginBottom: responsiveHeight(2),
-            }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: responsiveHeight(2),
+              }}
+            >
               <MaterialIcons
                 name="location-on"
                 size={24}
                 color="#58B9D0"
                 style={{ marginRight: 10 }}
               />
-              <Text style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: '#1F2937',
-              }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '600',
+                  color: '#1F2937',
+                }}
+              >
                 Address Information
               </Text>
             </View>
@@ -1416,12 +1503,12 @@ const Profile: React.FC = () => {
                   <TouchableOpacity
                     key={pet.id || index}
                     onPress={() => navigate('EditPet', { pet })}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
                   >
                     <View
                       style={{
                         backgroundColor: '#FFFFFF',
-                        borderRadius: 16,
+                        borderRadius: 12,
                         borderWidth: 1,
                         borderColor: '#E5E7EB',
                         overflow: 'hidden',
@@ -1429,30 +1516,28 @@ const Profile: React.FC = () => {
                     >
                       <View
                         style={{
-                          padding: responsiveWidth(4),
+                          paddingVertical: responsiveHeight(1.2),
+                          paddingHorizontal: responsiveWidth(3),
                           flexDirection: 'row',
                           alignItems: 'center',
                         }}
                       >
-                        {/* Pet Avatar with Image */}
+                        {/* Compact Avatar */}
                         <View
                           style={{
-                            width: 72,
-                            height: 72,
-                            borderRadius: 36,
-                            marginRight: responsiveWidth(3.5),
+                            width: 48,
+                            height: 48,
+                            borderRadius: 24,
+                            marginRight: responsiveWidth(3),
                             overflow: 'hidden',
-                            borderWidth: 2,
+                            borderWidth: 1,
                             borderColor: '#E5E7EB',
                           }}
                         >
                           {pet.profileImg ? (
                             <Image
                               source={{ uri: pet.profileImg }}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                              }}
+                              style={{ width: '100%', height: '100%' }}
                               resizeMode="cover"
                             />
                           ) : (
@@ -1460,12 +1545,16 @@ const Profile: React.FC = () => {
                               style={{
                                 width: '100%',
                                 height: '100%',
-                                backgroundColor: 'rgba(88, 185, 208, 0.1)',
+                                backgroundColor: 'rgba(88, 185, 208, 0.08)',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                               }}
                             >
-                              <MaterialIcons name="pets" size={36} color="#58B9D0" />
+                              <MaterialIcons
+                                name="pets"
+                                size={22}
+                                color="#58B9D0"
+                              />
                             </View>
                           )}
                         </View>
@@ -1473,77 +1562,63 @@ const Profile: React.FC = () => {
                         {/* Pet Info */}
                         <View style={{ flex: 1 }}>
                           <Text
+                            numberOfLines={1}
                             style={{
-                              fontSize: 18,
+                              fontSize: 15,
                               fontWeight: '700',
                               color: '#1F2937',
-                              marginBottom: 6,
                             }}
                           >
                             {pet.petName || 'Unnamed Pet'}
                           </Text>
 
-                          {/* Category and Size Row */}
                           <View
                             style={{
                               flexDirection: 'row',
-                              alignItems: 'center',
-                              gap: 12,
-                              marginBottom: 6,
+                              gap: 6,
+                              marginTop: 6,
+                              flexWrap: 'wrap',
                             }}
                           >
-                            {/* Category Badge */}
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: '#F0F9FF',
-                                paddingHorizontal: 8,
-                                paddingVertical: 4,
-                                borderRadius: 8,
-                                gap: 4,
-                              }}
-                            >
-                              <MaterialIcons
-                                name="pets"
-                                size={14}
-                                color="#0284C7"
-                              />
-                              <Text
+                            {pet.category?.catName && (
+                              <View
                                 style={{
-                                  fontSize: 13,
-                                  color: '#0284C7',
-                                  fontWeight: '600',
-                                  textTransform: 'capitalize',
+                                  backgroundColor: '#E0F2FE',
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 4,
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#BAE6FD',
                                 }}
                               >
-                                {pet.category?.catName || 'Unknown'}
-                              </Text>
-                            </View>
-
-                            {/* Size Badge */}
+                                <Text
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: '600',
+                                    color: '#0369A1',
+                                    textTransform: 'capitalize',
+                                  }}
+                                >
+                                  {pet.category.catName}
+                                </Text>
+                              </View>
+                            )}
                             {pet.size?.size && (
                               <View
                                 style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
                                   backgroundColor: '#F0FDF4',
-                                  paddingHorizontal: 8,
+                                  paddingHorizontal: 10,
                                   paddingVertical: 4,
-                                  borderRadius: 8,
-                                  gap: 4,
+                                  borderRadius: 12,
+                                  borderWidth: 1,
+                                  borderColor: '#BBF7D0',
                                 }}
                               >
-                                <MaterialIcons
-                                  name="straighten"
-                                  size={14}
-                                  color="#16A34A"
-                                />
                                 <Text
                                   style={{
-                                    fontSize: 13,
-                                    color: '#16A34A',
+                                    fontSize: 11,
                                     fontWeight: '600',
+                                    color: '#15803D',
                                     textTransform: 'capitalize',
                                   }}
                                 >
@@ -1552,48 +1627,56 @@ const Profile: React.FC = () => {
                               </View>
                             )}
                           </View>
-
-                          {/* Gender Row */}
-                          {pet.gender?.name && (
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 4,
-                              }}
-                            >
-                              <MaterialIcons
-                                name="wc"
-                                size={14}
-                                color="#9CA3AF"
-                              />
-                              <Text
-                                style={{
-                                  fontSize: 13,
-                                  color: '#6B7280',
-                                  textTransform: 'capitalize',
-                                }}
-                              >
-                                {pet.gender.name}
-                              </Text>
-                            </View>
-                          )}
                         </View>
 
-                        {/* Edit Button */}
-                        <TouchableOpacity
-                          onPress={() => navigate('EditPet', { pet })}
+                        {/* Actions: Edit + Delete */}
+                        <View
                           style={{
-                            backgroundColor: '#58B9D0',
-                            width: 40,
-                            height: 40,
-                            borderRadius: 20,
+                            flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'center',
+                            gap: 8,
                           }}
                         >
-                          <MaterialIcons name="edit" size={20} color="#FFFFFF" />
-                        </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => navigate('EditPet', { pet })}
+                            style={{
+                              backgroundColor: '#58B9D0',
+                              width: 36,
+                              height: 36,
+                              borderRadius: 18,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <MaterialIcons
+                              name="edit"
+                              size={18}
+                              color="#FFFFFF"
+                            />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => handleDeletePet(pet.id)}
+                            style={{
+                              backgroundColor: '#FEE2E2',
+                              width: 36,
+                              height: 36,
+                              borderRadius: 18,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {deletingPetId === pet.id ? (
+                              <ActivityIndicator size="small" color="#DC2626" />
+                            ) : (
+                              <MaterialIcons
+                                name="delete"
+                                size={18}
+                                color="#DC2626"
+                              />
+                            )}
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -1621,13 +1704,15 @@ const Profile: React.FC = () => {
 
         {/* Action Buttons - Conditional based on tab and edit mode */}
         {activeTab === 'user' && isEditingProfile && (
-          <View style={{
-            marginHorizontal: 16,
-            flexDirection: 'row',
-            gap: 12,
-            marginTop: responsiveHeight(2),
-            marginBottom: responsiveHeight(1),
-          }}>
+          <View
+            style={{
+              marginHorizontal: 16,
+              flexDirection: 'row',
+              gap: 12,
+              marginTop: responsiveHeight(2),
+              marginBottom: responsiveHeight(1),
+            }}
+          >
             {/* Save Button */}
             <TouchableOpacity
               onPress={() => {
@@ -1683,7 +1768,12 @@ const Profile: React.FC = () => {
               }}
               style={[
                 profileStyles.commonButton,
-                { flex: 1, backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#6B7280' },
+                {
+                  flex: 1,
+                  backgroundColor: 'transparent',
+                  borderWidth: 1.5,
+                  borderColor: '#6B7280',
+                },
               ]}
             >
               <MaterialIcons
@@ -1693,10 +1783,7 @@ const Profile: React.FC = () => {
                 style={profileStyles.commonButtonIcon}
               />
               <Text
-                style={[
-                  profileStyles.commonButtonText,
-                  { color: '#6B7280' },
-                ]}
+                style={[profileStyles.commonButtonText, { color: '#6B7280' }]}
               >
                 Cancel
               </Text>
@@ -1705,7 +1792,12 @@ const Profile: React.FC = () => {
         )}
 
         {/* Logout Button - Always visible */}
-        <View style={[profileStyles.actionButtonsContainer, { marginHorizontal: 16 }]}>
+        <View
+          style={[
+            profileStyles.actionButtonsContainer,
+            { marginHorizontal: 16 },
+          ]}
+        >
           <TouchableOpacity
             onPress={handleLogout}
             style={[

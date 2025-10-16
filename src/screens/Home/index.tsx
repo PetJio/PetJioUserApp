@@ -400,10 +400,12 @@ const Home: React.FC = () => {
       >
         <View style={styles.subcontainer}>
           {/* Pets Section - Reference Project Style */}
-          <View style={styles.doctoranddogimagecontainer}>
-            {loadingPets ? (
+          {loadingPets ? (
+            <View style={styles.doctoranddogimagecontainer}>
               <PetSkeleton />
-            ) : petsError ? (
+            </View>
+          ) : petsError ? (
+            <View style={styles.doctoranddogimagecontainer}>
               <View style={styles.errorContainer}>
                 <View style={styles.errorIconWrapper}>
                   <MaterialIcons name="pets" size={40} color="#58B9D0" />
@@ -421,55 +423,64 @@ const Home: React.FC = () => {
                   <Text style={styles.retryButtonText}>Retry</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
-              <>
-                {pets?.map(item => (
-                  <TouchableOpacity
-                    key={item?.id}
-                    onPress={() => navigate('EditPet', { pet: item })}
-                    activeOpacity={0.8}
-                  >
-                    <View>
-                      <View
-                        style={[
-                          styles.doctorcontainer,
-                          {
-                            backgroundColor: '#58B9D0',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                          },
-                        ]}
-                      >
-                        {item.profileImg ? (
-                          <Image
-                            source={{ uri: item.profileImg }}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              borderRadius: responsiveWidth(7.5),
-                            }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <MaterialIcons name="pets" size={24} color="#FFFFFF" />
-                        )}
-                      </View>
-                      <Text style={styles.dogname}>{item.petName}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: responsiveWidth(5),
+                paddingVertical: responsiveHeight(2),
+                gap: 16,
+              }}
+              style={{ flexGrow: 0 }}
+            >
+              {pets?.map(item => (
                 <TouchableOpacity
-                  style={styles.pluscontainer}
-                  onPress={() => navigate('AddPet')}
+                  key={item?.id}
+                  onPress={() => navigate('EditPet', { pet: item })}
                   activeOpacity={0.8}
                 >
-                  <Image source={Icons.BiPlus} />
+                  <View>
+                    <View
+                      style={[
+                        styles.doctorcontainer,
+                        {
+                          backgroundColor: '#58B9D0',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                        },
+                      ]}
+                    >
+                      {item.profileImg ? (
+                        <Image
+                          source={{ uri: item.profileImg }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: responsiveWidth(7.5),
+                          }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <MaterialIcons name="pets" size={24} color="#FFFFFF" />
+                      )}
+                    </View>
+                    <Text style={styles.dogname}>{item.petName}</Text>
+                  </View>
                 </TouchableOpacity>
-              </>
-            )}
-          </View>
+              ))}
+
+              <TouchableOpacity
+                style={styles.pluscontainer}
+                onPress={() => navigate('AddPet')}
+                activeOpacity={0.8}
+              >
+                <Image source={Icons.BiPlus} />
+              </TouchableOpacity>
+            </ScrollView>
+          )}
         </View>
 
         {/* Attractive empty state for appointments */}

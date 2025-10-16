@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View,Text,Image, FlatList,TouchableOpacity,Modal, Platform, TextInput, ActivityIndicator} from 'react-native';
+import { View,Text,Image, FlatList,TouchableOpacity,Modal, Platform, TextInput, ActivityIndicator, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -10,6 +10,7 @@ import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { PetSelectionSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 
 
@@ -128,6 +129,8 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
     const [showStartTimePicker, setShowStartTimePicker] = useState<boolean>(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState<boolean>(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState<boolean>(false);
+    const [showStartTimeDropdown, setShowStartTimeDropdown] = useState<boolean>(false);
+    const [showEndTimeDropdown, setShowEndTimeDropdown] = useState<boolean>(false);
 
     // Pet state
     const [pets, setPets] = useState<PetProfile[]>([]);
@@ -454,8 +457,8 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
             }
 
             console.log('🔍 Fetching boarding services for boardingId:', boardingId);
-            const apiUrl = `http://13.204.155.197/api/boarding-service/${boardingId}`;
-            
+            const apiUrl = `${API_CONFIG.BASE_URL}/boarding-service/${boardingId}`;
+
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -632,24 +635,9 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                         {/* Pet List Content */}
                         <View style={{ flex: 1, marginBottom: responsiveHeight(2) }}>
                             {(loadingPets || loadingServices) ? (
-                                <View style={{
-                                    flex: 1,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    paddingVertical: responsiveHeight(4)
-                                }}>
-                                    <ActivityIndicator size="large" color="#58B9D0" />
-                                    <Text style={{
-                                        marginTop: 16,
-                                        fontSize: 14,
-                                        color: '#666',
-                                        textAlign: 'center'
-                                    }}>
-                                        {loadingPets && loadingServices ? 'Loading pets and services...' :
-                                         loadingPets ? 'Loading your pets...' :
-                                         'Loading boarding services...'}
-                                    </Text>
-                                </View>
+                                <ScrollView showsVerticalScrollIndicator={false}>
+                                    <PetSelectionSkeleton />
+                                </ScrollView>
                             ) : (petsError || servicesError) ? (
                                 <View style={{
                                     flex: 1,
@@ -914,7 +902,7 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                             {/* Start Date and Time */}
                             <View>
                                 <Text style={boardingmodalstyles.dateLabel}>Start Date & Time</Text>
-                                <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                                <View style={{ flexDirection: 'row', gap: responsiveWidth(2), position: 'relative' }}>
                                     <TouchableOpacity
                                         style={[boardingmodalstyles.dateInput, { flex: 1 }]}
                                         onPress={() => setShowStartDatePicker(true)}>
@@ -925,19 +913,37 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[boardingmodalstyles.dateInput, { flex: 1 }]}
-                                        onPress={() => setShowStartTimePicker(true)}>
+                                        onPress={() => setShowStartTimeDropdown(true)}>
                                         <Text style={boardingmodalstyles.dateInputText}>
                                             {formatTime(startTime)}
                                         </Text>
                                         <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
                                     </TouchableOpacity>
                                 </View>
+                                {/* Inline Start Time Dropdown */}
+                                {showStartTimeDropdown && (
+                                    <View style={{ borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, marginTop: 8, maxHeight: responsiveHeight(25), backgroundColor: '#FFFFFF' }}>
+                                        <ScrollView>
+                                            {generateTimeSlots(6, 22, 30).map(slot => (
+                                                <TouchableOpacity key={slot} onPress={() => {
+                                                    const [h, m] = slot.split(':').map(s => parseInt(s, 10));
+                                                    const newTime = new Date(startTime);
+                                                    newTime.setHours(h, m, 0, 0);
+                                                    setStartTime(newTime);
+                                                    setShowStartTimeDropdown(false);
+                                                }} style={{ paddingVertical: 10, paddingHorizontal: 12 }}>
+                                                    <Text>{formatTimeString(slot)}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                )}
                             </View>
 
                             {/* End Date and Time */}
                             <View>
                                 <Text style={boardingmodalstyles.dateLabel}>End Date & Time</Text>
-                                <View style={{ flexDirection: 'row', gap: responsiveWidth(2) }}>
+                                <View style={{ flexDirection: 'row', gap: responsiveWidth(2), position: 'relative' }}>
                                     <TouchableOpacity
                                         style={[boardingmodalstyles.dateInput, { flex: 1 }]}
                                         onPress={() => setShowEndDatePicker(true)}>
@@ -948,13 +954,31 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[boardingmodalstyles.dateInput, { flex: 1 }]}
-                                        onPress={() => setShowEndTimePicker(true)}>
+                                        onPress={() => setShowEndTimeDropdown(true)}>
                                         <Text style={boardingmodalstyles.dateInputText}>
                                             {formatTime(endTime)}
                                         </Text>
                                         <Image source={Icons.DownArrow} style={boardingmodalstyles.dateInputIcon} />
                                     </TouchableOpacity>
                                 </View>
+                                {/* Inline End Time Dropdown */}
+                                {showEndTimeDropdown && (
+                                    <View style={{ borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, marginTop: 8, maxHeight: responsiveHeight(25), backgroundColor: '#FFFFFF' }}>
+                                        <ScrollView>
+                                            {generateTimeSlots(6, 22, 30).map(slot => (
+                                                <TouchableOpacity key={slot} onPress={() => {
+                                                    const [h, m] = slot.split(':').map(s => parseInt(s, 10));
+                                                    const newTime = new Date(endTime);
+                                                    newTime.setHours(h, m, 0, 0);
+                                                    setEndTime(newTime);
+                                                    setShowEndTimeDropdown(false);
+                                                }} style={{ paddingVertical: 10, paddingHorizontal: 12 }}>
+                                                    <Text>{formatTimeString(slot)}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                )}
                             </View>
                         </View>
 
@@ -1123,8 +1147,89 @@ const BoardingModal: React.FC<Omit<ModalComponentProps, 'navigation'>> = ({modal
                     )}
                 </>
             )}
+            {/* Start Time Dropdown (custom list) */}
+            <Modal
+                visible={showStartTimeDropdown}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowStartTimeDropdown(false)}
+            >
+                <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                    <View style={{ backgroundColor: 'white', padding: 16, borderTopLeftRadius: 12, borderTopRightRadius: 12, maxHeight: responsiveHeight(50) }}>
+                        <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 8 }}>Select Start Time</Text>
+                        <ScrollView>
+                            {generateTimeSlots(6, 22, 30).map((slot) => (
+                                <TouchableOpacity key={slot} onPress={() => {
+                                    const [h, m] = slot.split(':').map(s => parseInt(s, 10));
+                                    const newTime = new Date(startTime);
+                                    newTime.setHours(h, m, 0, 0);
+                                    setStartTime(newTime);
+                                    setShowStartTimeDropdown(false);
+                                }} style={{ paddingVertical: 12 }}>
+                                    <Text style={{ fontSize: 15 }}>{formatTimeString(slot)}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity onPress={() => setShowStartTimeDropdown(false)} style={{ marginTop: 10, alignSelf: 'flex-end' }}>
+                            <Text style={{ color: '#58B9D0', fontWeight: '600' }}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* End Time Dropdown (custom list) */}
+            <Modal
+                visible={showEndTimeDropdown}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowEndTimeDropdown(false)}
+            >
+                <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                    <View style={{ backgroundColor: 'white', padding: 16, borderTopLeftRadius: 12, borderTopRightRadius: 12, maxHeight: responsiveHeight(50) }}>
+                        <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 8 }}>Select End Time</Text>
+                        <ScrollView>
+                            {generateTimeSlots(6, 22, 30).map((slot) => (
+                                <TouchableOpacity key={slot} onPress={() => {
+                                    const [h, m] = slot.split(':').map(s => parseInt(s, 10));
+                                    const newTime = new Date(endTime);
+                                    newTime.setHours(h, m, 0, 0);
+                                    setEndTime(newTime);
+                                    setShowEndTimeDropdown(false);
+                                }} style={{ paddingVertical: 12 }}>
+                                    <Text style={{ fontSize: 15 }}>{formatTimeString(slot)}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity onPress={() => setShowEndTimeDropdown(false)} style={{ marginTop: 10, alignSelf: 'flex-end' }}>
+                            <Text style={{ color: '#58B9D0', fontWeight: '600' }}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
         </View>
     );
+};
+
+// Helper to generate time slots between startHour and endHour with given step minutes (e.g., 30)
+const generateTimeSlots = (startHour: number, endHour: number, stepMinutes: number) => {
+    const slots: string[] = [];
+    for (let h = startHour; h <= endHour; h++) {
+        for (let m = 0; m < 60; m += stepMinutes) {
+            const hh = String(h).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            slots.push(`${hh}:${mm}`);
+        }
+    }
+    return slots;
+};
+
+const formatTimeString = (slot: string) => {
+    const [hh, mm] = slot.split(':').map(s => parseInt(s, 10));
+    const date = new Date();
+    date.setHours(hh, mm, 0, 0);
+    // Format as 12-hour e.g., 6:00 AM
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 };
 
 export default BoardingModal;

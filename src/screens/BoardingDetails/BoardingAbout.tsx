@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   Modal,
   ScrollView,
   Dimensions,
-  Linking,
+  ActivityIndicator,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Video from 'react-native-video';
 import Icons from '../../../assets/icons';
 import boardingaboutstyles from './boardingabout.styles';
 
@@ -24,6 +25,9 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
     isVideo: boolean;
     filename: string;
   } | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const videoRef = useRef<any>(null);
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -37,20 +41,18 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
   console.log(serviceDetails, 'bordingUserIdbordingUserId');
 
   const handleMediaPress = (url: string) => {
-    const isVideo = url.toLowerCase().includes('.mp4') || 
+    const isVideo = url.toLowerCase().includes('.mp4') ||
                     url.toLowerCase().includes('.mov') ||
                     url.toLowerCase().includes('video');
-    
+
     const filename = url.split('/').pop() || 'media';
-    
+
     setSelectedMedia({ url, isVideo, filename });
     setShowMediaViewer(true);
-  };
-
-  const handleVideoPlay = (url: string) => {
-    Linking.openURL(url).catch(err => 
-      console.error('Error opening video:', err)
-    );
+    if (isVideo) {
+      setIsVideoLoading(true);
+      setPaused(false);
+    }
   };
   
   return (
@@ -88,22 +90,22 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
           <View style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            marginHorizontal: -4,
+            marginHorizontal: -3,
           }}>
             {serviceUploads.map((url: string, index: number) => {
-              const isVideo = url.toLowerCase().includes('.mp4') || 
+              const isVideo = url.toLowerCase().includes('.mp4') ||
                             url.toLowerCase().includes('.mov') ||
                             url.toLowerCase().includes('video');
-              
+
               return (
                 <TouchableOpacity
                   key={index}
                   style={{
-                    width: '48%',
+                    width: '31.33%',
                     aspectRatio: 1,
                     marginHorizontal: '1%',
                     marginBottom: 8,
-                    borderRadius: 12,
+                    borderRadius: 8,
                     overflow: 'hidden',
                     backgroundColor: '#F8F9FB',
                     borderWidth: 1,
@@ -121,12 +123,12 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
                         alignItems: 'center',
                       }}
                     >
-                      <MaterialIcons name="play-circle-filled" size={56} color="#58B9D0" />
+                      <MaterialIcons name="play-circle-filled" size={32} color="#58B9D0" />
                       <Text
                         style={{
-                          fontSize: 12,
+                          fontSize: 10,
                           color: '#FFFFFF',
-                          marginTop: 8,
+                          marginTop: 4,
                           fontWeight: '600',
                         }}
                       >
@@ -184,49 +186,87 @@ const BoardingAbout: React.FC<BoardingAboutProps> = ({ serviceDetails }) => {
           {selectedMedia && (
             <>
               {selectedMedia.isVideo ? (
-                <View style={{ alignItems: 'center' }}>
-                  <View
+                <View style={{ width: screenWidth, height: screenHeight * 0.4, justifyContent: 'center', alignItems: 'center' }}>
+                  {/* Video Player */}
+                  <Video
+                    ref={videoRef}
+                    source={{ uri: selectedMedia.url }}
                     style={{
-                      width: screenWidth * 0.8,
-                      height: screenWidth * 0.8,
-                      backgroundColor: '#1F2937',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    controls={true}
+                    resizeMode="contain"
+                    paused={paused}
+                    onLoadStart={() => setIsVideoLoading(true)}
+                    onLoad={() => setIsVideoLoading(false)}
+                    onError={(error) => {
+                      console.error('Video error:', error);
+                      setIsVideoLoading(false);
+                    }}
+                  />
+
+                  {/* Loading Indicator */}
+                  {isVideoLoading && (
+                    <View style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
                       justifyContent: 'center',
                       alignItems: 'center',
-                      borderRadius: 12,
-                    }}
-                  >
-                    <MaterialIcons name="play-circle-filled" size={80} color="#58B9D0" />
-                  </View>
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    }}>
+                      <ActivityIndicator size="large" color="#58B9D0" />
+                      <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Loading video...</Text>
+                    </View>
+                  )}
+
+                  {/* Play/Pause Button Overlay */}
                   <TouchableOpacity
                     style={{
-                      marginTop: 24,
-                      backgroundColor: '#58B9D0',
-                      paddingVertical: 12,
-                      paddingHorizontal: 32,
-                      borderRadius: 8,
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: [{ translateX: -30 }, { translateY: -30 }],
+                      width: 60,
+                      height: 60,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      borderRadius: 30,
                     }}
-                    onPress={() => handleVideoPlay(selectedMedia.url)}
+                    onPress={() => setPaused(!paused)}
                   >
+                    <MaterialIcons
+                      name={paused ? "play-arrow" : "pause"}
+                      size={40}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+
+                  {/* Filename */}
+                  <View style={{
+                    position: 'absolute',
+                    bottom: 20,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                  }}>
                     <Text
                       style={{
                         color: '#FFFFFF',
-                        fontSize: 16,
-                        fontWeight: '600',
+                        fontSize: 14,
+                        textAlign: 'center',
                       }}
+                      numberOfLines={1}
                     >
-                      Open Video
+                      {selectedMedia.filename}
                     </Text>
-                  </TouchableOpacity>
-                  <Text
-                    style={{
-                      color: '#FFFFFF',
-                      fontSize: 12,
-                      marginTop: 16,
-                      opacity: 0.7,
-                    }}
-                  >
-                    {selectedMedia.filename}
-                  </Text>
+                  </View>
                 </View>
               ) : (
                 <ScrollView

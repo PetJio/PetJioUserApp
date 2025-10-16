@@ -15,6 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import serviceStyles from '../Service/styles';
 import { API_CONFIG } from '../../config/api';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
+import { PetSelectionSkeleton, BoardingCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 // Pet interfaces
 interface PetCategory {
@@ -95,10 +96,12 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
     const [showDateSheet, setShowDateSheet] = useState<boolean>(false);
 
     // Time picker states
-    const [startTime, setStartTime] = useState<Date>(new Date());
-    const [endTime, setEndTime] = useState<Date>(new Date());
+    const [startTime, setStartTime] = useState<Date | null>(null);
+    const [endTime, setEndTime] = useState<Date | null>(null);
     const [showStartTimePicker, setShowStartTimePicker] = useState<boolean>(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState<boolean>(false);
+    const [showStartTimeDropdown, setShowStartTimeDropdown] = useState<boolean>(false);
+    const [showEndTimeDropdown, setShowEndTimeDropdown] = useState<boolean>(false);
 
     // Boarding results state
     const [boardingResults, setBoardingResults] = useState<any[]>([]);
@@ -276,19 +279,26 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
         }
     };
 
-    const formatTime = (date: Date) => {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
+    const formatTime = (date: Date | null) => {
+        if (!date) return 'Select Time';
+        // Format as 12-hour with AM/PM
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
     };
 
-    const combineDateAndTime = (dateString: string, time: Date) => {
+    const combineDateAndTime = (dateString: string, time: Date | null) => {
         // Create ISO 8601 datetime string: YYYY-MM-DDTHH:mm:ss.sssZ
         const datePart = dateString; // Already in YYYY-MM-DD format
-        const hours = time.getHours().toString().padStart(2, '0');
-        const minutes = time.getMinutes().toString().padStart(2, '0');
+
+        // Use provided time or default to 9:00 AM if not set
+        const timeToUse = time || new Date(2000, 0, 1, 9, 0, 0);
+        const hours = timeToUse.getHours().toString().padStart(2, '0');
+        const minutes = timeToUse.getMinutes().toString().padStart(2, '0');
         const seconds = '00';
-        
+
         // Return in format: 2025-10-10T14:30:00.000Z
         return `${datePart}T${hours}:${minutes}:${seconds}.000Z`;
     };
@@ -620,17 +630,10 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                 <View style={{
                     marginHorizontal: 20,
                     marginTop: 20,
-                    padding: 40,
-                    alignItems: 'center',
                 }}>
-                    <ActivityIndicator size="large" color="#58B9D0" />
-                    <Text style={{
-                        fontSize: 14,
-                        color: '#6B7280',
-                        marginTop: 16,
-                    }}>
-                        Searching for boardings...
-                    </Text>
+                    <BoardingCardSkeleton />
+                    <BoardingCardSkeleton />
+                    <BoardingCardSkeleton />
                 </View>
             )}
 
@@ -791,21 +794,13 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
 
                         {/* Pet List Content */}
                         {loadingPets ? (
-                            <View style={{
-                                flex: 1,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}>
-                                <ActivityIndicator size="large" color="#58B9D0" />
-                                <Text style={{
-                                    marginTop: 16,
-                                    fontSize: 14,
-                                    color: '#666',
-                                    textAlign: 'center'
-                                }}>
-                                    Loading your pets...
-                                </Text>
-                            </View>
+                            <ScrollView
+                                style={{ flex: 1 }}
+                                contentContainerStyle={{ paddingTop: 0 }}
+                                showsVerticalScrollIndicator={false}
+                            >
+                                <PetSelectionSkeleton />
+                            </ScrollView>
                         ) : petsError ? (
                             <View style={{
                                 flex: 1,
@@ -1256,89 +1251,179 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                                         marginBottom: 12,
                                     }}>Select Times</Text>
 
-                                    {/* Start Time */}
-                                    <View style={{ marginBottom: 12 }}>
-                                        <Text style={{
-                                            fontSize: 13,
-                                            color: '#6B7280',
-                                            marginBottom: 6,
-                                        }}>Start Time</Text>
-                                        <TouchableOpacity
-                                            style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                padding: 14,
-                                                backgroundColor: '#FFFFFF',
-                                                borderRadius: 12,
-                                                borderWidth: 1,
-                                                borderColor: '#E5E7EB',
-                                            }}
-                                            onPress={() => setShowStartTimePicker(true)}
-                                        >
-                                            <MaterialIcons name="access-time" size={20} color="#58B9D0" />
+                                    {/* Time Inputs Row */}
+                                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                                        {/* Start Time */}
+                                        <View style={{ flex: 1 }}>
                                             <Text style={{
-                                                fontSize: 16,
-                                                color: '#111827',
-                                                marginLeft: 12,
-                                                fontWeight: '500',
-                                            }}>
-                                                {formatTime(startTime)}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
+                                                fontSize: 13,
+                                                color: '#6B7280',
+                                                marginBottom: 6,
+                                            }}>Start Time</Text>
+                                            <TouchableOpacity
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    padding: 14,
+                                                    backgroundColor: '#FFFFFF',
+                                                    borderRadius: 12,
+                                                    borderWidth: 1,
+                                                    borderColor: '#E5E7EB',
+                                                }}
+                                                onPress={() => setShowStartTimeDropdown(true)}
+                                            >
+                                                <MaterialIcons name="access-time" size={20} color="#58B9D0" />
+                                                <Text style={{
+                                                    fontSize: 16,
+                                                    color: startTime ? '#111827' : '#9CA3AF',
+                                                    marginLeft: 12,
+                                                    fontWeight: '500',
+                                                }}>
+                                                    {formatTime(startTime)}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
 
-                                    {/* End Time */}
-                                    <View>
-                                        <Text style={{
-                                            fontSize: 13,
-                                            color: '#6B7280',
-                                            marginBottom: 6,
-                                        }}>End Time</Text>
-                                        <TouchableOpacity
-                                            style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                padding: 14,
-                                                backgroundColor: '#FFFFFF',
-                                                borderRadius: 12,
-                                                borderWidth: 1,
-                                                borderColor: '#E5E7EB',
-                                            }}
-                                            onPress={() => setShowEndTimePicker(true)}
-                                        >
-                                            <MaterialIcons name="access-time" size={20} color="#58B9D0" />
+                                        {/* End Time */}
+                                        <View style={{ flex: 1 }}>
                                             <Text style={{
-                                                fontSize: 16,
-                                                color: '#111827',
-                                                marginLeft: 12,
-                                                fontWeight: '500',
-                                            }}>
-                                                {formatTime(endTime)}
-                                            </Text>
-                                        </TouchableOpacity>
+                                                fontSize: 13,
+                                                color: '#6B7280',
+                                                marginBottom: 6,
+                                            }}>End Time</Text>
+                                            <TouchableOpacity
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    padding: 14,
+                                                    backgroundColor: '#FFFFFF',
+                                                    borderRadius: 12,
+                                                    borderWidth: 1,
+                                                    borderColor: '#E5E7EB',
+                                                }}
+                                                onPress={() => setShowEndTimeDropdown(true)}
+                                            >
+                                                <MaterialIcons name="access-time" size={20} color="#58B9D0" />
+                                                <Text style={{
+                                                    fontSize: 16,
+                                                    color: endTime ? '#111827' : '#9CA3AF',
+                                                    marginLeft: 12,
+                                                    fontWeight: '500',
+                                                }}>
+                                                    {formatTime(endTime)}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
                             )}
                         </ScrollView>
 
-                        {/* Time Pickers */}
-                        {showStartTimePicker && (
-                            <DateTimePicker
-                                value={startTime}
-                                mode="time"
-                                is24Hour={true}
-                                display="default"
-                                onChange={handleStartTimeChange}
-                            />
+                        {/* Time Dropdown Modals */}
+                        {/* Start Time Dropdown */}
+                        {showStartTimeDropdown && (
+                            <Modal
+                                visible={showStartTimeDropdown}
+                                transparent={true}
+                                animationType="slide"
+                                onRequestClose={() => setShowStartTimeDropdown(false)}
+                            >
+                                <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                                    <View style={{ backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' }}>
+                                        <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+                                            <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827' }}>Select Start Time</Text>
+                                        </View>
+                                        <ScrollView style={{ maxHeight: 400 }}>
+                                            {generateTimeSlots(9, 21, 30).map((slot) => (
+                                                <TouchableOpacity
+                                                    key={slot}
+                                                    onPress={() => {
+                                                        const [h, m] = slot.split(':').map(s => parseInt(s, 10));
+                                                        const newTime = new Date();
+                                                        newTime.setHours(h, m, 0, 0);
+                                                        setStartTime(newTime);
+                                                        setShowStartTimeDropdown(false);
+                                                    }}
+                                                    style={{
+                                                        paddingVertical: 16,
+                                                        paddingHorizontal: 20,
+                                                        borderBottomWidth: 1,
+                                                        borderBottomColor: '#F3F4F6'
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 16, color: '#111827' }}>{formatTimeString(slot)}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                        <View style={{ padding: 16 }}>
+                                            <TouchableOpacity
+                                                onPress={() => setShowStartTimeDropdown(false)}
+                                                style={{
+                                                    backgroundColor: '#58B9D0',
+                                                    paddingVertical: 14,
+                                                    borderRadius: 12,
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Close</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </View>
+                            </Modal>
                         )}
-                        {showEndTimePicker && (
-                            <DateTimePicker
-                                value={endTime}
-                                mode="time"
-                                is24Hour={true}
-                                display="default"
-                                onChange={handleEndTimeChange}
-                            />
+
+                        {/* End Time Dropdown */}
+                        {showEndTimeDropdown && (
+                            <Modal
+                                visible={showEndTimeDropdown}
+                                transparent={true}
+                                animationType="slide"
+                                onRequestClose={() => setShowEndTimeDropdown(false)}
+                            >
+                                <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                                    <View style={{ backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' }}>
+                                        <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+                                            <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827' }}>Select End Time</Text>
+                                        </View>
+                                        <ScrollView style={{ maxHeight: 400 }}>
+                                            {generateTimeSlots(9, 21, 30).map((slot) => (
+                                                <TouchableOpacity
+                                                    key={slot}
+                                                    onPress={() => {
+                                                        const [h, m] = slot.split(':').map(s => parseInt(s, 10));
+                                                        const newTime = new Date();
+                                                        newTime.setHours(h, m, 0, 0);
+                                                        setEndTime(newTime);
+                                                        setShowEndTimeDropdown(false);
+                                                    }}
+                                                    style={{
+                                                        paddingVertical: 16,
+                                                        paddingHorizontal: 20,
+                                                        borderBottomWidth: 1,
+                                                        borderBottomColor: '#F3F4F6'
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 16, color: '#111827' }}>{formatTimeString(slot)}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                        <View style={{ padding: 16 }}>
+                                            <TouchableOpacity
+                                                onPress={() => setShowEndTimeDropdown(false)}
+                                                style={{
+                                                    backgroundColor: '#58B9D0',
+                                                    paddingVertical: 14,
+                                                    borderRadius: 12,
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Close</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </View>
+                            </Modal>
                         )}
 
                         {/* Action Button */}
@@ -1351,7 +1436,7 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                         }}>
                             <TouchableOpacity
                                 style={{
-                                    backgroundColor: startDate && endDate ? '#58B9D0' : '#D1D5DB',
+                                    backgroundColor: startDate && endDate && startTime && endTime ? '#58B9D0' : '#D1D5DB',
                                     paddingVertical: 16,
                                     borderRadius: 12,
                                     alignItems: 'center',
@@ -1362,6 +1447,10 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                                         alert('Please select both start and end dates');
                                         return;
                                     }
+                                    if (!startTime || !endTime) {
+                                        alert('Please select both start and end times');
+                                        return;
+                                    }
                                     if (new Date(endDate) <= new Date(startDate)) {
                                         alert('End date must be after start date');
                                         return;
@@ -1369,23 +1458,23 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                                     // Combine dates and times into ISO datetime strings
                                     const startISO = combineDateAndTime(startDate, startTime);
                                     const endISO = combineDateAndTime(endDate, endTime);
-                                    
-                                    console.log('📅 Combined datetime strings:', { 
-                                        startDateTime: startISO, 
-                                        endDateTime: endISO 
+
+                                    console.log('📅 Combined datetime strings:', {
+                                        startDateTime: startISO,
+                                        endDateTime: endISO
                                     });
-                                    
+
                                     // Store the combined datetime strings
                                     setStartDateTime(startISO);
                                     setEndDateTime(endISO);
-                                    
+
                                     // Close date sheet and trigger search
                                     searchBoardings();
                                 }}
-                                disabled={!startDate || !endDate}
+                                disabled={!startDate || !endDate || !startTime || !endTime}
                                 activeOpacity={0.8}>
                                 <Text style={{
-                                    color: startDate && endDate ? '#FFFFFF' : '#9CA3AF',
+                                    color: startDate && endDate && startTime && endTime ? '#FFFFFF' : '#9CA3AF',
                                     fontWeight: '600',
                                     fontSize: 16,
                                 }}>
@@ -1398,6 +1487,28 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
             </Modal>
         </View>
     );
+};
+
+// Helper function to generate time slots between startHour and endHour with given step minutes
+const generateTimeSlots = (startHour: number, endHour: number, stepMinutes: number): string[] => {
+    const slots: string[] = [];
+    for (let h = startHour; h <= endHour; h++) {
+        for (let m = 0; m < 60; m += stepMinutes) {
+            const hh = String(h).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            slots.push(`${hh}:${mm}`);
+        }
+    }
+    return slots;
+};
+
+// Helper function to format time slot string to 12-hour format
+const formatTimeString = (slot: string): string => {
+    const [hh, mm] = slot.split(':').map(s => parseInt(s, 10));
+    const date = new Date();
+    date.setHours(hh, mm, 0, 0);
+    // Format as 12-hour e.g., 9:00 AM
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 };
 
 export default BoardingUser;

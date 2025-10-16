@@ -9,6 +9,7 @@ import colors from './src/styles/colors/index';
 import { storageService } from './src/utils/storage';
 import { navigationRef } from './src/utils/navigationService';
 import NotificationNavigationService from './src/services/notificationNavigationService';
+import { AppLoadingSkeleton } from './src/components/SkeletonLoader/SkeletonLoader';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +59,7 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Show loading spinner while checking login status
+  // Show loading skeleton while checking login status
   if (isLoading) {
     return (
       <Provider store={store}>
@@ -69,9 +70,7 @@ const App = () => {
             translucent={false}
             animated={false}
           />
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white || '#FFFFFF' }}>
-            <ActivityIndicator size="large" color={colors.primary || '#58B9D0'} />
-          </View>
+          <AppLoadingSkeleton />
         </SafeAreaProvider>
       </Provider>
     );

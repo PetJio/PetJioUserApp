@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
   TextInput,
   Image,
   Dimensions,
-  Linking,
 } from 'react-native';
+import Video from 'react-native-video';
 import {
   responsiveWidth,
   responsiveHeight,
@@ -114,10 +114,22 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [bookingDays, setBookingDays] = useState<BookingDay[]>([]);
   const [loadingDays, setLoadingDays] = useState<boolean>(false);
+  const [hasAnyUpdates, setHasAnyUpdates] = useState<boolean>(false);
+
+  // Helper to get local YYYY-MM-DD string (avoids timezone shifts from toISOString)
+  const localIsoDate = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
 
   // Full screen media viewer states
   const [showMediaViewer, setShowMediaViewer] = useState<boolean>(false);
   const [selectedMedia, setSelectedMedia] = useState<{url: string; isVideo: boolean; filename: string} | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const videoRef = useRef<any>(null);
 
   // Pet handover modal states
   const [showHandoverModal, setShowHandoverModal] = useState<boolean>(false);
@@ -356,47 +368,26 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         if (data.statusCode === 200 && data.body) {
           console.log('📋 Raw booking days:', data.body);
 
-          // Filter out future days and days without uploads, then sort by date descending (newest first)
+          // Include all days up to today (even if uploads is null) and sort by date descending
           const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+          const today = localIsoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
           console.log('📅 Today\'s date:', today);
 
           const pastAndTodayDays = data.body
-            .filter((day: BookingDay) => {
-              const isPastOrToday = day.date <= today;
-              const hasUploads = day.uploads && day.uploads.length > 0;
-              console.log(`🔍 Day ${day.date}: isPastOrToday = ${isPastOrToday}, hasUploads = ${hasUploads}, uploads =`, day.uploads);
-              // Only include days that are past/today AND have uploads
-              return isPastOrToday && hasUploads;
-            })
-            .sort((a: BookingDay, b: BookingDay) =>
-              new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
+            .filter((day: BookingDay) => day.date <= today)
+            .sort((a: BookingDay, b: BookingDay) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-          console.log('✅ Filtered and sorted days:', pastAndTodayDays.length);
-          console.log('📊 Filtered days data:', JSON.stringify(pastAndTodayDays, null, 2));
+          console.log('✅ Past-and-today days count:', pastAndTodayDays.length);
 
-          // Process uploads - they already contain full S3 URLs
-          console.log('🔗 Processing uploads (full S3 URLs)...');
+          // Map uploads (which are full S3 URLs) to uploadsWithUrls; if uploads is null, use empty array
           const daysWithUrls = pastAndTodayDays.map((day: BookingDay) => {
-            if (!day.uploads || day.uploads.length === 0) {
-              return day;
-            }
+            const uploadsArr: string[] = Array.isArray(day.uploads) ? day.uploads : [];
 
-            console.log(`📋 Processing day ${day.date} with ${day.uploads.length} uploads`);
-
-            const uploadsWithUrls = day.uploads.map((fileUrl) => {
-              // Check if it's a video based on file extension
+            const uploadsWithUrls = uploadsArr.map((fileUrl) => {
               const isVideo = fileUrl.toLowerCase().endsWith('.mp4') ||
-                             fileUrl.toLowerCase().endsWith('.mov') ||
-                             fileUrl.toLowerCase().endsWith('.avi');
-              
-              // Extract filename from URL for display
+                              fileUrl.toLowerCase().endsWith('.mov') ||
+                              fileUrl.toLowerCase().endsWith('.avi');
               const filename = fileUrl.split('/').pop() || fileUrl;
-              
-              console.log(`  ✅ ${filename} (isVideo: ${isVideo})`);
-              console.log(`     URL: ${fileUrl.substring(0, 80)}...`);
-              
               return { filename, url: fileUrl, isVideo };
             });
 
@@ -406,8 +397,21 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
             };
           });
 
-          console.log('✅ All uploads processed successfully');
-          setBookingDays(daysWithUrls);
+          console.log('✅ Mapped days with uploadsWithUrls:', JSON.stringify(daysWithUrls, null, 2));
+
+          // Determine the slice from the earliest day up to today
+          const daysAsc = daysWithUrls.slice().sort((a: BookingDay, b: BookingDay) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          const todayIndex = daysAsc.findIndex(d => d.date === today);
+          const sliceEnd = todayIndex >= 0 ? todayIndex + 1 : daysAsc.length;
+          const sliceToShow = daysAsc.slice(0, sliceEnd);
+
+          // Reverse to show newest first in UI
+          const finalDays = sliceToShow.slice().reverse();
+
+          // Check if any uploads exist within the days to show
+          const anyUpdates = finalDays.some(d => Array.isArray(d.uploadsWithUrls) && d.uploadsWithUrls.length > 0);
+          setHasAnyUpdates(anyUpdates);
+          setBookingDays(finalDays);
           console.log('✅ Booking days state updated successfully');
         } else {
           console.error('❌ Invalid response structure or non-200 statusCode');
@@ -454,7 +458,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
       const token = await getAuthToken();
       if (!token) return;
 
-      const response = await fetch(`http://13.204.155.197/api/boarding-booking-flow-history/by-boarding?boardingBookingId=${bookingId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history/by-boarding?boardingBookingId=${bookingId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -556,7 +560,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
       // Get owner ID if not available
       let currentOwnerId = ownerId;
       if (!currentOwnerId) {
-        const ownerResponse = await fetch('http://13.204.155.197/api/pet-owner/findByUserId', {
+        const ownerResponse = await fetch(`${API_CONFIG.BASE_URL}/pet-owner/findByUserId`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -578,7 +582,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         return;
       }
 
-      const response = await fetch('http://13.204.155.197/api/boarding-booking-flow-history', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -780,7 +784,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               <ActivityIndicator size="large" color="#58B9D0" />
               <Text style={{ marginTop: 12, color: '#666', fontSize: 14 }}>Loading updates...</Text>
             </View>
-          ) : bookingDays.length === 0 ? (
+          ) : !hasAnyUpdates ? (
             <View style={{ alignItems: 'center', paddingVertical: 30 }}>
               <MaterialIcons name="photo-library" size={48} color="#CBD5E1" />
               <Text style={{ marginTop: 12, fontSize: 14, fontWeight: '600', color: '#1F2937' }}>
@@ -795,7 +799,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
             <View style={{ marginTop: 12 }}>
               {bookingDays.map((day, index) => {
                 const now = new Date();
-                const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+                const todayDate = localIsoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
                 const isToday = day.date === todayDate;
 
                 return (
@@ -858,64 +862,106 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
                           </Text>
                         </View>
                       )}
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          flexWrap: 'wrap',
-                          marginHorizontal: -4,
-                        }}
-                      >
-                        {day.uploadsWithUrls && day.uploadsWithUrls.map((upload, uploadIndex) => {
-                          return (
-                            <TouchableOpacity
-                              key={uploadIndex}
-                              style={{
-                                width: '48%',
-                                aspectRatio: 1,
-                                marginHorizontal: '1%',
-                                marginBottom: 8,
-                                borderRadius: 8,
-                                overflow: 'hidden',
-                                backgroundColor: '#F8F9FB',
-                              }}
-                              onPress={() => {
-                                setSelectedMedia(upload);
-                                setShowMediaViewer(true);
-                              }}
-                              activeOpacity={0.8}
-                            >
-                              {upload.isVideo ? (
-                                <View
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    backgroundColor: '#1F2937',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                  }}
-                                >
-                                  <MaterialIcons name="play-circle-filled" size={40} color="#FFFFFF" />
-                                  <Text
+                      {day.uploadsWithUrls && day.uploadsWithUrls.length > 0 ? (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            flexWrap: 'wrap',
+                            marginHorizontal: -4,
+                          }}
+                        >
+                          {day.uploadsWithUrls.map((upload, uploadIndex) => {
+                            return (
+                              <TouchableOpacity
+                                key={uploadIndex}
+                                style={{
+                                  width: '48%',
+                                  aspectRatio: 1,
+                                  marginHorizontal: '1%',
+                                  marginBottom: 8,
+                                  borderRadius: 12,
+                                  overflow: 'hidden',
+                                  backgroundColor: '#F8F9FB',
+                                  borderWidth: 1,
+                                  borderColor: '#E5E7EB',
+                                }}
+                                onPress={() => {
+                                  setSelectedMedia(upload);
+                                  setShowMediaViewer(true);
+                                  if (upload.isVideo) {
+                                    setIsVideoLoading(true);
+                                    setPaused(false);
+                                  }
+                                }}
+                                activeOpacity={0.8}
+                              >
+                                {upload.isVideo ? (
+                                  <View
                                     style={{
-                                      fontSize: 11,
-                                      color: '#FFFFFF',
-                                      marginTop: 6,
+                                      width: '100%',
+                                      height: '100%',
+                                      backgroundColor: '#1F2937',
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
                                     }}
                                   >
-                                    VIDEO
-                                  </Text>
-                                </View>
-                              ) : (
-                                <Image
-                                  source={{ uri: upload.url }}
-                                  style={{ width: '100%', height: '100%' }}
-                                  resizeMode="cover"
-                                />
-                              )}
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
+                                    <MaterialIcons name="play-circle-filled" size={48} color="#FFFFFF" />
+                                    <Text
+                                      style={{
+                                        fontSize: 12,
+                                        fontWeight: '600',
+                                        color: '#FFFFFF',
+                                        marginTop: 8,
+                                      }}
+                                    >
+                                      VIDEO
+                                    </Text>
+                                  </View>
+                                ) : (
+                                  <Image
+                                    source={{ uri: upload.url }}
+                                    style={{ width: '100%', height: '100%' }}
+                                    resizeMode="cover"
+                                  />
+                                )}
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      ) : (
+                        <View style={{
+                          alignItems: 'center',
+                          paddingVertical: 24,
+                          paddingHorizontal: 16,
+                        }}>
+                          <View style={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 28,
+                            backgroundColor: '#F3F4F6',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: 12,
+                          }}>
+                            <MaterialIcons name="photo-camera" size={28} color="#9CA3AF" />
+                          </View>
+                          <Text style={{
+                            fontSize: 14,
+                            fontWeight: '600',
+                            color: '#6B7280',
+                            marginBottom: 4,
+                          }}>
+                            No Updates for This Day
+                          </Text>
+                          <Text style={{
+                            fontSize: 12,
+                            color: '#9CA3AF',
+                            textAlign: 'center',
+                          }}>
+                            Photos and videos will appear here{'\n'}when uploaded by the boarder
+                          </Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                 );
@@ -1148,51 +1194,65 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           }}>
             {selectedMedia && (
               selectedMedia.isVideo ? (
-                <View style={{
-                  width: '100%',
-                  height: '100%',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                  {/* Video Placeholder with Play Button */}
-                  <View style={{
-                    backgroundColor: '#1F2937',
-                    borderRadius: 16,
-                    padding: 40,
-                    alignItems: 'center',
-                  }}>
-                    <MaterialIcons name="play-circle-filled" size={80} color="#58B9D0" />
-                    <Text style={{
-                      color: '#FFFFFF',
-                      fontSize: 16,
-                      marginTop: 20,
-                      marginBottom: 30,
-                      textAlign: 'center',
+                <View style={{ width: Dimensions.get('window').width, height: Dimensions.get('window').height * 0.4, justifyContent: 'center', alignItems: 'center' }}>
+                  {/* Video Player */}
+                  <Video
+                    ref={videoRef}
+                    source={{ uri: selectedMedia.url }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    controls={true}
+                    resizeMode="contain"
+                    paused={paused}
+                    onLoadStart={() => setIsVideoLoading(true)}
+                    onLoad={() => setIsVideoLoading(false)}
+                    onError={(error: any) => {
+                      console.error('Video error:', error);
+                      setIsVideoLoading(false);
+                    }}
+                  />
+
+                  {/* Loading Indicator */}
+                  {isVideoLoading && (
+                    <View style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     }}>
-                      Tap to open video in browser
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Linking.openURL(selectedMedia.url).catch(err =>
-                          Alert.alert('Error', 'Could not open video')
-                        );
-                      }}
-                      style={{
-                        backgroundColor: '#58B9D0',
-                        paddingVertical: 12,
-                        paddingHorizontal: 24,
-                        borderRadius: 8,
-                      }}
-                    >
-                      <Text style={{
-                        color: '#FFFFFF',
-                        fontSize: 16,
-                        fontWeight: '600',
-                      }}>
-                        Open Video
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+                      <ActivityIndicator size="large" color="#58B9D0" />
+                      <Text style={{ color: '#FFFFFF', marginTop: 10 }}>Loading video...</Text>
+                    </View>
+                  )}
+
+                  {/* Play/Pause Button Overlay */}
+                  <TouchableOpacity
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: [{ translateX: -30 }, { translateY: -30 }],
+                      width: 60,
+                      height: 60,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      borderRadius: 30,
+                    }}
+                    onPress={() => setPaused(!paused)}
+                  >
+                    <MaterialIcons
+                      name={paused ? "play-arrow" : "pause"}
+                      size={40}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <ScrollView

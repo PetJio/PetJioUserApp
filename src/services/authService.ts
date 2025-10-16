@@ -1,12 +1,7 @@
 // Authentication Service
 import { fetchWithErrorHandling, StandardApiResponse } from '../utils/apiErrorHandler';
 import FirebaseMessagingService from './firebaseMessagingService';
-
-const API_BASE_URL = 'http://13.204.155.197';
-const API_HEADERS = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
+import { API_CONFIG } from '../config/api';
 
 export interface LoginRequest {
   emailPhone: string;
@@ -53,10 +48,10 @@ export interface AuthResponse {
 export const loginUser = async (loginData: LoginRequest): Promise<AuthResponse> => {
   try {
     const result: StandardApiResponse<any> = await fetchWithErrorHandling(
-      `${API_BASE_URL}/api/user/login`,
+      `${API_CONFIG.BASE_URL}/api/user/login`,
       {
         method: 'POST',
-        headers: API_HEADERS,
+        headers: API_CONFIG.HEADERS,
         body: JSON.stringify(loginData)
       }
     );
@@ -118,10 +113,10 @@ export const loginUser = async (loginData: LoginRequest): Promise<AuthResponse> 
 export const registerUser = async (registerData: RegisterRequest): Promise<AuthResponse> => {
   try {
     const result: StandardApiResponse<any> = await fetchWithErrorHandling(
-      `${API_BASE_URL}/api/user`,
+      `${API_CONFIG.BASE_URL}/api/user`,
       {
         method: 'POST',
-        headers: API_HEADERS,
+        headers: API_CONFIG.HEADERS,
         body: JSON.stringify(registerData)
       }
     );
@@ -162,10 +157,10 @@ export const registerUser = async (registerData: RegisterRequest): Promise<AuthR
 // Logout user function - calls real API with proper error handling
 export const logoutUser = async (token?: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const headers = token ? { ...API_HEADERS, 'Authorization': `Bearer ${token}` } : API_HEADERS;
-    
+    const headers = token ? { ...API_CONFIG.HEADERS, 'Authorization': `Bearer ${token}` } : API_CONFIG.HEADERS;
+
     const result: StandardApiResponse = await fetchWithErrorHandling(
-      `${API_BASE_URL}/api/auth/logout`,
+      `${API_CONFIG.BASE_URL}/api/auth/logout`,
       {
         method: 'POST',
         headers
@@ -195,10 +190,10 @@ export const logoutUser = async (token?: string): Promise<{ success: boolean; me
 export const checkEmailExists = async (email: string): Promise<boolean> => {
   try {
     const result: StandardApiResponse = await fetchWithErrorHandling(
-      `${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(email)}`,
+      `${API_CONFIG.BASE_URL}/api/user/profile?email=${encodeURIComponent(email)}`,
       {
         method: 'GET',
-        headers: API_HEADERS
+        headers: API_CONFIG.HEADERS
       }
     );
     

@@ -107,6 +107,36 @@ class StorageService {
     }
   }
 
+  async getUserLastName(): Promise<string> {
+    try {
+      const userData = await this.getUserData();
+      return userData?.lastName || '';
+    } catch (error) {
+      console.error('❌ Failed to get user last name:', error);
+      return '';
+    }
+  }
+
+  async getUserEmail(): Promise<string> {
+    try {
+      const userData = await this.getUserData();
+      return userData?.email || '';
+    } catch (error) {
+      console.error('❌ Failed to get user email:', error);
+      return '';
+    }
+  }
+
+  async getUserMobile(): Promise<string> {
+    try {
+      const userData = await this.getUserData();
+      return userData?.mobile || '';
+    } catch (error) {
+      console.error('❌ Failed to get user mobile:', error);
+      return '';
+    }
+  }
+
   // Specific storage methods
   async setUserToken(token: string): Promise<void> {
     await this.setItem(STORAGE_KEYS.USER_TOKEN, token);
