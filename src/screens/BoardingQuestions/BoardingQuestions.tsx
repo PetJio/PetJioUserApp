@@ -51,19 +51,24 @@ const BoardingQuestions: React.FC = () => {
 
   // Get boarder's available services from boardingDetails
   const boarding = boardingDetails || {};
-  const hasNailClipping = boarding.nailClipping && boarding.nailClipping > 0;
-  const hasMedicatedBath = boarding.medicatedBath && boarding.medicatedBath > 0;
-  const hasSwimmingPool = boarding.swimming && boarding.swimming > 0;
-  const hasWalksPerDay = boarding.walksPerDay && boarding.walksPerDay > 0;
+  
+  console.log('📋 Full boardingDetails:', JSON.stringify(boardingDetails, null, 2));
+  
+  // Check if services are available (even if price is 0, it's still available)
+  const hasNailClipping = boarding.nailClipping !== undefined && boarding.nailClipping !== null;
+  const hasMedicatedBath = boarding.medicatedBath !== undefined && boarding.medicatedBath !== null;
+  const hasSwimmingPool = boarding.swimming !== undefined && boarding.swimming !== null;
+  const hasWalksPerDay = boarding.walksPerDay !== undefined && boarding.walksPerDay !== null;
   const hasDocService = boarding.docAvailibility === true;
 
-  // Service prices
+  // Service prices (0 means free)
   const nailClippingPrice = boarding.nailClipping || 0;
   const medicatedBathPrice = boarding.medicatedBath || 0;
   const swimmingPoolPrice = boarding.swimming || 0;
   const walksPerDayPrice = boarding.walksPerDay || 0;
 
   console.log('🏠 Boarder Services:', {
+    boardingDetails,
     hasNailClipping,
     hasMedicatedBath,
     hasSwimmingPool,
@@ -145,8 +150,28 @@ const BoardingQuestions: React.FC = () => {
     setPetFormsData(updatedForms);
   };
 
+  // Early return for loading state
+  if (pets.length === 0) {
+    return (
+      <View style={[boardingQuestionStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#58B9D0" />
+        <Text style={{ marginTop: 10 }}>Loading pets...</Text>
+      </View>
+    );
+  }
+
   const currentPet = pets[currentPetIndex];
-  const currentForm = petFormsData[currentPetIndex] || {};
+  const currentForm = petFormsData[currentPetIndex] || {
+    petId: currentPet?.id || 0,
+    petName: currentPet?.name || '',
+    foodType: 1,
+    walksPerDay: 0,
+    nailClipping: false,
+    medicatedBath: false,
+    swimmingPool: false,
+    isDocReqd: false,
+    possessions: false,
+  };
   const isLastPet = currentPetIndex === pets.length - 1;
 
   const handleNext = () => {
@@ -260,15 +285,6 @@ const BoardingQuestions: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  if (!currentPet && pets.length === 0) {
-    return (
-      <View style={[boardingQuestionStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#58B9D0" />
-        <Text style={{ marginTop: 10 }}>Loading pets...</Text>
-      </View>
-    );
-  }
 
   // Checkout Summary View
   if (showCheckout) {

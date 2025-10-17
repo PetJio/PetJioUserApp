@@ -10,6 +10,30 @@ const boardingQuestionStyles = StyleSheet.create({
         backgroundColor: '#F8F9FB',
     },
     // Header styles matching other pages
+    header: {
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: responsiveWidth(4),
+        paddingVertical: responsiveHeight(2),
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    headerSubtitle: {
+        fontSize: 13,
+        color: '#6B7280',
+        marginTop: 2,
+    },
     containerchild: {
         width: responsiveWidth(100),
         paddingVertical: responsiveHeight(2),
@@ -41,9 +65,8 @@ const boardingQuestionStyles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: responsiveWidth(5),
     },
-    header: {
+    formSection: {
         marginBottom: responsiveHeight(3),
-        alignItems: 'center',
     },
     subtitle: {
         fontSize: 16,
@@ -195,6 +218,195 @@ const boardingQuestionStyles = StyleSheet.create({
         borderRadius: 8,
     },
     errorButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    // Form Elements
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: responsiveHeight(1.5),
+        marginTop: responsiveHeight(2),
+    },
+    dropdownContainer: {
+        marginBottom: responsiveHeight(2),
+    },
+    dropdown: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 8,
+        paddingVertical: responsiveHeight(1.5),
+        paddingHorizontal: responsiveWidth(4),
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    dropdownText: {
+        fontSize: 14,
+        color: '#374151',
+    },
+    dropdownPlaceholder: {
+        fontSize: 14,
+        color: '#9CA3AF',
+    },
+    dropdownOptions: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 8,
+        marginTop: responsiveHeight(0.5),
+        maxHeight: responsiveHeight(25),
+    },
+    dropdownOption: {
+        paddingVertical: responsiveHeight(1.5),
+        paddingHorizontal: responsiveWidth(4),
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    dropdownOptionLast: {
+        borderBottomWidth: 0,
+    },
+    dropdownOptionText: {
+        fontSize: 14,
+        color: '#374151',
+    },
+    selectedOption: {
+        backgroundColor: '#F0F9FF',
+    },
+    selectedOptionText: {
+        color: '#0284C7',
+        fontWeight: '500',
+    },
+    // Service Items
+    serviceItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        paddingVertical: responsiveHeight(1.5),
+        paddingHorizontal: responsiveWidth(4),
+        marginBottom: responsiveHeight(1),
+    },
+    serviceItemSelected: {
+        backgroundColor: '#F0F9FF',
+        borderColor: '#0284C7',
+    },
+    serviceLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        gap: responsiveWidth(3),
+    },
+    serviceIcon: {
+        width: 24,
+        height: 24,
+    },
+    serviceInfo: {
+        flex: 1,
+    },
+    serviceName: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#111827',
+    },
+    servicePrice: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginTop: 2,
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: '#D1D5DB',
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    checkboxSelected: {
+        backgroundColor: '#0284C7',
+        borderColor: '#0284C7',
+    },
+    checkIcon: {
+        width: 14,
+        height: 14,
+        tintColor: '#FFFFFF',
+    },
+    // Walks Counter
+    walksContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        paddingVertical: responsiveHeight(1.5),
+        paddingHorizontal: responsiveWidth(4),
+        marginBottom: responsiveHeight(1.5),
+    },
+    walksLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: responsiveWidth(3),
+    },
+    walksText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#111827',
+    },
+    walksCounter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: responsiveWidth(3),
+    },
+    walksButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+    },
+    walksButtonDisabled: {
+        opacity: 0.4,
+    },
+    walksButtonIcon: {
+        width: 18,
+        height: 18,
+        tintColor: '#374151',
+    },
+    walksValue: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+        minWidth: 30,
+        textAlign: 'center',
+    },
+    // Pet Navigation
+    petIndicator: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: 4,
+    },
+    nextButton: {
+        backgroundColor: '#0284C7',
+        paddingVertical: responsiveHeight(1.8),
+        borderRadius: 8,
+        alignItems: 'center',
+        marginHorizontal: responsiveWidth(5),
+        marginVertical: responsiveHeight(2),
+    },
+    nextButtonText: {
         fontSize: 16,
         fontWeight: '600',
         color: '#FFFFFF',
