@@ -187,53 +187,49 @@ const BoardingQuestions: React.FC = () => {
         return;
       }
 
-      console.log('📦 Starting to update booking for each pet');
+      console.log('📦 Starting to update booking with all pets data');
       console.log('Booking ID:', bookingId);
       console.log('Pet Forms Data:', petFormsData);
 
-      // Update booking for each pet
-      const updatePromises = petFormsData.map(async (form) => {
-        const updatePayload = {
-          id: bookingId,
-          possessions: form.possessions,
-          foodType: form.foodType,
-          nailClipping: form.nailClipping,
-          isDocReqd: form.isDocReqd,
-          swimmingPool: form.swimmingPool,
-          medicatedBath: form.medicatedBath,
-          walksPerDay: form.walksPerDay,
-        };
+      // Prepare data array for all pets
+      const dataArray = petFormsData.map((form) => ({
+        id: form.petId,
+        possessions: form.possessions,
+        foodType: form.foodType,
+        nailClipping: form.nailClipping,
+        isDocReqd: form.isDocReqd,
+        swimmingPool: form.swimmingPool,
+        medicatedBath: form.medicatedBath,
+        walksPerDay: form.walksPerDay,
+      }));
 
-        console.log(`📤 Updating booking for ${form.petName} (Pet ID: ${form.petId}):`, updatePayload);
+      const updatePayload = {
+        data: dataArray,
+      };
 
-        try {
-          const response = await fetch(
-            `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/update-booking-booking-01`,
-            {
-              method: 'PATCH',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(updatePayload),
-            }
-          );
+      console.log('📤 UPDATE BOOKING CURL:', `curl --location --request PATCH '${API_CONFIG.BASE_URL}/api/boarding-service-bookings/update-booking-booking-01' \\
+--header 'Content-Type: application/json' \\
+--header 'Authorization: Bearer ${token}' \\
+--data '${JSON.stringify(updatePayload)}'`);
 
-          const result = await response.json();
-          console.log(`✅ ${form.petName} booking update response:`, result);
-          return { petId: form.petId, petName: form.petName, success: response.ok, result };
-        } catch (error) {
-          console.error(`❌ Error updating booking for ${form.petName}:`, error);
-          return { petId: form.petId, petName: form.petName, success: false, error };
+      console.log('📤 Update payload:', JSON.stringify(updatePayload, null, 2));
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/update-booking-booking-01`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatePayload),
         }
-      });
+      );
 
-      const results = await Promise.all(updatePromises);
-      console.log('📊 All booking updates completed:', results);
+      const result = await response.json();
+      console.log('📥 Booking update response:', result);
 
-      const allSuccess = results.every(r => r.success);
-
-      if (allSuccess) {
+      if (response.ok) {
         Alert.alert(
           'Success!',
           'All booking details have been updated successfully.',
@@ -247,15 +243,14 @@ const BoardingQuestions: React.FC = () => {
           ]
         );
       } else {
-        const failedPets = results.filter(r => !r.success).map(r => r.petName);
         Alert.alert(
-          'Partial Success',
-          `Some bookings could not be updated.\nFailed: ${failedPets.join(', ')}`,
+          'Update Failed',
+          result.message || 'Failed to update booking details. Please try again.',
           [{ text: 'OK' }]
         );
       }
     } catch (error) {
-      console.error('error', error);
+      console.error('🔥 Booking update error:', error);
       Alert.alert(
         'Booking Failed',
         'Network error. Please check your connection and try again.',
