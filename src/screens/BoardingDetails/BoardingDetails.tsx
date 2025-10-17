@@ -73,6 +73,14 @@ type RootStackParamList = {
     serviceIds?: number[];
     serviceBookings?: number[];
   };
+  BoardingCheckout: {
+    bookingId: number;
+    bookingData: any;
+    startDate?: string;
+    endDate?: string;
+    boardingDetails?: any;
+    petOwnerId?: number;
+  };
   BoardingReview: undefined;
   BoardingRegistrationform: undefined;
   Chat: {
@@ -165,7 +173,7 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         return;
       }
 
-      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-days/booking/123`;
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-days/booking/${bookingId}`;
       console.log('🌐 API URL:', apiUrl);
 
       // Generate CURL command for debugging
@@ -230,6 +238,10 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           console.log('✅ Booking days state updated successfully');
         } else {
           console.error('❌ Invalid response structure or non-200 statusCode');
+          console.error('❌ Received statusCode:', data.statusCode);
+          console.error('❌ data.body exists:', !!data.body);
+          console.error('❌ data.body type:', typeof data.body);
+          console.error('❌ Full response data:', JSON.stringify(data, null, 2));
         }
       } else {
         const errorText = await response.text();
@@ -350,36 +362,101 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
     return serviceBookings;
   };
 
-  // Handle Book Now navigation - Navigate directly to BoardingQuestions
-  const handleBookNow = () => {
+  // Handle Book Now - Call booking API and navigate to checkout
+  const handleBookNow = async () => {
     if (!bookingDetailsData) {
       Alert.alert('Error', 'Service details not available');
       return;
     }
 
-    console.log('📅 Continue clicked with params:', {
-      boardingId: bookingDetailsData.id,
-      startDate,
-      endDate,
-      mode,
-      selectedPets,
-      petOwnerId,
-    });
+    if (!selectedPets || selectedPets.length === 0) {
+      Alert.alert('Error', 'Please select at least one pet');
+      return;
+    }
 
-    // Calculate serviceBookings for the selected pets
-    const serviceBookings = calculateServiceBookings();
+    if (!startDate || !endDate) {
+      Alert.alert('Error', 'Please select booking dates');
+      return;
+    }
 
-    // Navigate directly to BoardingQuestions
-    navigation.navigate('BoardingQuestions', {
-      startDate,
-      endDate,
-      mode,
-      selectedPets: selectedPets || [],
-      petOwnerId,
-      boardingId: bookingDetailsData.id,
-      serviceIds: boardingServices.map(s => s.id),
-      serviceBookings,
-    });
+    try {
+      setLoading(true);
+      const token = await storageService.getUserToken();
+      if (!token) {
+        Alert.alert('Error', 'Please login to continue');
+        setLoading(false);
+        return;
+      }
+
+      // Format dates to YYYY-MM-DD HH:MM:SS
+      const formatDateTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day} 00:00:00`;
+      };
+
+      // Prepare booking payload
+      const bookingPayload = {
+        startTime: formatDateTime(startDate),
+        endTime: formatDateTime(endDate),
+        boardingId: bookingDetailsData.userId,
+        mode: mode || 1,
+        pets: selectedPets.map((petId: number) => ({ id: petId })),
+      };
+
+      console.log('📤 Booking API payload:', bookingPayload);
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/api/boarding-service-bookings`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bookingPayload),
+        }
+      );
+
+      const result = await response.json();
+      console.log('📥 Booking API response:', result);
+
+      if (response.ok && result.statusCode === 201) {
+        // Booking created successfully
+        console.log('✅ Booking created successfully:', result.body);
+
+        // Validate response body
+        if (!result.body || !result.body.paymentRecords || !Array.isArray(result.body.paymentRecords) || result.body.paymentRecords.length === 0) {
+          Alert.alert('Error', 'Invalid booking response. Please try again.');
+          return;
+        }
+
+        // Navigate to checkout with pricing data
+        navigation.navigate('BoardingCheckout', {
+          bookingId: result.body.bookingId, // Use bookingId from response
+          bookingData: result.body.paymentRecords, // Array of payment records (pricing info)
+          startDate,
+          endDate,
+          boardingDetails: bookingDetailsData,
+          petOwnerId,
+        });
+      } else {
+        Alert.alert(
+          'Booking Failed',
+          result.message || 'Failed to create booking. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('🔥 Booking API error:', error);
+      Alert.alert(
+        'Booking Error',
+        'Network error. Please check your connection and try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle chat navigation
@@ -708,24 +785,29 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
       }}>
-        {/* Continue Button */}
+        {/* Book Now Button */}
         <TouchableOpacity
           onPress={handleBookNow}
+          disabled={loading}
           style={{
-            backgroundColor: '#58B9D0',
+            backgroundColor: loading ? '#A0D8E8' : '#58B9D0',
             paddingVertical: 16,
             borderRadius: 12,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Text style={{
-            fontSize: 16,
-            fontWeight: '700',
-            color: '#FFFFFF',
-          }}>
-            Continue
-          </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '700',
+              color: '#FFFFFF',
+            }}>
+              Book Now
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 

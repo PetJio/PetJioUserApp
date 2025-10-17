@@ -49,7 +49,16 @@
       "Bash(copy:*)",
       "Bash(timeout 15 adb logcat)",
       "Bash(find:*)",
-      "Bash(.\\android\\gradlew.bat clean:*)"
+      "Bash(.\\android\\gradlew.bat clean:*)",
+      "Bash(powershell -Command \"Start-Process -FilePath ''C:\\Users\\Apurba Ruidas\\AppData\\Local\\Android\\Sdk\\extras\\google\\Android_Emulator_Hypervisor_Driver\\silent_install.bat'' -Verb RunAs\")",
+      "Bash(setx:*)",
+      "Bash(emulator:*)",
+      "Bash(powershell -Command \"Invoke-WebRequest -Uri ''https://dl.google.com/android/repository/aehd-windows_v2.2.zip'' -OutFile ''$env:TEMP\\aehd.zip''\")",
+      "Bash(powershell -Command \"$ProgressPreference = ''SilentlyContinue''; Invoke-WebRequest -Uri ''https://dl.google.com/android/repository/aehd-windows_v2.2.zip'' -OutFile \"\"$env:TEMP\\aehd.zip\"\" -UseBasicParsing\")",
+      "Bash(unzip:*)",
+      "Bash(powershell -Command \"Start-Process -FilePath ''C:\\Users\\Apurba Ruidas\\AppData\\Local\\Android\\Sdk\\extras\\google\\Android_Emulator_Hypervisor_Driver\\silent_install.bat'' -Verb RunAs -Wait\")",
+      "Bash(powershell -Command:*)",
+      "Bash(pnpm start:*)"
     ],
     "deny": [],
     "ask": [],

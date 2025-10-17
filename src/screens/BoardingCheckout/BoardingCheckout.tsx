@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -33,7 +34,22 @@ type RootStackParamList = {
     boardingDetails?: any;
     petOwnerId?: number;
   };
-  BoardingSuccess: undefined;
+  BoardingSuccess: {
+    bookingId: number;
+    startDate?: string;
+    endDate?: string;
+    selectedPets?: number[];
+    petOwnerId?: number;
+    boardingDetails?: any;
+  };
+  BoardingQuestions: {
+    bookingId: number;
+    startDate?: string;
+    endDate?: string;
+    selectedPets?: number[];
+    petOwnerId?: number;
+    boardingDetails?: any;
+  };
   Home: undefined;
 };
 
@@ -66,9 +82,24 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
   const [petOwnerId, setPetOwnerId] = useState<number | null>(routePetOwnerId || null);
 
   useEffect(() => {
+    // Validate bookingData
+    if (!bookingData || !Array.isArray(bookingData) || bookingData.length === 0) {
+      Alert.alert(
+        'Error',
+        'Booking data is missing. Please try booking again.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+      return;
+    }
+
     fetchPetsAndOwner();
     loadUserDetails();
-    console.log('📋 BoardingCheckout params:', { bookingId, petOwnerId: routePetOwnerId });
+    console.log('📋 BoardingCheckout params:', { bookingId, petOwnerId: routePetOwnerId, bookingData });
   }, []);
 
   const loadUserDetails = async () => {
@@ -139,6 +170,9 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
   };
 
   const calculateTotal = () => {
+    if (!bookingData || !Array.isArray(bookingData)) {
+      return 0;
+    }
     return bookingData.reduce((sum, item) => sum + item.price, 0);
   };
 
@@ -212,23 +246,60 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
       const result = await response.json();
       console.log('💳 Payment link API response:', result);
 
-      if (response.ok && result.statusCode === 200) {
+      if (response.ok && result.statusCode === 201) {
         // Payment link created successfully
         console.log('✅ Payment link created:', result.body);
 
-        // For now, show success and navigate
-        Alert.alert(
-          'Payment Link Created',
-          'Payment link has been generated successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                navigation.navigate('BoardingSuccess');
-              },
-            },
-          ]
-        );
+        // Check if short_url exists
+        if (result.body && result.body.short_url) {
+          const paymentUrl = result.body.short_url;
+          console.log('💳 Opening payment URL:', paymentUrl);
+
+          // Open the payment URL in browser
+          const supported = await Linking.canOpenURL(paymentUrl);
+          if (supported) {
+            await Linking.openURL(paymentUrl);
+
+            // Show dialog to confirm payment status
+            setTimeout(() => {
+              Alert.alert(
+                'Payment Status',
+                'Please complete the payment in your browser.\n\nHave you completed the payment?',
+                [
+                  {
+                    text: 'Yes, Payment Done',
+                    onPress: () => {
+                      // Navigate to success screen
+                      const selectedPetIds = bookingData.map((item: any) => item.petId);
+                      navigation.navigate('BoardingSuccess', {
+                        bookingId,
+                        startDate,
+                        endDate,
+                        selectedPets: selectedPetIds,
+                        petOwnerId,
+                        boardingDetails,
+                      });
+                    },
+                  },
+                  {
+                    text: 'No, Cancel',
+                    style: 'cancel',
+                    onPress: () => {
+                      Alert.alert(
+                        'Payment Pending',
+                        'Your booking is saved but payment is pending. You can complete payment later.'
+                      );
+                    },
+                  },
+                ]
+              );
+            }, 2000);
+          } else {
+            Alert.alert('Error', 'Cannot open payment link.');
+          }
+        } else {
+          Alert.alert('Error', 'Payment link URL not found in response.');
+        }
       } else {
         Alert.alert(
           'Payment Failed',
@@ -348,7 +419,7 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
             </Text>
           </View>
 
-          {bookingData.map((item, index) => {
+          {bookingData && Array.isArray(bookingData) && bookingData.map((item, index) => {
             const pet = getPetById(item.petId);
             return (
               <View key={index} style={boardingCheckoutStyles.priceRow}>
@@ -430,7 +501,7 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
         onCancel={handlePaymentCancel}
         userEmail={userEmail}
         userName={userName}
-        description={`Boarding service for ${bookingData.length} pet(s)`}
+        description={`Boarding service for ${bookingData?.length || 0} pet(s)`}
       />
     </View>
   );

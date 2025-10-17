@@ -1,15 +1,54 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { responsiveWidth, responsiveHeight } from 'react-native-responsive-dimensions';
 
+type RootStackParamList = {
+    BoardingSuccess: {
+        bookingId: number;
+        startDate?: string;
+        endDate?: string;
+        selectedPets?: number[];
+        petOwnerId?: number;
+        boardingDetails?: any;
+    };
+    BoardingQuestions: {
+        bookingId: number;
+        startDate?: string;
+        endDate?: string;
+        selectedPets?: number[];
+        petOwnerId?: number;
+        boardingDetails?: any;
+    };
+    Main: { screen: string };
+};
+
+type BoardingSuccessNavigationProp = StackNavigationProp<RootStackParamList, 'BoardingSuccess'>;
+type BoardingSuccessRouteProp = RouteProp<RootStackParamList, 'BoardingSuccess'>;
+
 const BoardingSuccess = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<BoardingSuccessNavigationProp>();
+    const route = useRoute<BoardingSuccessRouteProp>();
+
+    const { bookingId, startDate, endDate, selectedPets, petOwnerId, boardingDetails } = route.params || {};
 
     const handleGoHome = () => {
         (navigation as any).navigate('Main', {
             screen: 'Home'
+        });
+    };
+
+    const handleFillDetails = () => {
+        // Navigate to BoardingQuestions with all the booking data
+        navigation.navigate('BoardingQuestions', {
+            bookingId,
+            startDate,
+            endDate,
+            selectedPets,
+            petOwnerId,
+            boardingDetails,
         });
     };
 
@@ -51,7 +90,7 @@ const BoardingSuccess = () => {
                 </Text>
             </View>
 
-            {/* Back to Home Button - Fixed at bottom matching Book Now button */}
+            {/* Action Buttons - Fixed at bottom */}
             <View style={{
                 backgroundColor: '#FFFFFF',
                 paddingHorizontal: responsiveWidth(4),
@@ -65,6 +104,7 @@ const BoardingSuccess = () => {
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
             }}>
+                {/* Fill All Details Button */}
                 <TouchableOpacity
                     style={{
                         backgroundColor: '#58B9D0',
@@ -74,13 +114,38 @@ const BoardingSuccess = () => {
                         justifyContent: 'center',
                         width: '100%',
                         minHeight: 50,
+                        marginBottom: 12,
+                    }}
+                    onPress={handleFillDetails}
+                >
+                    <Text style={{
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#FFFFFF',
+                    }}>
+                        Fill All Details
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Back to Home Button */}
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: '#FFFFFF',
+                        paddingVertical: 16,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        minHeight: 50,
+                        borderWidth: 1,
+                        borderColor: '#58B9D0',
                     }}
                     onPress={handleGoHome}
                 >
                     <Text style={{
                         fontSize: 16,
                         fontWeight: '600',
-                        color: '#FFFFFF',
+                        color: '#58B9D0',
                     }}>
                         Back to Home
                     </Text>
