@@ -8,6 +8,9 @@ export type RootStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
   LogIn: undefined;
+   ForgetPassword: undefined;
+  OTPVerification: { email: string };
+  NewPassword: { email: string };
   Location: { userSignUpData: any };
   
   // Main Navigation

@@ -38,6 +38,11 @@ const SignIn: React.FC<SignInProps> = ({navigation}) => {
             >
                 <Text style={[signinstyles.text, {color: '#58B9D0'}]}>Register As</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text>Forgot password?</Text>
+          </TouchableOpacity>
+
         </View>
       </View>
     )

@@ -21,6 +21,7 @@ import { RootStackParamList } from '../../types/navigation';
 import { storageService } from '../../utils/storage';
 import { STORAGE_KEYS } from '../../constants';
 import FirebaseMessagingService from '../../services/firebaseMessagingService';
+import ForgetPasswordScreen from '../../screens/ForgetPassword/ForgetPasswordScreen';
 
 type LogInScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -348,11 +349,18 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
       </View>
 
         </View>
-  
+        {/* <TouchableOpacity onPress={() => navigation.navigate('ForgetPassword')}>
+          <Text style={{ color: 'blue', textAlign: 'center', marginTop: 10 }}>
+          Forgot Password?
+        </Text>
+          </TouchableOpacity> */}
+         <TouchableOpacity onPress={() => navigation.navigate('ForgetPasswordScreen')}>
+  <Text style={{ color: "#0a84ff", marginTop: 10, textAlign: "right" }}>
+    Forgot Password?
+  </Text>
+</TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text style={loginstyles.forgotText}>Forget Password?</Text>
-        </TouchableOpacity>
+
 
         {/* Dev Mode: Quick Test Login Button */}
         {showDevMode && (
@@ -373,6 +381,8 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
             <Text style={loginstyles.loginText}>Login</Text>
           )}
         </TouchableOpacity>
+
+
 
         <View style={loginstyles.orContainer}>
          <View style={loginstyles.line} />

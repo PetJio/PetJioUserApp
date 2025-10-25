@@ -1,6 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://13.204.155.197',
+  BASE_URL: 'https://stage.petgeo.in',
+  // BASE_URL: 'http://13.204.155.197',
   TIMEOUT: 30000, // 30 seconds
   HEADERS: {
     'Content-Type': 'application/json',
@@ -18,6 +19,9 @@ export const API_ENDPOINTS = {
     REFRESH_TOKEN: '/api/auth/refresh',
     FORGOT_PASSWORD: '/api/auth/forgot-password',
     RESET_PASSWORD: '/api/auth/reset-password',
+    SEND_OTP: '/api/user/get-otp',
+    VERIFY_OTP: '/api/user/verify-otp',
+    NEW_PASSWORD: '/api/user/reset-password',
   },
 
   // User Management

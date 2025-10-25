@@ -26,6 +26,7 @@
     "@react-navigation/native-stack": "^7.3.25",
     "@react-navigation/stack": "^7.4.7",
     "@reduxjs/toolkit": "^2.9.0",
+    "axios": "^1.12.2",
     "expo": "^53.0.20",
     "metro": "^0.83.1",
     "metro-config": "^0.83.1",
