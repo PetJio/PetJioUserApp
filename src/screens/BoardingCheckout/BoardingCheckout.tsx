@@ -354,15 +354,12 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
           onPress={() => navigation.goBack()}
           style={{ marginRight: 16 }}
         >
-          <Image
-            source={Icons.LeftArrow}
-            style={{ tintColor: '#000000', width: 20, height: 20 }}
-          />
+          <MaterialIcons name="arrow-back" size={24} color="#1A1D29" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={boardingCheckoutStyles.headerTitle}>Checkout</Text>
+          <Text style={boardingCheckoutStyles.headerTitle}>Checkout Summary</Text>
           <Text style={boardingCheckoutStyles.headerSubtitle}>
-            Review your booking details
+            Review your selections
           </Text>
         </View>
       </View>
@@ -410,52 +407,80 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
           </View>
         </View>
 
-        {/* Pricing Breakdown */}
-        <View style={boardingCheckoutStyles.card}>
-          <View style={boardingCheckoutStyles.cardHeader}>
-            <MaterialIcons name="receipt" size={20} color="#58B9D0" />
-            <Text style={boardingCheckoutStyles.cardTitle}>
-              Pricing Details
-            </Text>
-          </View>
+        {/* Pet Details Cards */}
+        {bookingData && Array.isArray(bookingData) && bookingData.map((item, index) => {
+          const pet = getPetById(item.petId);
 
-          {bookingData && Array.isArray(bookingData) && bookingData.map((item, index) => {
-            const pet = getPetById(item.petId);
-            return (
-              <View key={index} style={boardingCheckoutStyles.priceRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={boardingCheckoutStyles.petName}>
+          // Extract service details from the item
+          const services = [];
+          if (item.foodType) services.push(`Food: ${item.foodType}`);
+          if (item.nailClipping) services.push('Nail Clipping');
+          if (item.medicatedBath) services.push('Medicated Bath');
+          if (item.swimmingPool) services.push('Swimming Pool');
+          if (item.walksPerDay) services.push(`Walks (${item.walksPerDay}/day)`);
+          if (item.isDocReqd) services.push('On-site Doctor Requested');
+
+          return (
+            <View key={index} style={boardingCheckoutStyles.petCard}>
+              <View style={boardingCheckoutStyles.petCardHeader}>
+                <View style={boardingCheckoutStyles.petIconContainer}>
+                  <MaterialIcons name="pets" size={24} color="#58B9D0" />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={boardingCheckoutStyles.petCardName}>
                     {pet?.name || `Pet ${item.petId}`}
                   </Text>
-                  <Text style={boardingCheckoutStyles.serviceText}>
-                    Service ID: {item.serviceId}
+                  {pet?.breed && (
+                    <Text style={boardingCheckoutStyles.petCardBreed}>
+                      {pet.breed}
+                    </Text>
+                  )}
+                </View>
+                <View style={boardingCheckoutStyles.petPriceTag}>
+                  <Text style={boardingCheckoutStyles.petPriceLabel}>Pet Total</Text>
+                  <Text style={boardingCheckoutStyles.petPriceValue}>
+                    ₹ {item.price}
                   </Text>
                 </View>
-                <Text style={boardingCheckoutStyles.priceText}>
-                  ₹ {item.price.toFixed(2)}
-                </Text>
               </View>
-            );
-          })}
 
-          <View style={boardingCheckoutStyles.divider} />
+              {services.length > 0 && (
+                <View style={boardingCheckoutStyles.servicesContainer}>
+                  {services.map((service, idx) => (
+                    <View key={idx} style={boardingCheckoutStyles.serviceChip}>
+                      <MaterialIcons
+                        name={service.toLowerCase().includes('doctor') ? 'medical-services' : 'check-circle'}
+                        size={14}
+                        color="#10B981"
+                      />
+                      <Text style={boardingCheckoutStyles.serviceChipText}>{service}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          );
+        })}
 
-          <View style={boardingCheckoutStyles.totalRow}>
-            <Text style={boardingCheckoutStyles.totalLabel}>Total Amount</Text>
-            <Text style={boardingCheckoutStyles.totalPrice}>
-              ₹ {calculateTotal().toFixed(2)}
+        {/* Grand Total Card */}
+        <View style={boardingCheckoutStyles.grandTotalCard}>
+          <View style={boardingCheckoutStyles.grandTotalRow}>
+            <Text style={boardingCheckoutStyles.grandTotalLabel}>Grand Total</Text>
+            <Text style={boardingCheckoutStyles.grandTotalValue}>
+              ₹ {calculateTotal()}
             </Text>
           </View>
         </View>
 
         {/* Important Note */}
         <View style={boardingCheckoutStyles.noteCard}>
-          <MaterialIcons name="info" size={20} color="#F59E0B" />
+          <View style={boardingCheckoutStyles.noteIconContainer}>
+            <MaterialIcons name="info" size={20} color="#F59E0B" />
+          </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={boardingCheckoutStyles.noteTitle}>Please Note</Text>
+            <Text style={boardingCheckoutStyles.noteTitle}>Important Information</Text>
             <Text style={boardingCheckoutStyles.noteText}>
-              The booking will be confirmed after successful payment. You will
-              receive updates on your pet's stay.
+              Your booking will be confirmed after successful payment. You'll receive regular updates about your pet's stay including daily photos and videos.
             </Text>
           </View>
         </View>
@@ -465,30 +490,26 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
       {/* Bottom Payment Section */}
       {!dataLoading && (
       <View style={boardingCheckoutStyles.bottomSection}>
-        <View style={boardingCheckoutStyles.paymentInfo}>
-          <View>
-            <Text style={boardingCheckoutStyles.totalAmountLabel}>
-              Total Amount
-            </Text>
-            <Text style={boardingCheckoutStyles.totalAmountValue}>
-              ₹ {calculateTotal().toFixed(2)}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={handlePayNow}
-            disabled={loading}
-            style={[
-              boardingCheckoutStyles.payButton,
-              loading && boardingCheckoutStyles.payButtonDisabled,
-            ]}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={boardingCheckoutStyles.payButtonText}>Pay Now</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={handlePayNow}
+          disabled={loading}
+          style={[
+            boardingCheckoutStyles.confirmButton,
+            loading && boardingCheckoutStyles.confirmButtonDisabled,
+          ]}
+          activeOpacity={0.8}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <MaterialIcons name="check-circle" size={20} color="#FFFFFF" />
+              <Text style={boardingCheckoutStyles.confirmButtonText}>
+                Confirm Booking
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
       )}
 

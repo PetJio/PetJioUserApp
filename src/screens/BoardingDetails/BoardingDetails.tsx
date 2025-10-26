@@ -113,13 +113,6 @@ interface BoardingDetailsProps {
   route: WalkingDetailsScreenRouteProp;
 }
 
-interface BookingDay {
-  id: number;
-  date: string;
-  uploads: string[] | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   navigation,
@@ -130,8 +123,6 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [bookingDetailsData, setBookingDetailsData] = useState<any>(null);
-  const [bookingDays, setBookingDays] = useState<BookingDay[]>([]);
-  const [loadingDays, setLoadingDays] = useState<boolean>(false);
   const [pets, setPets] = useState<any[]>([]);
   const [boardingServices, setBoardingServices] = useState<any[]>([]);
   const [petOwnerId, setPetOwnerId] = useState<number | null>(null);
@@ -158,122 +149,13 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
     selectedPets: [],
   };
 
-  // Fetch booking days with photos/videos
-  const fetchBookingDays = async (bookingId: number) => {
-    try {
-      setLoadingDays(true);
-      console.log('🔄 Starting fetchBookingDays...');
-      console.log('📋 Booking ID:', bookingId);
-
-      const token = await storageService.getUserToken();
-      console.log('🔑 Token retrieved:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
-
-      if (!token) {
-        console.error('❌ No authentication token found');
-        return;
-      }
-
-      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-days/booking/${bookingId}`;
-      console.log('🌐 API URL:', apiUrl);
-
-      // Generate CURL command for debugging
-      const curlCommand = `curl -X GET "${apiUrl}" \\
-  -H "Authorization: Bearer ${token}" \\
-  -H "Content-Type: application/json" \\
-  -v`;
-
-      console.log('🔧 CURL command for booking days API:');
-      console.log('=====================================');
-      console.log(curlCommand);
-      console.log('=====================================');
-
-      console.log('📡 Sending request to booking days API...');
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', response.headers);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Booking days raw response:', JSON.stringify(data, null, 2));
-        console.log('📊 Response statusCode:', data.statusCode);
-        console.log('📊 Response message:', data.message);
-        console.log('📊 Number of days in response:', data.body ? data.body.length : 0);
-
-        if (data.statusCode === 200 && data.body) {
-          console.log('📋 Raw booking days:', data.body);
-
-          // Filter out future days (days with null uploads) and sort by date descending (newest first)
-          const today = new Date().toISOString().split('T')[0];
-          console.log('📅 Today\'s date:', today);
-
-          const pastAndTodayDays = data.body
-            .filter((day: BookingDay) => {
-              const isPastOrToday = day.date <= today;
-              console.log(`🔍 Day ${day.date}: isPastOrToday = ${isPastOrToday}, hasUploads = ${!!day.uploads}`);
-              return isPastOrToday;
-            })
-            .sort((a: BookingDay, b: BookingDay) =>
-              new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-
-          console.log('✅ Filtered and sorted days:', pastAndTodayDays.length);
-          pastAndTodayDays.forEach((day: BookingDay, index: number) => {
-            console.log(`  ${index + 1}. Date: ${day.date}, Uploads: ${day.uploads?.length || 0}`);
-            if (day.uploads) {
-              day.uploads.forEach((upload, uploadIndex) => {
-                const s3Url = `https://petjio-stage-bucket.s3.ap-south-1.amazonaws.com/${upload}`;
-                console.log(`     ${uploadIndex + 1}. ${upload} -> ${s3Url}`);
-              });
-            }
-          });
-
-          setBookingDays(pastAndTodayDays);
-          console.log('✅ Booking days state updated successfully');
-        } else {
-          console.error('❌ Invalid response structure or non-200 statusCode');
-          console.error('❌ Received statusCode:', data.statusCode);
-          console.error('❌ data.body exists:', !!data.body);
-          console.error('❌ data.body type:', typeof data.body);
-          console.error('❌ Full response data:', JSON.stringify(data, null, 2));
-        }
-      } else {
-        const errorText = await response.text();
-        console.error('❌ Failed to fetch booking days');
-        console.error('❌ Status:', response.status);
-        console.error('❌ Error response:', errorText);
-      }
-    } catch (error) {
-      console.error('🔥 Error fetching booking days:', error);
-      console.error('🔥 Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      });
-    } finally {
-      setLoadingDays(false);
-      console.log('✅ fetchBookingDays completed');
-    }
-  };
-
   useEffect(() => {
     const routeParams = route?.params as any;
     const boardDetailsData = routeParams?.boardDetails;
     console.log('details ==> ', boardDetailsData);
-    // fetchBoardingDetails();
+
     if (boardDetailsData) {
       setBookingDetailsData(boardDetailsData);
-
-      // Fetch boarding days if booking ID is available
-      if (boardDetailsData.id) {
-        fetchBookingDays(boardDetailsData.id);
-      }
 
       // Fetch boarding services for this provider
       if (boardDetailsData.boardingServices) {
@@ -433,13 +315,19 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           return;
         }
 
+        // Prepare enhanced boarding details with service information
+        const enhancedBoardingDetails = {
+          ...bookingDetailsData,
+          boardingServices: boardingServices, // Include the full boardingServices array
+        };
+
         // Navigate to checkout with pricing data
         navigation.navigate('BoardingCheckout', {
           bookingId: result.body.bookingId, // Use bookingId from response
           bookingData: result.body.paymentRecords, // Array of payment records (pricing info)
           startDate,
           endDate,
-          boardingDetails: bookingDetailsData,
+          boardingDetails: enhancedBoardingDetails, // Pass enhanced details with services
           petOwnerId,
         });
       } else {

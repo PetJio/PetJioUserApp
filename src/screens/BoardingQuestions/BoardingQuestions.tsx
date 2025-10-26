@@ -32,7 +32,7 @@ const BoardingQuestions: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
-  const { startDate, endDate, selectedPets, petOwnerId, bookingId, boardingDetails } = route.params || {};
+  const { startDate, endDate, selectedPets, petOwnerId, bookingId, boardingDetails: routeBoardingDetails } = route.params || {};
 
   const [currentPetIndex, setCurrentPetIndex] = useState(0);
   const [pets, setPets] = useState<any[]>([]);
@@ -40,6 +40,7 @@ const BoardingQuestions: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showFoodTypeDropdown, setShowFoodTypeDropdown] = useState(false);
+  const [boardingDetails, setBoardingDetails] = useState<any>(routeBoardingDetails || {});
 
   // Food type options
   const foodTypeOptions = [
@@ -50,30 +51,72 @@ const BoardingQuestions: React.FC = () => {
   ];
 
   // Get boarder's available services from boardingDetails
-  const boarding = boardingDetails || {};
-  
+  // boardingDetails can have THREE structures:
+  // 1. Flat structure (multiple pets): { id, matchedPetIds, nailClipping, medicatedBath, ... }
+  // 2. Nested in boardingServices array: { boardingServices: [{ boarding: { nailClipping, ... } }] }
+  // 3. Direct on root: { nailClipping, medicatedBath, ... }
+
+  let boarding = boardingDetails || {};
+
+  // Check if services are in boardingServices array (nested structure - single pet)
+  if (boarding.boardingServices && Array.isArray(boarding.boardingServices) && boarding.boardingServices.length > 0) {
+    const firstService = boarding.boardingServices[0];
+    // Check if service fields are inside a nested 'boarding' object
+    if (firstService.boarding && typeof firstService.boarding === 'object') {
+      boarding = firstService.boarding; // Use the nested boarding object
+    } else {
+      boarding = firstService; // Use first service object directly
+    }
+  }
+  // If it has matchedPetIds, services are directly on the root object (multiple pets)
+  // In this case, boarding is already set correctly above
+
   console.log('📋 Full boardingDetails:', JSON.stringify(boardingDetails, null, 2));
-  
-  // Check if services are available (even if price is 0, it's still available)
-  const hasNailClipping = boarding.nailClipping !== undefined && boarding.nailClipping !== null;
-  const hasMedicatedBath = boarding.medicatedBath !== undefined && boarding.medicatedBath !== null;
-  const hasSwimmingPool = boarding.swimming !== undefined && boarding.swimming !== null;
-  const hasWalksPerDay = boarding.walksPerDay !== undefined && boarding.walksPerDay !== null;
+  console.log('🎯 Extracted boarding object:', JSON.stringify(boarding, null, 2));
+  console.log('🔍 Service field types:', {
+    'nailClipping type': typeof boarding.nailClipping,
+    'nailClipping value': boarding.nailClipping,
+    'medicatedBath type': typeof boarding.medicatedBath,
+    'medicatedBath value': boarding.medicatedBath,
+    'swimming type': typeof boarding.swimming,
+    'swimming value': boarding.swimming,
+    'swimmingPool type': typeof boarding.swimmingPool,
+    'swimmingPool value': boarding.swimmingPool,
+    'walksPerDay type': typeof boarding.walksPerDay,
+    'walksPerDay value': boarding.walksPerDay,
+    'docAvailibility type': typeof boarding.docAvailibility,
+    'docAvailibility value': boarding.docAvailibility,
+  });
+
+  // Check if services are available - show only if field exists with number value (including 0 for free)
+  const hasNailClipping = typeof boarding.nailClipping === 'number';
+  const hasMedicatedBath = typeof boarding.medicatedBath === 'number';
+  const hasSwimmingPool = typeof boarding.swimming === 'number' || typeof boarding.swimmingPool === 'number';
+  const hasWalksPerDay = typeof boarding.walksPerDay === 'number';
   const hasDocService = boarding.docAvailibility === true;
 
   // Service prices (0 means free)
-  const nailClippingPrice = boarding.nailClipping || 0;
-  const medicatedBathPrice = boarding.medicatedBath || 0;
-  const swimmingPoolPrice = boarding.swimming || 0;
-  const walksPerDayPrice = boarding.walksPerDay || 0;
+  const nailClippingPrice = typeof boarding.nailClipping === 'number' ? boarding.nailClipping : 0;
+  const medicatedBathPrice = typeof boarding.medicatedBath === 'number' ? boarding.medicatedBath : 0;
+  const swimmingPoolPrice = typeof boarding.swimming === 'number' ? boarding.swimming : (typeof boarding.swimmingPool === 'number' ? boarding.swimmingPool : 0);
+  const walksPerDayPrice = typeof boarding.walksPerDay === 'number' ? boarding.walksPerDay : 0;
 
-  console.log('🏠 Boarder Services:', {
-    boardingDetails,
+  console.log('🏠 Boarder Services Check:', {
+    'Raw boardingDetails': boardingDetails,
+    'boarding.nailClipping': boarding.nailClipping,
+    'boarding.medicatedBath': boarding.medicatedBath,
+    'boarding.swimming': boarding.swimming,
+    'boarding.swimmingPool': boarding.swimmingPool,
+    'boarding.walksPerDay': boarding.walksPerDay,
+    'boarding.docAvailibility': boarding.docAvailibility,
+    'boarding.isDocReqd': boarding.isDocReqd,
+    '---Results---': '---',
     hasNailClipping,
     hasMedicatedBath,
     hasSwimmingPool,
     hasWalksPerDay,
     hasDocService,
+    '---Prices---': '---',
     nailClippingPrice,
     medicatedBathPrice,
     swimmingPoolPrice,
@@ -82,7 +125,60 @@ const BoardingQuestions: React.FC = () => {
 
   useEffect(() => {
     fetchPetsData();
+    fetchFullBoardingDetails();
   }, []);
+
+  const fetchFullBoardingDetails = async () => {
+    // Check if service fields are missing
+    const hasServiceFields = typeof boardingDetails.nailClipping === 'number' ||
+                             typeof boardingDetails.medicatedBath === 'number' ||
+                             typeof boardingDetails.swimming === 'number';
+
+    if (!hasServiceFields && boardingDetails.id) {
+      try {
+        console.log('🔄 Service fields missing, fetching full boarding details for ID:', boardingDetails.id);
+        const token = await storageService.getUserToken();
+        if (!token) return;
+
+        // Try the boarding-services endpoint which should have the service details
+        const response = await fetch(
+          `${API_CONFIG.BASE_URL}/api/boarding-services?boardingId=${boardingDetails.id}`,
+          {
+            headers: { 'Authorization': `Bearer ${token}` },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Boarding services fetched:', result);
+
+          if (result.statusCode === 200 && result.body && Array.isArray(result.body) && result.body.length > 0) {
+            // Extract service data from first boarding service
+            const firstService = result.body[0];
+            if (firstService.boarding) {
+              // Merge the service fields with existing boardingDetails
+              setBoardingDetails({
+                ...boardingDetails,
+                nailClipping: firstService.boarding.nailClipping,
+                medicatedBath: firstService.boarding.medicatedBath,
+                swimming: firstService.boarding.swimming,
+                walksPerDay: firstService.boarding.walksPerDay,
+                docAvailibility: firstService.boarding.docAvailibility,
+                commercialFood: firstService.boarding.commercialFood,
+              });
+              console.log('✅ Service fields updated successfully');
+            }
+          }
+        } else {
+          console.log('⚠️ Boarding services API failed, status:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching boarding details:', error);
+      }
+    } else {
+      console.log('✅ Service fields already present in boardingDetails');
+    }
+  };
 
   const fetchPetsData = async () => {
     try {
@@ -216,7 +312,7 @@ const BoardingQuestions: React.FC = () => {
       console.log('Booking ID:', bookingId);
       console.log('Pet Forms Data:', petFormsData);
 
-      // Prepare data array for all pets
+      // Prepare data array for all pets - each object represents one pet's form data
       const dataArray = petFormsData.map((form) => ({
         id: form.petId,
         possessions: form.possessions,
@@ -232,24 +328,25 @@ const BoardingQuestions: React.FC = () => {
         data: dataArray,
       };
 
-      console.log('📤 UPDATE BOOKING CURL:', `curl --location --request PATCH '${API_CONFIG.BASE_URL}/api/boarding-service-bookings/update-booking-booking-01' \\
+      // API URL with booking ID in the path as shown in CURL
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/update-booking-booking/${bookingId}`;
+
+      console.log('📤 UPDATE BOOKING CURL:', `curl --location --request PATCH '${apiUrl}' \\
 --header 'Content-Type: application/json' \\
 --header 'Authorization: Bearer ${token}' \\
 --data '${JSON.stringify(updatePayload)}'`);
 
       console.log('📤 Update payload:', JSON.stringify(updatePayload, null, 2));
+      console.log(`📊 Total pets being updated: ${dataArray.length}`);
 
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/update-booking-booking-01`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updatePayload),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatePayload),
+      });
 
       const result = await response.json();
       console.log('📥 Booking update response:', result);
@@ -257,7 +354,7 @@ const BoardingQuestions: React.FC = () => {
       if (response.ok) {
         Alert.alert(
           'Success!',
-          'All booking details have been updated successfully.',
+          `Booking details for ${dataArray.length} pet(s) have been updated successfully.`,
           [
             {
               text: 'OK',
@@ -326,28 +423,36 @@ const BoardingQuestions: React.FC = () => {
                 {form.nailClipping && hasNailClipping && (
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                     <Text style={{ color: '#6B7280' }}>Nail Clipping</Text>
-                    <Text style={{ fontWeight: '600' }}>₹ {nailClippingPrice}</Text>
+                    <Text style={{ fontWeight: '600' }}>
+                      {nailClippingPrice === 0 ? 'FREE' : `₹ ${nailClippingPrice}`}
+                    </Text>
                   </View>
                 )}
 
                 {form.medicatedBath && hasMedicatedBath && (
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                     <Text style={{ color: '#6B7280' }}>Medicated Bath</Text>
-                    <Text style={{ fontWeight: '600' }}>₹ {medicatedBathPrice}</Text>
+                    <Text style={{ fontWeight: '600' }}>
+                      {medicatedBathPrice === 0 ? 'FREE' : `₹ ${medicatedBathPrice}`}
+                    </Text>
                   </View>
                 )}
 
                 {form.swimmingPool && hasSwimmingPool && (
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                     <Text style={{ color: '#6B7280' }}>Swimming Pool</Text>
-                    <Text style={{ fontWeight: '600' }}>₹ {swimmingPoolPrice}</Text>
+                    <Text style={{ fontWeight: '600' }}>
+                      {swimmingPoolPrice === 0 ? 'FREE' : `₹ ${swimmingPoolPrice}`}
+                    </Text>
                   </View>
                 )}
 
                 {form.walksPerDay > 0 && hasWalksPerDay && (
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                     <Text style={{ color: '#6B7280' }}>Walks ({form.walksPerDay}/day)</Text>
-                    <Text style={{ fontWeight: '600' }}>₹ {walksPerDayPrice * form.walksPerDay}</Text>
+                    <Text style={{ fontWeight: '600' }}>
+                      {walksPerDayPrice === 0 ? 'FREE' : `₹ ${walksPerDayPrice * form.walksPerDay}`}
+                    </Text>
                   </View>
                 )}
 
@@ -467,15 +572,25 @@ const BoardingQuestions: React.FC = () => {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
+              backgroundColor: '#FFFFFF',
             }}
           >
-            <Text>{foodTypeOptions.find(f => f.id === currentForm.foodType)?.label}</Text>
-            <MaterialIcons name={showFoodTypeDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} />
+            <Text style={{ fontSize: 14, color: '#111827', fontWeight: '500' }}>
+              {foodTypeOptions.find(f => f.id === currentForm.foodType)?.label || 'Select food type'}
+            </Text>
+            <MaterialIcons name={showFoodTypeDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} color="#6B7280" />
           </TouchableOpacity>
 
           {showFoodTypeDropdown && (
-            <View style={{ marginTop: 8 }}>
-              {foodTypeOptions.map(option => (
+            <View style={{
+              marginTop: 8,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+              overflow: 'hidden',
+            }}>
+              {foodTypeOptions.map((option, index) => (
                 <TouchableOpacity
                   key={option.id}
                   onPress={() => {
@@ -484,11 +599,18 @@ const BoardingQuestions: React.FC = () => {
                   }}
                   style={{
                     padding: 12,
-                    borderBottomWidth: 1,
+                    borderBottomWidth: index < foodTypeOptions.length - 1 ? 1 : 0,
                     borderBottomColor: '#E5E7EB',
+                    backgroundColor: currentForm.foodType === option.id ? '#F0F9FF' : '#FFFFFF',
                   }}
                 >
-                  <Text>{option.label}</Text>
+                  <Text style={{
+                    fontSize: 14,
+                    color: currentForm.foodType === option.id ? '#0284C7' : '#111827',
+                    fontWeight: currentForm.foodType === option.id ? '600' : '400',
+                  }}>
+                    {option.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -509,7 +631,9 @@ const BoardingQuestions: React.FC = () => {
               <MaterialIcons name="directions-walk" size={24} color="#58B9D0" style={{ marginRight: 12 }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>Walks Per Day</Text>
-                <Text style={{ fontSize: 12, color: '#6B7280' }}>₹{walksPerDayPrice} per walk</Text>
+                <Text style={{ fontSize: 12, color: '#6B7280' }}>
+                  {walksPerDayPrice === 0 ? 'FREE' : `₹${walksPerDayPrice} per walk`}
+                </Text>
               </View>
             </View>
 
@@ -545,6 +669,24 @@ const BoardingQuestions: React.FC = () => {
           Additional Services
         </Text>
 
+        {/* No services message */}
+        {!hasNailClipping && !hasMedicatedBath && !hasSwimmingPool && !hasDocService && (
+          <View style={{
+            backgroundColor: '#F9FAFB',
+            borderRadius: 12,
+            padding: 20,
+            marginBottom: 16,
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+            alignItems: 'center',
+          }}>
+            <MaterialIcons name="info-outline" size={40} color="#9CA3AF" style={{ marginBottom: 12 }} />
+            <Text style={{ fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 22 }}>
+              No additional services available for this boarding facility
+            </Text>
+          </View>
+        )}
+
         {/* Nail Clipping */}
         {hasNailClipping && (
           <TouchableOpacity
@@ -575,7 +717,9 @@ const BoardingQuestions: React.FC = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>Nail Clipping</Text>
-              <Text style={{ fontSize: 12, color: '#6B7280' }}>₹{nailClippingPrice}</Text>
+              <Text style={{ fontSize: 12, color: '#6B7280' }}>
+                {nailClippingPrice === 0 ? 'FREE' : `₹${nailClippingPrice}`}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
@@ -610,7 +754,9 @@ const BoardingQuestions: React.FC = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>Medicated Bath</Text>
-              <Text style={{ fontSize: 12, color: '#6B7280' }}>₹{medicatedBathPrice}</Text>
+              <Text style={{ fontSize: 12, color: '#6B7280' }}>
+                {medicatedBathPrice === 0 ? 'FREE' : `₹${medicatedBathPrice}`}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
@@ -645,7 +791,9 @@ const BoardingQuestions: React.FC = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>Swimming Pool Access</Text>
-              <Text style={{ fontSize: 12, color: '#6B7280' }}>₹{swimmingPoolPrice}</Text>
+              <Text style={{ fontSize: 12, color: '#6B7280' }}>
+                {swimmingPoolPrice === 0 ? 'FREE' : `₹${swimmingPoolPrice}`}
+              </Text>
             </View>
           </TouchableOpacity>
         )}

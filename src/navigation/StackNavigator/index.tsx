@@ -96,6 +96,7 @@ import {
   VeterinaryHomeVisiteDetails,
   AddPet,
   EditPet,
+  VaccinationUpload,
   ViewDetails,
 } from '../../screens';
 import TabNavigator from '../TabNavigator';
@@ -228,6 +229,7 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="VeterinaryHomeVisiteDetails" component={VeterinaryHomeVisiteDetails}/>
             <Stack.Screen name="AddPet" component={AddPet}/>
             <Stack.Screen name="EditPet" component={EditPet}/>
+            <Stack.Screen name="VaccinationUpload" component={VaccinationUpload}/>
             <Stack.Screen name="ViewDetails" component={ViewDetails}/>
 
         </Stack.Navigator>

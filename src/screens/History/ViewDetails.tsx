@@ -30,14 +30,26 @@ import historyStyles from './history.styles';
 import serviceStyles from '../Service/styles';
 import { HistoryDetailsSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
-// Interface definitions from History.tsx
-interface BookingDetail {
+// Interface definitions matching NEW API response structure from History.tsx
+interface Status {
   id: number;
-  startTime: string;
-  endTime: string;
+  name: string;
 }
 
-interface Service {
+interface Mode {
+  id: number;
+  value: string;
+}
+
+interface Customer {
+  id: number;
+  userId: number;
+  pets: any;
+  alterNo: string;
+  profileImg: string;
+}
+
+interface ServiceProvider {
   id: number;
   firstName: string;
   lastName: string;
@@ -47,21 +59,46 @@ interface Service {
   state: string;
   address: string;
   businessName?: string;
+  fcmToken?: string;
 }
 
-interface ServiceBooking {
-  serviceId: number;
-  customerId: number;
-  consultationId: number;
-  service: Service;
+interface Boarding {
+  id: number;
+  facilityName: string;
+  userId: number;
+  description: string;
+  regNo: string;
+  serviceUploads: string[];
+  profileImg: string;
+  experience: number;
+  keepCustomerPossessions: boolean;
+  checkinTime: number;
+  checkoutTime: number;
+  lastCheckoutTime: number;
+  capacity: number;
+  acAvailable: boolean;
+  medicatedBath: number;
+  swimming: number;
+  nailClipping: number;
+  commercialFood: number;
+  walksPerDay: number;
+  docAvailibility: boolean;
+}
+
+interface BookingDetail {
+  id: number;
+  startTime: string;
+  endTime: string;
 }
 
 interface BoardingServiceBooking {
   id: number;
   possessions: boolean;
-  backUpFood: boolean;
-  shaveAndTrimming: boolean;
-  groomingBeforeDischarge: boolean;
+  isDocReqd: boolean;
+  nailClipping: boolean;
+  swimmingPool: boolean;
+  walksPerDay: number | null;
+  medicatedBath: boolean;
   additionalAdvice?: string;
   bookingDetails: BookingDetail;
 }
@@ -81,10 +118,16 @@ interface FlowOption {
 }
 
 interface BookingHistoryItem {
-  bookingDetail: BookingDetail;
-  serviceBookings: ServiceBooking[];
+  id: number;
+  mode: Mode;
+  startTime: string;
+  endTime: string;
+  customer: Customer;
+  status: Status;
+  service: ServiceProvider;
+  boarding: Boarding;
   boardingServiceBookings: BoardingServiceBooking[];
-  flowHistories: FlowHistory[];
+  flowHistories?: FlowHistory[];
 }
 
 interface BookingDay {
@@ -147,11 +190,11 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
 
   // Fetch booking days when component mounts
   useEffect(() => {
-    if (currentBookingData?.bookingDetail?.id) {
-      console.log('📋 Fetching booking days for booking ID:', currentBookingData.bookingDetail.id);
-      fetchBookingDays(currentBookingData.bookingDetail.id);
+    if (currentBookingData?.id) {
+      console.log('📋 Fetching booking days for booking ID:', currentBookingData.id);
+      fetchBookingDays(currentBookingData.id);
     }
-  }, [currentBookingData?.bookingDetail?.id]);
+  }, [currentBookingData?.id]);
 
   // Helper functions from History.tsx
   const formatDate = (dateString: string) => {
@@ -195,17 +238,12 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   };
 
   const getServiceTitle = (booking: BookingHistoryItem) => {
-    if (booking.boardingServiceBookings.length > 0) {
-      return 'Boarding Service';
-    } else if (booking.serviceBookings.length > 0) {
-      return 'Pet Service';
-    }
-    return 'Service Booking';
+    return booking.boarding?.facilityName || 'Boarding Service';
   };
 
   const getProviderName = (booking: BookingHistoryItem) => {
-    if (booking.serviceBookings.length > 0) {
-      const service = booking.serviceBookings[0].service;
+    const service = booking.service;
+    if (service) {
       return `${service.firstName} ${service.lastName}`;
     }
     return 'Service Provider';
@@ -214,9 +252,11 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   const getServiceFeatures = (booking: BoardingServiceBooking) => {
     const features = [];
     if (booking.possessions) features.push('Possessions');
-    if (booking.backUpFood) features.push('Backup Food');
-    if (booking.shaveAndTrimming) features.push('Grooming');
-    if (booking.groomingBeforeDischarge) features.push('Pre-discharge Grooming');
+    if (booking.isDocReqd) features.push('Doctor Required');
+    if (booking.nailClipping) features.push('Nail Clipping');
+    if (booking.swimmingPool) features.push('Swimming Pool');
+    if (booking.medicatedBath) features.push('Medicated Bath');
+    if (booking.walksPerDay) features.push(`${booking.walksPerDay} Walks/day`);
     return features;
   };
 
@@ -239,20 +279,19 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
     }
   };
 
-  const getCurrentStatus = (flowHistories: FlowHistory[]) => {
-    if (flowHistories.length === 0) return null;
-    const latestFlow = flowHistories.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-    return { id: latestFlow.boardingBookingFlowOptionsId };
+  const getCurrentStatus = (booking: BookingHistoryItem) => {
+    // Return the status from the new API response
+    return booking.status;
   };
 
   // Handle chat navigation
   const handleChatPress = () => {
-    if (!currentBookingData.serviceBookings || currentBookingData.serviceBookings.length === 0) {
+    if (!currentBookingData.service) {
       Alert.alert('Error', 'Provider information not available');
       return;
     }
 
-    const serviceProvider = currentBookingData.serviceBookings[0].service;
+    const serviceProvider = currentBookingData.service;
     const chatUser = {
       id: serviceProvider.id?.toString() || 'unknown',
       name: `${serviceProvider.firstName} ${serviceProvider.lastName}`,
@@ -485,7 +524,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   // Pull-to-refresh function
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshBookingData(currentBookingData.bookingDetail.id);
+    await refreshBookingData(currentBookingData.id);
     setRefreshing(false);
   };
 
@@ -612,11 +651,11 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
     }
   };
 
-  const duration = calculateDuration(currentBookingData.bookingDetail.startTime, currentBookingData.bookingDetail.endTime);
+  const duration = calculateDuration(currentBookingData.startTime, currentBookingData.endTime);
   const serviceTitle = getServiceTitle(currentBookingData);
   const providerName = getProviderName(currentBookingData);
-  const currentStatus = getCurrentStatus(currentBookingData.flowHistories);
-  const actionButton = currentStatus ? getActionButton(currentStatus.id, currentBookingData.bookingDetail.id) : null;
+  const currentStatus = getCurrentStatus(currentBookingData);
+  const actionButton = currentStatus ? getActionButton(currentStatus.id, currentBookingData.id) : null;
 
   return (
     <View style={historyStyles.container}>
@@ -630,7 +669,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         <View style={serviceStyles.headerTitleContainer}>
           <Text style={serviceStyles.stickyHeaderTitle}>Booking Details</Text>
           <Text style={serviceStyles.stickyHeaderSubtitle}>
-            #{currentBookingData.bookingDetail.id}
+            #{currentBookingData.id}
           </Text>
         </View>
         <TouchableOpacity
@@ -693,7 +732,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               <MaterialIcons name="calendar-today" size={16} color="#666" />
               <View style={historyStyles.dateTexts}>
                 <Text style={historyStyles.dateLabel}>Check-in</Text>
-                <Text style={historyStyles.dateValue}>{formatDate(currentBookingData.bookingDetail.startTime)}</Text>
+                <Text style={historyStyles.dateValue}>{formatDate(currentBookingData.startTime)}</Text>
               </View>
             </View>
             <View style={historyStyles.dateDivider} />
@@ -701,7 +740,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               <MaterialIcons name="event" size={16} color="#666" />
               <View style={historyStyles.dateTexts}>
                 <Text style={historyStyles.dateLabel}>Check-out</Text>
-                <Text style={historyStyles.dateValue}>{formatDate(currentBookingData.bookingDetail.endTime)}</Text>
+                <Text style={historyStyles.dateValue}>{formatDate(currentBookingData.endTime)}</Text>
               </View>
             </View>
           </View>
@@ -731,32 +770,32 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         )}
 
         {/* Provider Details */}
-        {currentBookingData.serviceBookings.length > 0 && (
+        {currentBookingData.service && (
           <View style={historyStyles.detailsCard}>
             <Text style={historyStyles.cardTitle}>Service Provider</Text>
             <View style={historyStyles.providerInfo}>
               <View style={historyStyles.providerDetail}>
                 <MaterialIcons name="person" size={16} color="#666" />
                 <Text style={historyStyles.providerDetailText}>
-                  {currentBookingData.serviceBookings[0].service.firstName} {currentBookingData.serviceBookings[0].service.lastName}
+                  {currentBookingData.service.firstName} {currentBookingData.service.lastName}
                 </Text>
               </View>
               <View style={historyStyles.providerDetail}>
                 <MaterialIcons name="email" size={16} color="#666" />
                 <Text style={historyStyles.providerDetailText}>
-                  {currentBookingData.serviceBookings[0].service.email}
+                  {currentBookingData.service.email}
                 </Text>
               </View>
               <View style={historyStyles.providerDetail}>
                 <MaterialIcons name="phone" size={16} color="#666" />
                 <Text style={historyStyles.providerDetailText}>
-                  {currentBookingData.serviceBookings[0].service.mobile}
+                  {currentBookingData.service.mobile}
                 </Text>
               </View>
               <View style={historyStyles.providerDetail}>
                 <MaterialIcons name="location-on" size={16} color="#666" />
                 <Text style={historyStyles.providerDetailText}>
-                  {currentBookingData.serviceBookings[0].service.address}, {currentBookingData.serviceBookings[0].service.city}, {currentBookingData.serviceBookings[0].service.state}
+                  {currentBookingData.service.address}, {currentBookingData.service.city}, {currentBookingData.service.state}
                 </Text>
               </View>
             </View>
@@ -770,7 +809,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
             <View style={historyStyles.statusRow}>
               <MaterialIcons name="info-outline" size={20} color="#58B9D0" />
               <Text style={historyStyles.statusTextLarge}>
-                {getStatusMessage(currentStatus.id)}
+                {currentStatus.name}
               </Text>
             </View>
           </View>
@@ -1125,7 +1164,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => submitPetExtras(currentBookingData.bookingDetail.id)}
+                onPress={() => submitPetExtras(currentBookingData.id)}
                 disabled={submittingHandover || !customerProvides.trim()}
                 style={{
                   flex: 1,

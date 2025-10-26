@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import {
     responsiveWidth,
     responsiveHeight,
@@ -9,25 +9,21 @@ const boardingQuestionStyles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8F9FB',
     },
-    // Header styles matching other pages
+    // Header styles matching BoardingCheckout
     header: {
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: responsiveWidth(4),
-        paddingVertical: responsiveHeight(2),
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingBottom: 12,
+        backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#111827',
+        color: '#1A1D29',
     },
     headerSubtitle: {
         fontSize: 13,

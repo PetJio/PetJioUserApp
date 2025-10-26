@@ -87,6 +87,7 @@ export type RootStackParamList = {
   Packages: undefined;
   ConfirmDetails: undefined;
   AddVaccination: undefined;
+  VaccinationUpload: { petId: number; petName: string };
   AddPet: undefined;
   EditPet: { pet: any };
 

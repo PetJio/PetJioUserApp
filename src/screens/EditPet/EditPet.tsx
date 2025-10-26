@@ -25,6 +25,7 @@ import { API_CONFIG } from '../../config/api';
 import { storageService } from '../../utils/storage';
 import { goBack } from '../../utils/navigationService';
 import { RootStackNavigationProp } from '../../types/navigation';
+import VaccinationDisplay from '../../components/VaccinationDisplay/VaccinationDisplay';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
 import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
@@ -37,7 +38,8 @@ interface PetCategory {
 
 interface PetBreed {
   id: number;
-  breedName: string;
+  name?: string; // Legacy field
+  breedName?: string; // Current API field
   pet?: {
     id: number;
     catName: string;
@@ -142,7 +144,7 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
   const [disability, setDisability] = useState(pet?.disability || '');
   const [feedCount, setFeedCount] = useState<number | null>(pet?.dailyFeedCount || null);
   const [medicalHistory, setMedicalHistory] = useState(pet?.medicalHistory || '');
-  const [foodType, setFoodType] = useState<number | null>(pet?.foodType || null);
+  const [foodType, setFoodType] = useState<string | null>(pet?.foodType?.toString() || null);
   const [favouriteGames, setFavouriteGames] = useState(pet?.favGames || '');
 
   console.log('📊 Initial state values:', {
@@ -216,26 +218,71 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
     return null;
   };
 
-  const fetchDropdownData = async () => {
+  const fetchDropdownData = async (retryCount = 0) => {
     setLoadingData(true);
     try {
       const token = await getAuthToken();
       if (!token) {
         Alert.alert('Error', 'Please login to continue');
+        setLoadingData(false);
         return;
       }
 
-      // Fetch categories, sizes, and genders in parallel
+      console.log('🔄 Fetching dropdown data from:', API_CONFIG.BASE_URL);
+      console.log('🔑 Using token:', token ? `${token.substring(0, 20)}...` : 'None');
+
+      // Generate CURL commands for debugging
+      const categoriesUrl = `${API_CONFIG.BASE_URL}/api/pet-category`;
+      const sizesUrl = `${API_CONFIG.BASE_URL}/api/pet-size`;
+      const gendersUrl = `${API_CONFIG.BASE_URL}/api/gender`;
+
+      console.log('\n📋 CURL for Categories:');
+      console.log(`curl -X GET "${categoriesUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json"`);
+
+      console.log('\n📏 CURL for Sizes:');
+      console.log(`curl -X GET "${sizesUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json"`);
+
+      console.log('\n👥 CURL for Genders:');
+      console.log(`curl -X GET "${gendersUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json"\n`);
+
+      // Fetch categories, sizes, and genders in parallel with better error handling
       const [categoriesRes, sizesRes, gendersRes] = await Promise.all([
-        fetch(`${API_CONFIG.BASE_URL}/api/pet-category`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }).catch(() => null),
-        fetch(`${API_CONFIG.BASE_URL}/api/pet-size`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }).catch(() => null),
-        fetch(`${API_CONFIG.BASE_URL}/api/pet-gender`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }).catch(() => null),
+        fetch(categoriesUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }).catch(err => {
+          console.error('❌ Categories fetch error:', err);
+          console.error('❌ Categories error details:', JSON.stringify(err, null, 2));
+          return null;
+        }),
+        fetch(sizesUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }).catch(err => {
+          console.error('❌ Sizes fetch error:', err);
+          console.error('❌ Sizes error details:', JSON.stringify(err, null, 2));
+          return null;
+        }),
+        fetch(gendersUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }).catch(err => {
+          console.error('❌ Genders fetch error:', err);
+          console.error('❌ Genders error details:', JSON.stringify(err, null, 2));
+          return null;
+        }),
       ]);
 
       // Handle categories
@@ -250,17 +297,25 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
       // Handle sizes
       if (sizesRes && sizesRes.ok) {
         const sizesData = await sizesRes.json();
+        console.log('📏 Raw sizes response:', sizesData);
         const sizes = sizesData.body || [];
         setPetSizes(sizes);
         console.log('📏 Sizes loaded:', sizes);
+        console.log('📏 Sizes array length:', sizes.length);
+      } else {
+        console.error('❌ Sizes request failed:', sizesRes?.status, sizesRes?.statusText);
       }
 
       // Handle genders
       if (gendersRes && gendersRes.ok) {
         const gendersData = await gendersRes.json();
+        console.log('👥 Raw genders response:', gendersData);
         const genders = gendersData.body || [];
         setPetGenders(genders);
         console.log('👥 Genders loaded:', genders);
+        console.log('👥 Genders array length:', genders.length);
+      } else {
+        console.error('❌ Genders request failed:', gendersRes?.status, gendersRes?.statusText);
       }
 
     } catch (error) {
@@ -485,35 +540,17 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
     }
 
     if (!category) {
-      newErrors.category = 'Pet category is required';
-    }
-
-    const selectedCategory = petCategories.find(c => c.id === category);
-    const isExotic = selectedCategory?.catName?.toLowerCase() === 'exotic';
-    const isDog = selectedCategory?.catName?.toLowerCase() === 'dog';
-
-    if (isExotic && !exoticType.trim()) {
-      newErrors.exoticType = 'Exotic pet type is required';
-    }
-
-    if (!isExotic && !breed) {
-      newErrors.breed = 'Breed is required';
-    }
-
-    if (breed === 0 && !breedOthers.trim()) {
-      newErrors.breedOthers = 'Please specify the breed';
-    }
-
-    if (isDog && !size) {
-      newErrors.size = 'Size is required for dogs';
+      newErrors.category = 'Please select a category';
     }
 
     if (!gender) {
-      newErrors.gender = 'Gender is required';
+      newErrors.gender = 'Please select a gender';
     }
 
-    if (!feedCount) {
-      newErrors.feedCount = 'Daily feed count is required';
+    // Size is required only for dogs
+    const isDog = petCategories.find(c => c.id === category)?.catName?.toLowerCase() === 'dog';
+    if (isDog && !size) {
+      newErrors.size = 'Please select a size for dog';
     }
 
     setErrors(newErrors);
@@ -646,6 +683,11 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
   const selectedCategory = petCategories.find(c => c.id === category);
   const isExotic = selectedCategory?.catName?.toLowerCase() === 'exotic';
   const isDog = selectedCategory?.catName?.toLowerCase() === 'dog';
+
+  console.log('🔍 Render - petSizes state:', petSizes);
+  console.log('🔍 Render - petGenders state:', petGenders);
+  console.log('🔍 Render - current size value:', size);
+  console.log('🔍 Render - current gender value:', gender);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
@@ -874,7 +916,7 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
                     borderBottomWidth: 1,
                     borderBottomColor: '#F0F0F0',
                   }}
-                  data={petBreeds.map(b => ({ label: b.breedName, value: b.id }))}
+                  data={petBreeds.map(b => ({ label: b.breedName || b.name, value: b.id }))}
                   labelField="label"
                   valueField="value"
                   placeholder="Select Breed"
@@ -1082,6 +1124,53 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
               )}
             </View>
 
+            {/* Food Type */}
+            <View>
+              <Dropdown
+                style={[
+                  {
+                    height: 56,
+                    borderColor: '#E2E2E2',
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    backgroundColor: '#fff',
+                  },
+                ]}
+                placeholderStyle={{ fontSize: 16, color: '#666' }}
+                selectedTextStyle={{ fontSize: 16, color: '#333' }}
+                itemTextStyle={{ fontSize: 16, color: '#333' }}
+                containerStyle={{
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#E2E2E2',
+                  marginTop: 5,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: '#fff',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F0F0F0',
+                }}
+                data={[
+                  { label: 'Raw meat', value: 'Raw meat' },
+                  { label: 'Cooked chicken rice', value: 'Cooked chicken rice' },
+                  { label: 'Kibbles', value: 'Kibbles' },
+                  { label: 'Curd rice', value: 'Curd rice' },
+                ]}
+                labelField="label"
+                valueField="value"
+                placeholder="Food Type"
+                value={foodType}
+                onChange={item => {
+                  setFoodType(item.value);
+                }}
+                renderLeftIcon={() => (
+                  <MaterialIcons name="fastfood" size={20} color="#58B9D0" style={{ marginRight: 10 }} />
+                )}
+              />
+            </View>
+
             {/* Allergies */}
             <View>
               <TextInput
@@ -1092,7 +1181,7 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
                 onChangeText={setAllergies}
                 multiline
                 numberOfLines={2}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="warning" size={20} color="#58B9D0" />} />}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="warning" size={20} color="#FF9800" />} />}
                 theme={{
                   roundness: 12,
                   colors: { primary: '#58B9D0', outline: '#E2E2E2' },
@@ -1128,7 +1217,43 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
                 onChangeText={setTreats}
                 multiline
                 numberOfLines={2}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="cookie" size={20} color="#58B9D0" />} />}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="favorite" size={20} color="#E91E63" />} />}
+                theme={{
+                  roundness: 12,
+                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+                }}
+              />
+            </View>
+
+            {/* Favourite Games */}
+            <View>
+              <TextInput
+                mode="outlined"
+                label="Favourite Games"
+                placeholder="e.g. Tug, Fetch"
+                value={favouriteGames}
+                onChangeText={setFavouriteGames}
+                multiline
+                numberOfLines={2}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="sports-esports" size={20} color="#4CAF50" />} />}
+                theme={{
+                  roundness: 12,
+                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
+                }}
+              />
+            </View>
+
+            {/* Medical History */}
+            <View>
+              <TextInput
+                mode="outlined"
+                label="Medical History"
+                placeholder="Any medical conditions or treatments"
+                value={medicalHistory}
+                onChangeText={setMedicalHistory}
+                multiline
+                numberOfLines={3}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="medical-services" size={20} color="#F44336" />} />}
                 theme={{
                   roundness: 12,
                   colors: { primary: '#58B9D0', outline: '#E2E2E2' },
@@ -1409,7 +1534,28 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
                     {uploads.filter(f => f.type === 'video').length}/2
                   </Text>
                 </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{
+                    fontSize: 12,
+                    color: '#6B7280',
+                    marginBottom: 2,
+                  }}>
+                    Uploaded
+                  </Text>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: '#10B981',
+                  }}>
+                    {uploads.filter(f => f.s3Url).length}/{uploads.length}
+                  </Text>
+                </View>
               </View>
+            </View>
+
+            {/* Vaccination Records */}
+            <View style={{ marginTop: responsiveHeight(2) }}>
+              <VaccinationDisplay petId={pet.id} petName={pet.petName} />
             </View>
           </View>
           </View>

@@ -21,14 +21,26 @@ import { navigate } from '../../utils/navigationService';
 import historyStyles from './history.styles';
 import { HistoryCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
-// Interface definitions based on API response
-interface BookingDetail {
+// Interface definitions based on NEW API response
+interface Status {
   id: number;
-  startTime: string;
-  endTime: string;
+  name: string;
 }
 
-interface Service {
+interface Mode {
+  id: number;
+  value: string;
+}
+
+interface Customer {
+  id: number;
+  userId: number;
+  pets: any;
+  alterNo: string;
+  profileImg: string;
+}
+
+interface ServiceProvider {
   id: number;
   firstName: string;
   lastName: string;
@@ -38,22 +50,46 @@ interface Service {
   state: string;
   address: string;
   businessName?: string;
+  fcmToken?: string;
 }
 
-interface ServiceBooking {
-  serviceId: number;
-  customerId: number;
-  consultationId: number;
-  service: Service;
+interface Boarding {
+  id: number;
+  facilityName: string;
+  userId: number;
+  description: string;
+  regNo: string;
+  serviceUploads: string[];
+  profileImg: string;
+  experience: number;
+  keepCustomerPossessions: boolean;
+  checkinTime: number;
+  checkoutTime: number;
+  lastCheckoutTime: number;
+  capacity: number;
+  acAvailable: boolean;
+  medicatedBath: number;
+  swimming: number;
+  nailClipping: number;
+  commercialFood: number;
+  walksPerDay: number;
+  docAvailibility: boolean;
+}
+
+interface BookingDetail {
+  id: number;
+  startTime: string;
+  endTime: string;
 }
 
 interface BoardingServiceBooking {
   id: number;
   possessions: boolean;
-  backUpFood: boolean;
-  shaveAndTrimming: boolean;
-  groomingBeforeDischarge: boolean;
-  additionalAdvice?: string;
+  isDocReqd: boolean;
+  nailClipping: boolean;
+  swimmingPool: boolean;
+  walksPerDay: number | null;
+  medicatedBath: boolean;
   bookingDetails: BookingDetail;
 }
 
@@ -72,10 +108,16 @@ interface FlowOption {
 }
 
 interface BookingHistoryItem {
-  bookingDetail: BookingDetail;
-  serviceBookings: ServiceBooking[];
+  id: number;
+  mode: Mode;
+  startTime: string;
+  endTime: string;
+  customer: Customer;
+  status: Status;
+  service: ServiceProvider;
+  boarding: Boarding;
   boardingServiceBookings: BoardingServiceBooking[];
-  flowHistories: FlowHistory[];
+  flowHistories?: FlowHistory[];
 }
 
 interface ApiResponse {
@@ -190,7 +232,7 @@ const History: React.FC = () => {
         return;
       }
 
-      const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/pet-owner/${userId}`;
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-details/get-booking-by-pet-owner/${userId}`;
       console.log('🌐 Fetching booking history from:', apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -236,8 +278,8 @@ const History: React.FC = () => {
 
         // Sort bookings by start time in descending order (newest first)
         const sortedBookings = bookingData.sort((a, b) => {
-          const dateA = new Date(a.bookingDetail?.startTime || 0);
-          const dateB = new Date(b.bookingDetail?.startTime || 0);
+          const dateA = new Date(a.startTime || 0);
+          const dateB = new Date(b.startTime || 0);
           return dateB.getTime() - dateA.getTime();
         });
 
@@ -333,17 +375,12 @@ const History: React.FC = () => {
   };
 
   const getServiceTitle = (booking: BookingHistoryItem) => {
-    if (booking.boardingServiceBookings.length > 0) {
-      return 'Boarding Service';
-    } else if (booking.serviceBookings.length > 0) {
-      return 'Pet Service';
-    }
-    return 'Service Booking';
+    return booking.boarding?.facilityName || 'Boarding Service';
   };
 
   const getProviderName = (booking: BookingHistoryItem) => {
-    if (booking.serviceBookings.length > 0) {
-      const service = booking.serviceBookings[0].service;
+    const service = booking.service;
+    if (service) {
       return `${service.firstName} ${service.lastName}`;
     }
     return 'Service Provider';
@@ -352,16 +389,17 @@ const History: React.FC = () => {
   const getServiceFeatures = (booking: BoardingServiceBooking) => {
     const features = [];
     if (booking.possessions) features.push('Possessions');
-    if (booking.backUpFood) features.push('Backup Food');
-    if (booking.shaveAndTrimming) features.push('Grooming');
-    if (booking.groomingBeforeDischarge) features.push('Pre-discharge Grooming');
+    if (booking.isDocReqd) features.push('Doctor Required');
+    if (booking.nailClipping) features.push('Nail Clipping');
+    if (booking.swimmingPool) features.push('Swimming Pool');
+    if (booking.medicatedBath) features.push('Medicated Bath');
+    if (booking.walksPerDay) features.push(`${booking.walksPerDay} Walks/day`);
     return features;
   };
 
-  const getCurrentStatus = (flowHistories: FlowHistory[]) => {
-    if (flowHistories.length === 0) return null;
-    const latestFlow = flowHistories.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-    return flowOptions.find(option => option.id === latestFlow.boardingBookingFlowOptionsId);
+  const getCurrentStatus = (booking: BookingHistoryItem) => {
+    // Return the status from the new API response
+    return booking.status;
   };
 
   const getStatusMessage = (statusId: number) => {
@@ -445,10 +483,10 @@ const History: React.FC = () => {
   };
 
   const renderBookingItem = ({ item }: { item: BookingHistoryItem }) => {
-    const duration = calculateDuration(item.bookingDetail.startTime, item.bookingDetail.endTime);
+    const duration = calculateDuration(item.startTime, item.endTime);
     const serviceTitle = getServiceTitle(item);
     const providerName = getProviderName(item);
-    const currentStatus = getCurrentStatus(item.flowHistories);
+    const currentStatus = getCurrentStatus(item);
 
     return (
       <View style={historyStyles.bookingCard}>
@@ -464,7 +502,7 @@ const History: React.FC = () => {
             </View>
           </View>
           <View style={historyStyles.headerRight}>
-            <Text style={historyStyles.bookingId}>#{item.bookingDetail.id}</Text>
+            <Text style={historyStyles.bookingId}>#{item.id}</Text>
             <Text style={historyStyles.duration}>{duration} days</Text>
           </View>
         </View>
@@ -472,7 +510,7 @@ const History: React.FC = () => {
         {/* Minimal Date Info */}
         <View style={historyStyles.minimalDateSection}>
           <Text style={historyStyles.dateRange}>
-            {formatDate(item.bookingDetail.startTime)} - {formatDate(item.bookingDetail.endTime)}
+            {formatDate(item.startTime)} - {formatDate(item.endTime)}
           </Text>
         </View>
 
@@ -481,7 +519,7 @@ const History: React.FC = () => {
           <View style={historyStyles.statusRow}>
             <MaterialIcons name="info-outline" size={16} color="#666" />
             <Text style={historyStyles.statusText}>
-              {getStatusMessage(currentStatus.id)}
+              Status: {currentStatus.name}
             </Text>
           </View>
         )}
@@ -547,7 +585,7 @@ const History: React.FC = () => {
           <FlatList
             data={bookings}
             renderItem={renderBookingItem}
-            keyExtractor={(item) => item.bookingDetail.id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               historyStyles.listContainer,

@@ -29,7 +29,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import { API_CONFIG } from '../../config/api';
 import { storageService } from '../../utils/storage';
-import { goBack } from '../../utils/navigationService';
+import { goBack, navigate } from '../../utils/navigationService';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
 import boardingstyles from '../Boarding/boarding.styles';
@@ -53,8 +53,12 @@ interface PetGender {
 
 interface PetBreed {
   id: number;
-  name: string;
-  category?: string; // 'dog' or 'cat'
+  name?: string; // Legacy field
+  breedName?: string; // Current API field
+  pet?: {
+    id: number;
+    catName: string;
+  };
 }
 
 interface UploadedFile {
@@ -569,8 +573,17 @@ const AddPet: React.FC = () => {
           type: 'success',
           text: 'Pet profile created successfully!',
         });
+
+        // Navigate to vaccination upload page with pet details
         setTimeout(() => {
-          goBack();
+          if (responseData.body?.id) {
+            navigate('VaccinationUpload', {
+              petId: responseData.body.id,
+              petName: petName.trim(),
+            });
+          } else {
+            goBack();
+          }
         }, 1500);
       } else {
         console.error('❌ Pet creation failed with status:', response.status);
@@ -986,7 +999,7 @@ const AddPet: React.FC = () => {
                     borderBottomColor: '#F0F0F0',
                   }}
                   data={[
-                    ...petBreeds.map(b => ({ label: b.name, value: b.id })),
+                    ...petBreeds.map(b => ({ label: b.breedName || b.name, value: b.id })),
                     { label: 'Other', value: 0 } // Add "Other" option with value 0
                   ]}
                   labelField="label"

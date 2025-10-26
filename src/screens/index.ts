@@ -97,6 +97,7 @@ export { default as PharmacyOrderOnTheWay} from './PharmacyOrderOnTheWay/Pharmac
 export { default as VeterinaryHomeVisiteDetails} from './VeterinaryHomeVisiteDetails/VeterinaryHomeVisiteDetails';
 export { default as AddPet} from './AddPet/AddPet';
 export { default as EditPet} from './EditPet/EditPet';
+export { default as VaccinationUpload} from './VaccinationUpload/VaccinationUpload';
 export { default as ChatList} from './Chat/ChatList';
 export { default as Chat} from './Chat/Chat';
 export { default as History} from './History/History';

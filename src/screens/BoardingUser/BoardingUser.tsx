@@ -332,9 +332,12 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
             }
 
             const petIdsString = Array.from(selectedPets).join(',');
-            const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding/search-boardings?startDate=${startDate}&endDate=${endDate}&pets=${petIdsString}`;
+            const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding/search-boardings?startDate=${startDate}&endDate=${endDate}&pets=${JSON.stringify(petIdsString)}`;
 
             console.log('🔍 Searching boardings:', apiUrl);
+            console.log('📤 SEARCH BOARDINGS CURL:', `curl --location --request GET '${apiUrl}' \\
+--header 'Content-Type: application/json' \\
+--header 'Authorization: Bearer ${token}'`);
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
