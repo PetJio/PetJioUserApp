@@ -304,12 +304,8 @@ const VaccinationUpload: React.FC<VaccinationUploadProps> = ({ route }) => {
       });
 
       setTimeout(() => {
-        // Navigate to Main tab navigator and then to Profile tab
-        navigate('Main');
-        // Small delay to ensure Main is loaded before navigating to Profile
-        setTimeout(() => {
-          navigate('Profile');
-        }, 100);
+        // Navigate back to the previous screen (e.g., BoardingQuestions or EditPet)
+        goBack();
       }, 1500);
     } catch (error) {
       console.error('Error saving vaccinations:', error);
@@ -331,11 +327,8 @@ const VaccinationUpload: React.FC<VaccinationUploadProps> = ({ route }) => {
         {
           text: 'Skip',
           onPress: () => {
-            // Navigate to Main tab navigator and then to Profile tab
-            navigate('Main');
-            setTimeout(() => {
-              navigate('Profile');
-            }, 100);
+            // Navigate back to the previous screen
+            goBack();
           },
         },
       ]

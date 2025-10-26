@@ -290,17 +290,30 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
 
       console.log('📤 Booking API payload:', bookingPayload);
 
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/api/boarding-service-bookings`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(bookingPayload),
-        }
-      );
+      const bookingUrl = `${API_CONFIG.BASE_URL}/api/boarding-service-bookings`;
+
+      // Generate and log CURL command for debugging
+      const curlCommand = `curl -X POST "${bookingUrl}" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${token}" \\
+  -d '${JSON.stringify(bookingPayload, null, 2)}' \\
+  -v`;
+
+      console.log('🔧 Booking API CURL Command:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      const response = await fetch(bookingUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingPayload),
+      });
+
+      console.log('📡 Booking API response status:', response.status);
 
       const result = await response.json();
       console.log('📥 Booking API response:', result);

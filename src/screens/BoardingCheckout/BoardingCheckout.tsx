@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   Platform,
   Alert,
-  Linking,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useRoute, RouteProp } from '@react-navigation/native';
@@ -33,6 +33,15 @@ type RootStackParamList = {
     endDate?: string;
     boardingDetails?: any;
     petOwnerId?: number;
+  };
+  PaymentWebView: {
+    paymentUrl: string;
+    bookingId: number;
+    startDate?: string;
+    endDate?: string;
+    selectedPets?: number[];
+    petOwnerId?: number;
+    boardingDetails?: any;
   };
   BoardingSuccess: {
     bookingId: number;
@@ -219,10 +228,18 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
         return;
       }
 
-      // Create payment link payload - amount is hardcoded to 1 as per requirement
-      // All other values are dynamic from the logged-in user
+      // Create payment link payload with calculated total amount
+      // All values are dynamic from the logged-in user and booking data
+      const totalAmount = calculateTotal();
+      console.log('💰 Calculated total amount (INR):', totalAmount);
+
+      // Razorpay requires amount in paise (smallest currency unit)
+      // 1 INR = 100 paise, so multiply by 100
+      const amountInPaise = Math.round(totalAmount);
+      console.log('💰 Amount in paise for Razorpay:', amountInPaise);
+
       const paymentPayload = {
-        amount: 1, // Hardcoded as per requirement
+        amount: 1 || amountInPaise, // Dynamic - calculated from booking data, converted to paise
         email: userEmail, // Dynamic - from logged-in user
         contact: userContact, // Dynamic - from logged-in user
         bookingsId: bookingId, // Dynamic - from booking creation
@@ -253,50 +270,19 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
         // Check if short_url exists
         if (result.body && result.body.short_url) {
           const paymentUrl = result.body.short_url;
-          console.log('💳 Opening payment URL:', paymentUrl);
+          console.log('💳 Opening payment URL in WebView:', paymentUrl);
 
-          // Open the payment URL in browser
-          const supported = await Linking.canOpenURL(paymentUrl);
-          if (supported) {
-            await Linking.openURL(paymentUrl);
-
-            // Show dialog to confirm payment status
-            setTimeout(() => {
-              Alert.alert(
-                'Payment Status',
-                'Please complete the payment in your browser.\n\nHave you completed the payment?',
-                [
-                  {
-                    text: 'Yes, Payment Done',
-                    onPress: () => {
-                      // Navigate to success screen
-                      const selectedPetIds = bookingData.map((item: any) => item.petId);
-                      navigation.navigate('BoardingSuccess', {
-                        bookingId,
-                        startDate,
-                        endDate,
-                        selectedPets: selectedPetIds,
-                        petOwnerId,
-                        boardingDetails,
-                      });
-                    },
-                  },
-                  {
-                    text: 'No, Cancel',
-                    style: 'cancel',
-                    onPress: () => {
-                      Alert.alert(
-                        'Payment Pending',
-                        'Your booking is saved but payment is pending. You can complete payment later.'
-                      );
-                    },
-                  },
-                ]
-              );
-            }, 2000);
-          } else {
-            Alert.alert('Error', 'Cannot open payment link.');
-          }
+          // Navigate to PaymentWebView screen
+          const selectedPetIds = bookingData.map((item: any) => item.petId);
+          navigation.navigate('PaymentWebView', {
+            paymentUrl,
+            bookingId,
+            startDate,
+            endDate,
+            selectedPets: selectedPetIds,
+            petOwnerId,
+            boardingDetails,
+          });
         } else {
           Alert.alert('Error', 'Payment link URL not found in response.');
         }
@@ -352,15 +338,33 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
       <View style={boardingCheckoutStyles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={{ marginRight: 16 }}
+          style={{ 
+            marginRight: 16,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: '#F3F4F6',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          <MaterialIcons name="arrow-back" size={24} color="#1A1D29" />
+          <MaterialIcons name="arrow-back" size={22} color="#1F2937" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={boardingCheckoutStyles.headerTitle}>Checkout Summary</Text>
           <Text style={boardingCheckoutStyles.headerSubtitle}>
             Review your selections
           </Text>
+        </View>
+        <View style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: '#E0F2FE',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <MaterialIcons name="shopping-cart" size={20} color="#58B9D0" />
         </View>
       </View>
 
@@ -371,7 +375,7 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
           contentContainerStyle={{
-            paddingHorizontal: responsiveWidth(4),
+            paddingHorizontal: responsiveWidth(5),
             paddingTop: 20,
             paddingBottom: 100,
           }}
@@ -413,7 +417,11 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
 
           // Extract service details from the item
           const services = [];
-          if (item.foodType) services.push(`Food: ${item.foodType}`);
+          if (item.foodType) {
+            // Handle foodType as object {id, name} or string
+            const foodTypeName = typeof item.foodType === 'object' ? item.foodType.name : item.foodType;
+            services.push(`Food: ${foodTypeName}`);
+          }
           if (item.nailClipping) services.push('Nail Clipping');
           if (item.medicatedBath) services.push('Medicated Bath');
           if (item.swimmingPool) services.push('Swimming Pool');
@@ -428,11 +436,11 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={boardingCheckoutStyles.petCardName}>
-                    {pet?.name || `Pet ${item.petId}`}
+                    {pet?.petName || pet?.name || `Pet ${item.petId}`}
                   </Text>
                   {pet?.breed && (
                     <Text style={boardingCheckoutStyles.petCardBreed}>
-                      {pet.breed}
+                      {typeof pet.breed === 'object' ? pet.breed.name || pet.breed.breedName : pet.breed}
                     </Text>
                   )}
                 </View>
@@ -446,16 +454,51 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
 
               {services.length > 0 && (
                 <View style={boardingCheckoutStyles.servicesContainer}>
-                  {services.map((service, idx) => (
-                    <View key={idx} style={boardingCheckoutStyles.serviceChip}>
-                      <MaterialIcons
-                        name={service.toLowerCase().includes('doctor') ? 'medical-services' : 'check-circle'}
-                        size={14}
-                        color="#10B981"
-                      />
-                      <Text style={boardingCheckoutStyles.serviceChipText}>{service}</Text>
-                    </View>
-                  ))}
+                  {services.map((service, idx) => {
+                    // Get icon, color, and background based on service type
+                    let iconName = 'check-circle';
+                    let iconColor = '#10B981';
+                    let bgColor = '#ECFDF5';
+                    
+                    if (service.toLowerCase().includes('doctor')) {
+                      iconName = 'medical-services';
+                      iconColor = '#DC2626';
+                      bgColor = '#FEE2E2';
+                    } else if (service.toLowerCase().includes('food')) {
+                      iconName = 'restaurant';
+                      iconColor = '#F59E0B';
+                      bgColor = '#FEF3C7';
+                    } else if (service.toLowerCase().includes('bath')) {
+                      iconName = 'bathtub';
+                      iconColor = '#3B82F6';
+                      bgColor = '#DBEAFE';
+                    } else if (service.toLowerCase().includes('pool')) {
+                      iconName = 'pool';
+                      iconColor = '#06B6D4';
+                      bgColor = '#CFFAFE';
+                    } else if (service.toLowerCase().includes('walk')) {
+                      iconName = 'directions-walk';
+                      iconColor = '#8B5CF6';
+                      bgColor = '#EDE9FE';
+                    } else if (service.toLowerCase().includes('nail')) {
+                      iconName = 'content-cut';
+                      iconColor = '#EC4899';
+                      bgColor = '#FCE7F3';
+                    }
+                    
+                    return (
+                      <View key={idx} style={[boardingCheckoutStyles.serviceChip, { backgroundColor: bgColor }]}>
+                        <MaterialIcons
+                          name={iconName}
+                          size={14}
+                          color={iconColor}
+                        />
+                        <Text style={[boardingCheckoutStyles.serviceChipText, { color: iconColor }]}>
+                          {service}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
               )}
             </View>
@@ -463,19 +506,29 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
         })}
 
         {/* Grand Total Card */}
-        <View style={boardingCheckoutStyles.grandTotalCard}>
+        <LinearGradient
+          colors={['#58B9D0', '#4A9FB8', '#3D8BA4']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={boardingCheckoutStyles.grandTotalCard}
+        >
           <View style={boardingCheckoutStyles.grandTotalRow}>
-            <Text style={boardingCheckoutStyles.grandTotalLabel}>Grand Total</Text>
+            <View>
+              <Text style={boardingCheckoutStyles.grandTotalLabel}>TOTAL AMOUNT</Text>
+              <Text style={{ fontSize: 12, color: '#FFFFFF', opacity: 0.8, marginTop: 4 }}>
+                including all services
+              </Text>
+            </View>
             <Text style={boardingCheckoutStyles.grandTotalValue}>
-              ₹ {calculateTotal()}
+              ₹{calculateTotal()}
             </Text>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Important Note */}
         <View style={boardingCheckoutStyles.noteCard}>
           <View style={boardingCheckoutStyles.noteIconContainer}>
-            <MaterialIcons name="info" size={20} color="#F59E0B" />
+            <MaterialIcons name="info" size={22} color="#F59E0B" />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={boardingCheckoutStyles.noteTitle}>Important Information</Text>
@@ -493,22 +546,25 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
         <TouchableOpacity
           onPress={handlePayNow}
           disabled={loading}
-          style={[
-            boardingCheckoutStyles.confirmButton,
-            loading && boardingCheckoutStyles.confirmButtonDisabled,
-          ]}
           activeOpacity={0.8}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <>
-              <MaterialIcons name="check-circle" size={20} color="#FFFFFF" />
-              <Text style={boardingCheckoutStyles.confirmButtonText}>
-                Confirm Booking
-              </Text>
-            </>
-          )}
+          <LinearGradient
+            colors={loading ? ['#CBD5E1', '#CBD5E1'] : ['#58B9D0', '#4A9FB8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={boardingCheckoutStyles.confirmButton}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <MaterialIcons name="payment" size={22} color="#FFFFFF" />
+                <Text style={boardingCheckoutStyles.confirmButtonText}>
+                  Confirm Booking
+                </Text>
+              </>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
       )}

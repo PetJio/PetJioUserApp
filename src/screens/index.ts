@@ -98,10 +98,13 @@ export { default as VeterinaryHomeVisiteDetails} from './VeterinaryHomeVisiteDet
 export { default as AddPet} from './AddPet/AddPet';
 export { default as EditPet} from './EditPet/EditPet';
 export { default as VaccinationUpload} from './VaccinationUpload/VaccinationUpload';
+export { default as PaymentWebView} from './PaymentWebView/PaymentWebView';
 export { default as ChatList} from './Chat/ChatList';
 export { default as Chat} from './Chat/Chat';
 export { default as History} from './History/History';
 export { default as ViewDetails} from './History/ViewDetails';
+export { default as SettlementCheckout} from './SettlementCheckout/SettlementCheckout';
+export { default as SettlementSuccess} from './SettlementSuccess/SettlementSuccess';
 
 
 

@@ -15,6 +15,12 @@ import Icons from '../../../assets/icons';
 import { storageService } from '../../utils';
 import { API_CONFIG } from '../../config/api';
 import { responsiveWidth } from 'react-native-responsive-dimensions';
+import VaccinationDisplay from '../../components/VaccinationDisplay/VaccinationDisplay';
+
+interface FoodOption {
+  id: number;
+  name: string;
+}
 
 interface PetFormData {
   petId: number;
@@ -41,13 +47,14 @@ const BoardingQuestions: React.FC = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showFoodTypeDropdown, setShowFoodTypeDropdown] = useState(false);
   const [boardingDetails, setBoardingDetails] = useState<any>(routeBoardingDetails || {});
+  const [foodOptions, setFoodOptions] = useState<FoodOption[]>([]);
 
-  // Food type options
-  const foodTypeOptions = [
-    { id: 1, label: 'Raw meat' },
-    { id: 2, label: 'Cooked chicken rice' },
-    { id: 3, label: 'Kibbles' },
-    { id: 4, label: 'Curd rice' },
+  // Food type options - will be replaced by API data
+  const foodTypeOptions = foodOptions.length > 0 ? foodOptions : [
+    { id: 1, name: 'Raw meat' },
+    { id: 2, name: 'Cooked chicken rice' },
+    { id: 3, name: 'Kibbles' },
+    { id: 4, name: 'Curd rice' },
   ];
 
   // Get boarder's available services from boardingDetails
@@ -73,7 +80,7 @@ const BoardingQuestions: React.FC = () => {
 
   console.log('📋 Full boardingDetails:', JSON.stringify(boardingDetails, null, 2));
   console.log('🎯 Extracted boarding object:', JSON.stringify(boarding, null, 2));
-  console.log('🔍 Service field types:', {
+  console.log('🔍 Service field types:', JSON.stringify({
     'nailClipping type': typeof boarding.nailClipping,
     'nailClipping value': boarding.nailClipping,
     'medicatedBath type': typeof boarding.medicatedBath,
@@ -86,7 +93,7 @@ const BoardingQuestions: React.FC = () => {
     'walksPerDay value': boarding.walksPerDay,
     'docAvailibility type': typeof boarding.docAvailibility,
     'docAvailibility value': boarding.docAvailibility,
-  });
+  }, null, 2));
 
   // Check if services are available - show only if field exists with number value (including 0 for free)
   const hasNailClipping = typeof boarding.nailClipping === 'number';
@@ -101,7 +108,7 @@ const BoardingQuestions: React.FC = () => {
   const swimmingPoolPrice = typeof boarding.swimming === 'number' ? boarding.swimming : (typeof boarding.swimmingPool === 'number' ? boarding.swimmingPool : 0);
   const walksPerDayPrice = typeof boarding.walksPerDay === 'number' ? boarding.walksPerDay : 0;
 
-  console.log('🏠 Boarder Services Check:', {
+  console.log('🏠 Boarder Services Check:', JSON.stringify({
     'Raw boardingDetails': boardingDetails,
     'boarding.nailClipping': boarding.nailClipping,
     'boarding.medicatedBath': boarding.medicatedBath,
@@ -121,11 +128,12 @@ const BoardingQuestions: React.FC = () => {
     medicatedBathPrice,
     swimmingPoolPrice,
     walksPerDayPrice,
-  });
+  }, null, 2));
 
   useEffect(() => {
     fetchPetsData();
     fetchFullBoardingDetails();
+    fetchFoodOptions();
   }, []);
 
   const fetchFullBoardingDetails = async () => {
@@ -150,7 +158,7 @@ const BoardingQuestions: React.FC = () => {
 
         if (response.ok) {
           const result = await response.json();
-          console.log('✅ Boarding services fetched:', result);
+          console.log('✅ Boarding services fetched:', JSON.stringify(result, null, 2));
 
           if (result.statusCode === 200 && result.body && Array.isArray(result.body) && result.body.length > 0) {
             // Extract service data from first boarding service
@@ -177,6 +185,44 @@ const BoardingQuestions: React.FC = () => {
       }
     } else {
       console.log('✅ Service fields already present in boardingDetails');
+    }
+  };
+
+  const fetchFoodOptions = async () => {
+    try {
+      const token = await storageService.getUserToken();
+      if (!token) return;
+
+      const foodOptionsUrl = `${API_CONFIG.BASE_URL}/api/boarding-food-options`;
+      console.log('🔧 Food options CURL:');
+      console.log(`curl -X GET "${foodOptionsUrl}" \\
+  -H "Authorization: Bearer ${token.substring(0, 20)}..." \\
+  -v`);
+
+      const foodOptionsResponse = await fetch(foodOptionsUrl, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 Food options response status:', foodOptionsResponse.status);
+
+      if (foodOptionsResponse.ok) {
+        const foodOptionsData = await foodOptionsResponse.json();
+        console.log('✅ Food options fetched:', JSON.stringify(foodOptionsData, null, 2));
+        console.log('🍖 Food options count:', foodOptionsData.body?.length || 0);
+        
+        if (foodOptionsData.statusCode === 200 && foodOptionsData.body) {
+          setFoodOptions(foodOptionsData.body);
+        }
+      } else {
+        console.error('❌ Food options request failed:', foodOptionsResponse.status);
+        const errorText = await foodOptionsResponse.text();
+        console.error('❌ Error details:', errorText);
+      }
+    } catch (error) {
+      console.error('🔥 Error fetching food options:', error);
     }
   };
 
@@ -212,15 +258,16 @@ const BoardingQuestions: React.FC = () => {
             selectedPets?.includes(pet.id)
           );
 
-          console.log('🐕 Selected Pets:', selectedPetsData.map((p: any) => ({ id: p.id, name: p.name })));
+          console.log('🐕 Selected Pets:', JSON.stringify(selectedPetsData.map((p: any) => ({ id: p.id, name: p.name })), null, 2));
+          console.log('🐕 Full Pet Data:', JSON.stringify(selectedPetsData, null, 2));
 
           setPets(selectedPetsData);
 
-          // Initialize form data for each pet
+          // Initialize form data for each pet - auto-select food type from pet data
           const initialForms = selectedPetsData.map((pet: any) => ({
             petId: pet.id,
-            petName: pet.name,
-            foodType: 2, // Default
+            petName: pet.name || pet.petName,
+            foodType: pet.foodType || pet.food || 2, // Use pet's food type if available, default to 2
             walksPerDay: hasWalksPerDay ? 2 : 0,
             nailClipping: false,
             medicatedBath: false,
@@ -228,6 +275,8 @@ const BoardingQuestions: React.FC = () => {
             isDocReqd: false,
             possessions: false,
           }));
+
+          console.log('📝 Initial Forms Data:', JSON.stringify(initialForms, null, 2));
 
           setPetFormsData(initialForms);
         }
@@ -310,7 +359,7 @@ const BoardingQuestions: React.FC = () => {
 
       console.log('📦 Starting to update booking with all pets data');
       console.log('Booking ID:', bookingId);
-      console.log('Pet Forms Data:', petFormsData);
+      console.log('Pet Forms Data:', JSON.stringify(petFormsData, null, 2));
 
       // Prepare data array for all pets - each object represents one pet's form data
       const dataArray = petFormsData.map((form) => ({
@@ -352,6 +401,36 @@ const BoardingQuestions: React.FC = () => {
       console.log('📥 Booking update response:', result);
 
       if (response.ok) {
+        // After successful booking update, update the booking status to pending (status: 1)
+        try {
+          const statusUrl = `${API_CONFIG.BASE_URL}/api/booking-details/update-booking-status/${bookingId}`;
+          const statusPayload = { status: 1 }; // 1 = pending
+
+          console.log('📤 UPDATE BOOKING STATUS CURL:', `curl --location --request PATCH '${statusUrl}' \\
+--header 'Content-Type: application/json' \\
+--header 'Authorization: Bearer ${token}' \\
+--data '${JSON.stringify(statusPayload)}'`);
+
+          const statusResponse = await fetch(statusUrl, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(statusPayload),
+          });
+
+          const statusResult = await statusResponse.json();
+          console.log('📥 Booking status update response:', statusResult);
+
+          if (!statusResponse.ok) {
+            console.warn('⚠️ Failed to update booking status, but booking details were saved');
+          }
+        } catch (statusError) {
+          console.error('🔥 Error updating booking status:', statusError);
+          // Don't fail the whole operation if status update fails
+        }
+
         Alert.alert(
           'Success!',
           `Booking details for ${dataArray.length} pet(s) have been updated successfully.`,
@@ -416,7 +495,7 @@ const BoardingQuestions: React.FC = () => {
 
                 <View style={{ marginBottom: 8 }}>
                   <Text style={{ color: '#6B7280', fontSize: 14 }}>
-                    Food: {foodTypeOptions.find(f => f.id === form.foodType)?.label}
+                    Food: {foodTypeOptions.find(f => f.id === form.foodType)?.name}
                   </Text>
                 </View>
 
@@ -532,7 +611,7 @@ const BoardingQuestions: React.FC = () => {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={boardingQuestionStyles.headerTitle}>
-            {currentPet?.name || 'Boarding Questions'}
+            {String(currentPet?.name || currentPet?.petName || 'Boarding Questions')}
           </Text>
           <Text style={boardingQuestionStyles.headerSubtitle}>
             Pet {currentPetIndex + 1} of {pets.length}
@@ -541,6 +620,131 @@ const BoardingQuestions: React.FC = () => {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+        {/* Pet Details Card */}
+        <View style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 20,
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#E0F2FE',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 12,
+              overflow: 'hidden',
+            }}>
+              {currentPet?.profileImg ? (
+                <Image
+                  source={{ uri: currentPet.profileImg }}
+                  style={{
+                    width: 60,
+                    height: 60,
+                  }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <MaterialIcons name="pets" size={32} color="#58B9D0" />
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 4 }}>
+                {String(currentPet?.name || currentPet?.petName || 'Pet')}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {currentPet?.breed && (
+                  <Text style={{ fontSize: 13, color: '#6B7280' }}>
+                    {typeof currentPet.breed === 'object'
+                      ? (currentPet.breed?.name || currentPet.breed?.breedName || String(currentPet.breed))
+                      : String(currentPet.breed)}
+                  </Text>
+                )}
+                {currentPet?.category && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB' }} />
+                    <Text style={{ fontSize: 13, color: '#6B7280' }}>
+                      {currentPet.category === 1 ? 'Dog' : currentPet.category === 2 ? 'Cat' : 'Exotic'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Pet Stats Grid */}
+          <View style={{ 
+            flexDirection: 'row', 
+            flexWrap: 'wrap', 
+            gap: 8,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: '#F3F4F6',
+          }}>
+            {currentPet?.gender && (
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#F9FAFB',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+                gap: 6,
+              }}>
+                <MaterialIcons 
+                  name={currentPet.gender === 1 ? 'male' : 'female'} 
+                  size={16} 
+                  color={currentPet.gender === 1 ? '#3B82F6' : '#EC4899'} 
+                />
+                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '500' }}>
+                  {currentPet.gender === 1 ? 'Male' : 'Female'}
+                </Text>
+              </View>
+            )}
+            {currentPet?.weight && (
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#F9FAFB',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+                gap: 6,
+              }}>
+                <MaterialIcons name="scale" size={16} color="#10B981" />
+                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '500' }}>
+                  {currentPet.weight} kg
+                </Text>
+              </View>
+            )}
+            {currentPet?.dob && (
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#F9FAFB',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+                gap: 6,
+              }}>
+                <MaterialIcons name="cake" size={16} color="#F59E0B" />
+                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '500' }}>
+                  {new Date(currentPet.dob).toLocaleDateString('en-GB', { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric' 
+                  })}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
         <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 20, color: '#111827' }}>
           Boarding Preferences
         </Text>
@@ -576,7 +780,7 @@ const BoardingQuestions: React.FC = () => {
             }}
           >
             <Text style={{ fontSize: 14, color: '#111827', fontWeight: '500' }}>
-              {foodTypeOptions.find(f => f.id === currentForm.foodType)?.label || 'Select food type'}
+              {foodTypeOptions.find(f => f.id === currentForm.foodType)?.name || 'Select food type'}
             </Text>
             <MaterialIcons name={showFoodTypeDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} color="#6B7280" />
           </TouchableOpacity>
@@ -609,7 +813,7 @@ const BoardingQuestions: React.FC = () => {
                     color: currentForm.foodType === option.id ? '#0284C7' : '#111827',
                     fontWeight: currentForm.foodType === option.id ? '600' : '400',
                   }}>
-                    {option.label}
+                    {option.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -663,6 +867,20 @@ const BoardingQuestions: React.FC = () => {
             </View>
           </View>
         )}
+
+        {/* Vaccination Certificates */}
+        <View style={{
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+          paddingTop: 16,
+          marginTop: 8,
+          marginBottom: 16,
+        }}>
+          <VaccinationDisplay 
+            petId={currentPet?.id} 
+            petName={currentPet?.name || currentPet?.petName} 
+          />
+        </View>
 
         {/* Additional Services */}
         <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 16, marginTop: 8, color: '#111827' }}>

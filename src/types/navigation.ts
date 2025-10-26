@@ -88,6 +88,17 @@ export type RootStackParamList = {
   ConfirmDetails: undefined;
   AddVaccination: undefined;
   VaccinationUpload: { petId: number; petName: string };
+  PaymentWebView: {
+    paymentUrl: string;
+    bookingId: number;
+    startDate?: string;
+    endDate?: string;
+    selectedPets?: number[];
+    petOwnerId?: number;
+    boardingDetails?: any;
+    isSettlement?: boolean;
+    settlementAmount?: number;
+  };
   AddPet: undefined;
   EditPet: { pet: any };
 
@@ -108,7 +119,15 @@ export type RootStackParamList = {
 
   // History Screens
   ViewDetails: { bookingItem: any };
-  
+  SettlementCheckout: {
+    bookingId: number;
+    bookingData: any;
+  };
+  SettlementSuccess: {
+    bookingId: number;
+    amount?: number;
+  };
+
   // Mart Screens
   MartLocalityAddress: undefined;
   PetjioMartStore: undefined;

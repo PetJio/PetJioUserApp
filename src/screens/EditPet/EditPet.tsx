@@ -56,6 +56,11 @@ interface PetGender {
   name: string;
 }
 
+interface FoodOption {
+  id: number;
+  name: string;
+}
+
 interface PetProfile {
   id: number;
   petName: string;
@@ -144,7 +149,11 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
   const [disability, setDisability] = useState(pet?.disability || '');
   const [feedCount, setFeedCount] = useState<number | null>(pet?.dailyFeedCount || null);
   const [medicalHistory, setMedicalHistory] = useState(pet?.medicalHistory || '');
-  const [foodType, setFoodType] = useState<string | null>(pet?.foodType?.toString() || null);
+  const [foodType, setFoodType] = useState<number | null>(
+    typeof pet?.foodType === 'object' && pet?.foodType?.id
+      ? pet.foodType.id
+      : (typeof pet?.foodType === 'number' ? pet.foodType : null)
+  );
   const [favouriteGames, setFavouriteGames] = useState(pet?.favGames || '');
 
   console.log('📊 Initial state values:', {
@@ -153,7 +162,10 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
     gender,
     breed,
     feedCount,
+    foodType,
   });
+  console.log('🍖 FoodType from pet data:', pet?.foodType);
+  console.log('🍖 FoodType state value:', foodType);
 
   // Uploads
   const [uploads, setUploads] = useState<UploadedFile[]>([]);
@@ -164,6 +176,7 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
   const [petBreeds, setPetBreeds] = useState<PetBreed[]>([]);
   const [petSizes, setPetSizes] = useState<PetSize[]>([]);
   const [petGenders, setPetGenders] = useState<PetGender[]>([]);
+  const [foodOptions, setFoodOptions] = useState<FoodOption[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -316,6 +329,37 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
         console.log('👥 Genders array length:', genders.length);
       } else {
         console.error('❌ Genders request failed:', gendersRes?.status, gendersRes?.statusText);
+      }
+
+      // Fetch food options
+      const foodOptionsUrl = `${API_CONFIG.BASE_URL}/api/boarding-food-options`;
+      console.log('🔧 Food options CURL:');
+      console.log(`curl -X GET "${foodOptionsUrl}" -H "Authorization: Bearer ${token.substring(0, 20)}..."`);
+
+      const foodOptionsRes = await fetch(foodOptionsUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      }).catch(err => {
+        console.error('❌ Food options fetch error:', err);
+        return null;
+      });
+
+      console.log('📡 Food options response status:', foodOptionsRes?.status);
+
+      if (foodOptionsRes && foodOptionsRes.ok) {
+        const foodOptionsData = await foodOptionsRes.json();
+        console.log('🍖 Food options loaded:', foodOptionsData);
+        console.log('🍖 Food options count:', foodOptionsData.body?.length || 0);
+        console.log('🍖 Food options array:', foodOptionsData.body);
+        setFoodOptions(foodOptionsData.body || []);
+
+        // Log after setting food options
+        console.log('🍖 Current foodType state:', foodType);
+        console.log('🍖 Should auto-select foodType:', foodType);
+      } else {
+        console.error('❌ Food options request failed:', foodOptionsRes?.status);
       }
 
     } catch (error) {
@@ -600,15 +644,30 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
         breed: breed === 0 ? null : breed || null, // Breed ID or null
         allergies: allergies.trim() || '',
         disability: disability.trim() || '',
-        foodType: foodType || null, // Food type ID
+        foodType: typeof foodType === 'number' ? foodType : null, // Food type ID - ensure it's a number
         medicalHistory: medicalHistory.trim() || '',
         favGames: favouriteGames.trim() || '',
       };
 
+      console.log('🔍 Debug foodType value:', foodType);
+      console.log('🔍 Debug foodType type:', typeof foodType);
       console.log('Updating pet profile with data:', updateData);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/pet-profile/${pet.id}`, {
-        method: 'PUT',
+      // Generate CURL command for debugging
+      const updateUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/${pet.id}`;
+      const curlCommand = `curl -X PATCH "${updateUrl}" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${token}" \\
+  -d '${JSON.stringify(updateData, null, 2)}' \\
+  -v`;
+
+      console.log('🔧 Update Pet CURL Command:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      const response = await fetch(updateUrl, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -1152,12 +1211,7 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
                   borderBottomWidth: 1,
                   borderBottomColor: '#F0F0F0',
                 }}
-                data={[
-                  { label: 'Raw meat', value: 'Raw meat' },
-                  { label: 'Cooked chicken rice', value: 'Cooked chicken rice' },
-                  { label: 'Kibbles', value: 'Kibbles' },
-                  { label: 'Curd rice', value: 'Curd rice' },
-                ]}
+                data={foodOptions.map(f => ({ label: f.name, value: f.id }))}
                 labelField="label"
                 valueField="value"
                 placeholder="Food Type"

@@ -61,6 +61,11 @@ interface PetBreed {
   };
 }
 
+interface FoodOption {
+  id: number;
+  name: string;
+}
+
 interface UploadedFile {
   uri: string;
   type: 'image' | 'video';
@@ -95,7 +100,7 @@ const AddPet: React.FC = () => {
   const [treats, setTreats] = useState('');
   const [feedCount, setFeedCount] = useState<number | null>(null);
   const [medicalHistory, setMedicalHistory] = useState('');
-  const [foodType, setFoodType] = useState<string | null>(null);
+  const [foodType, setFoodType] = useState<number | null>(null);
   const [favouriteGames, setFavouriteGames] = useState('');
   const [allergies, setAllergies] = useState('');
   const [disability, setDisability] = useState('');
@@ -112,6 +117,7 @@ const AddPet: React.FC = () => {
   const [petSizes, setPetSizes] = useState<PetSize[]>([]);
   const [petGenders, setPetGenders] = useState<PetGender[]>([]);
   const [petBreeds, setPetBreeds] = useState<PetBreed[]>([]);
+  const [foodOptions, setFoodOptions] = useState<FoodOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -441,6 +447,28 @@ const AddPet: React.FC = () => {
         setPetGenders(gendersData.body || []);
       }
 
+      // Fetch food options
+      const foodOptionsUrl = `${API_CONFIG.BASE_URL}/api/boarding-food-options`;
+      console.log('🔧 Food options CURL:');
+      console.log(`curl -X GET "${foodOptionsUrl}" -H "Authorization: Bearer ${token.substring(0, 20)}..."`);
+
+      const foodOptionsResponse = await fetch(foodOptionsUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('📡 Food options response status:', foodOptionsResponse.status);
+
+      if (foodOptionsResponse.ok) {
+        const foodOptionsData = await foodOptionsResponse.json();
+        console.log('✅ Food options fetched:', foodOptionsData);
+        console.log('🍖 Food options count:', foodOptionsData.body?.length || 0);
+        setFoodOptions(foodOptionsData.body || []);
+      } else {
+        console.error('❌ Food options request failed:', foodOptionsResponse.status);
+        const errorText = await foodOptionsResponse.text();
+        console.error('❌ Error details:', errorText);
+      }
+
       // Don't fetch breeds initially - they will be fetched when cat/dog is selected
       // Initialize with empty array
       setPetBreeds([]);
@@ -518,12 +546,17 @@ const AddPet: React.FC = () => {
       const selectedCategory = petCategories.find(c => c.id === category);
       const isExotic = selectedCategory?.catName?.toLowerCase() === 'exotic';
 
+      // Debug: Log category value
+      console.log('🐾 Category ID:', category);
+      console.log('🐾 Selected Category:', selectedCategory);
+      console.log('🐾 Is Exotic:', isExotic);
+
       // Prepare pet data in the exact format required by API
       const petData = {
         petName: petName.trim(),
         dob: dob.trim(),
         category: category, // Category ID
-        size: size, // Size ID
+        size: size || 1, // Size ID
         ownerId: ownerId,
         profileImg: selectedProfileImg || uploads.find(f => f.type === 'image')?.s3Url || '',
         otherPetName: isExotic ? exoticType.trim() : (breed === 0 ? breedOthers.trim() : ''),
@@ -535,7 +568,7 @@ const AddPet: React.FC = () => {
         breed: breed === 0 ? null : breed || null, // Breed ID or null
         allergies: allergies.trim() || '',
         disability: disability.trim() || '',
-        foodType: foodType ? parseInt(foodType) : null, // Food type ID
+        foodType: foodType || null, // Food type ID
         medicalHistory: medicalHistory.trim() || '',
         favGames: favouriteGames.trim() || '',
       };
@@ -838,7 +871,7 @@ const AddPet: React.FC = () => {
                   setExoticType('');
                   setBreed(null);
                   setBreedOthers('');
-                  setSize(null);
+                  setSize(1);
 
                   // Fetch breeds if cat or dog is selected
                   const selectedCat = petCategories.find(c => c.id === item.value);
@@ -1125,12 +1158,7 @@ const AddPet: React.FC = () => {
                   borderBottomWidth: 1,
                   borderBottomColor: '#F0F0F0',
                 }}
-                data={[
-                  { label: 'Raw meat', value: 'Raw meat' },
-                  { label: 'Cooked chicken rice', value: 'Cooked chicken rice' },
-                  { label: 'Kibbles', value: 'Kibbles' },
-                  { label: 'Curd rice', value: 'Curd rice' },
-                ]}
+                data={foodOptions.map(f => ({ label: f.name, value: f.id }))}
                 labelField="label"
                 valueField="value"
                 placeholder="Food Type"

@@ -93,6 +93,8 @@ interface BookingDetail {
 
 interface BoardingServiceBooking {
   id: number;
+  petId?: number;
+  pet?: any;
   possessions: boolean;
   isDocReqd: boolean;
   nailClipping: boolean;
@@ -176,8 +178,15 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
 
   // Pet handover modal states
   const [showHandoverModal, setShowHandoverModal] = useState<boolean>(false);
-  const [customerProvides, setCustomerProvides] = useState<string>('');
+  const [petItems, setPetItems] = useState<Array<{name: string; count: string}>>([{name: '', count: ''}]);
   const [submittingHandover, setSubmittingHandover] = useState<boolean>(false);
+
+  // Settlement checkout modal states
+  const [showSettlementModal, setShowSettlementModal] = useState<boolean>(false);
+  const [settlementData, setSettlementData] = useState<any>(null);
+  const [loadingSettlement, setLoadingSettlement] = useState<boolean>(false);
+  const [pets, setPets] = useState<any[]>([]);
+  const [loadingPets, setLoadingPets] = useState<boolean>(true);
 
   // Simulate initial data loading
   React.useEffect(() => {
@@ -188,11 +197,20 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Fetch pet details
+  useEffect(() => {
+    if (currentBookingData?.customer?.id) {
+      fetchPetProfiles(currentBookingData.customer.id);
+    }
+  }, [currentBookingData?.customer?.id]);
+
   // Fetch booking days when component mounts
   useEffect(() => {
     if (currentBookingData?.id) {
       console.log('📋 Fetching booking days for booking ID:', currentBookingData.id);
       fetchBookingDays(currentBookingData.id);
+      // Also refresh booking data to get latest flow histories
+      refreshBookingData(currentBookingData.id);
     }
   }, [currentBookingData?.id]);
 
@@ -280,8 +298,20 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   };
 
   const getCurrentStatus = (booking: BookingHistoryItem) => {
-    // Return the status from the new API response
-    return booking.status;
+    // Get the latest status from flowHistories array (last item in the array)
+    if (booking.flowHistories && booking.flowHistories.length > 0) {
+      const latestFlow = booking.flowHistories[booking.flowHistories.length - 1];
+      const statusId = latestFlow.boardingBookingFlowOptionsId;
+      const statusName = getStatusMessage(statusId);
+      
+      return {
+        id: statusId,
+        name: statusName
+      };
+    }
+    
+    // Return null if no flow histories available (will hide booking status)
+    return null;
   };
 
   // Handle chat navigation
@@ -304,6 +334,26 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
     navigation.navigate('Chat', { user: chatUser });
   };
 
+  // Handle Accept Pet - Update status and navigate to settlement checkout
+  const handleAcceptPet = async (bookingId: number) => {
+    try {
+      console.log('🐾 Accepting pet for booking:', bookingId);
+
+      // First update the booking status to 6 (Pet accepted)
+      await updateBookingStatus(bookingId, 6);
+
+      // Then navigate to settlement checkout
+      console.log('💰 Navigating to settlement checkout');
+      navigation.navigate('SettlementCheckout', {
+        bookingId: bookingId,
+        bookingData: currentBookingData,
+      });
+    } catch (error) {
+      console.error('🔥 Error in handleAcceptPet:', error);
+      Alert.alert('Error', 'Failed to process pet acceptance');
+    }
+  };
+
   const getActionButton = (statusId: number, bookingId: number) => {
     switch (statusId) {
       case 8:
@@ -315,7 +365,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
       case 5:
         return {
           text: 'Accept Pet',
-          action: () => updateBookingStatus(bookingId, 6),
+          action: () => handleAcceptPet(bookingId),
           color: '#10B981'
         };
       default:
@@ -448,7 +498,7 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           const finalDays = sliceToShow.slice().reverse();
 
           // Check if any uploads exist within the days to show
-          const anyUpdates = finalDays.some(d => Array.isArray(d.uploadsWithUrls) && d.uploadsWithUrls.length > 0);
+          const anyUpdates = finalDays.some((d: BookingDay) => Array.isArray(d.uploadsWithUrls) && d.uploadsWithUrls.length > 0);
           setHasAnyUpdates(anyUpdates);
           setBookingDays(finalDays);
           console.log('✅ Booking days state updated successfully');
@@ -491,13 +541,152 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
     return null;
   };
 
+  // Function to fetch pet profiles
+  const fetchPetProfiles = async (petOwnerId: number) => {
+    try {
+      setLoadingPets(true);
+      console.log('🐾 Fetching pet profiles for owner ID:', petOwnerId);
+      console.log('📋 Current booking data:', JSON.stringify(currentBookingData.boardingServiceBookings, null, 2));
+
+      const token = await getAuthToken();
+      if (!token) {
+        console.error('❌ No authentication token found');
+        setLoadingPets(false);
+        return;
+      }
+
+      // Check if pets are already embedded in the boardingServiceBookings
+      const embeddedPets = currentBookingData.boardingServiceBookings
+        .map(booking => booking.pet)
+        .filter(pet => pet !== null && pet !== undefined);
+
+      if (embeddedPets.length > 0) {
+        console.log('✅ Using embedded pet data from booking:', embeddedPets.length);
+        setPets(embeddedPets);
+        setLoadingPets(false);
+        return;
+      }
+
+      // Check if petId is available in boardingServiceBookings
+      const petIds = currentBookingData.boardingServiceBookings
+        .map(booking => booking.petId)
+        .filter(id => id !== null && id !== undefined);
+
+      if (petIds.length === 0) {
+        console.log('⚠️ No pet IDs found in boardingServiceBookings, fetching from individual booking endpoints');
+
+        // Fallback: Fetch each boarding service booking to get petId
+        const bookingPetIds: number[] = [];
+        const collectedPets: any[] = [];
+
+        for (const booking of currentBookingData.boardingServiceBookings) {
+          const bookingApiUrl = `${API_CONFIG.BASE_URL}/api/boarding-service-bookings/${booking.id}`;
+          console.log('🌐 Fetching booking details from:', bookingApiUrl);
+
+          const bookingResponse = await fetch(bookingApiUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (bookingResponse.ok) {
+            const bookingData = await bookingResponse.json();
+            console.log('✅ Booking data:', JSON.stringify(bookingData, null, 2));
+
+            if (bookingData.statusCode === 200 && bookingData.body) {
+              // Check if pet is embedded
+              if (bookingData.body.pet) {
+                collectedPets.push(bookingData.body.pet);
+              } else if (bookingData.body.petId) {
+                bookingPetIds.push(bookingData.body.petId);
+              }
+            }
+          }
+        }
+
+        // If we got pets from the embedded data, we're done
+        if (collectedPets.length > 0) {
+          console.log('✅ Pets loaded from embedded data:', collectedPets.length);
+          setPets(collectedPets);
+          setLoadingPets(false);
+          return;
+        }
+
+        // Use the collected pet IDs
+        petIds.push(...bookingPetIds);
+      }
+
+      console.log('📋 Pet IDs to fetch:', petIds);
+
+      // Fetch individual pet profiles
+      const petPromises = petIds.map(async (petId) => {
+        const petApiUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/${petId}`;
+        console.log('🌐 Fetching pet profile:', petApiUrl);
+
+        const petResponse = await fetch(petApiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (petResponse.ok) {
+          const petData = await petResponse.json();
+          console.log('✅ Pet data:', JSON.stringify(petData, null, 2));
+
+          if (petData.statusCode === 200 && petData.body) {
+            return petData.body;
+          }
+        }
+        return null;
+      });
+
+      const fetchedPets = await Promise.all(petPromises);
+      const validPets = fetchedPets.filter(pet => pet !== null);
+
+      console.log('✅ Pet profiles loaded:', validPets.length);
+      console.log('✅ Pet profiles data:', JSON.stringify(validPets, null, 2));
+
+      setPets(validPets);
+    } catch (error) {
+      console.error('🔥 Error fetching pet profiles:', error);
+    } finally {
+      setLoadingPets(false);
+    }
+  };
+
   // Function to refresh booking data from API
   const refreshBookingData = async (bookingId: number) => {
     try {
       const token = await getAuthToken();
       if (!token) return;
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history/by-boarding?boardingBookingId=${bookingId}`, {
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/boarding-booking-flow-history/by-boarding?boardingBookingId=${bookingId}`;
+      
+      // Generate CURL command for debugging
+      const curlCommand = `curl -X GET "${apiUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json" \\
+  -v`;
+
+      console.log('🔧 CURL command for refreshBookingData API:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      console.log('📤 refreshBookingData REQUEST:');
+      console.log('URL:', apiUrl);
+      console.log('Method: GET');
+      console.log('Headers:', {
+        'Authorization': `Bearer ${token.substring(0, 20)}...`,
+        'Content-Type': 'application/json'
+      });
+      console.log('Booking ID:', bookingId);
+
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -505,19 +694,49 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         },
       });
 
+      console.log('📥 refreshBookingData RESPONSE:');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+      
+      // Log response headers manually
+      const headersObj: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        headersObj[key] = value;
+      });
+      console.log('Headers:', JSON.stringify(headersObj, null, 2));
+
       if (response.ok) {
         const result = await response.json();
+        console.log('✅ refreshBookingData Response Body:', JSON.stringify(result, null, 2));
+        console.log('Response statusCode:', result.statusCode);
+        console.log('Response message:', result.message);
+        console.log('Response body type:', typeof result.body);
+        console.log('Response body length:', Array.isArray(result.body) ? result.body.length : 'N/A');
+
         if (result.statusCode === 200 && result.body) {
           // The API returns an array of flow history items, so we need to merge with existing booking data
           const updatedFlowHistories = result.body;
+          console.log('✅ Updating flow histories:', JSON.stringify(updatedFlowHistories, null, 2));
+
           setCurrentBookingData(prevData => ({
             ...prevData,
             flowHistories: updatedFlowHistories
           }));
+          console.log('✅ Booking data updated successfully');
+        } else {
+          console.warn('⚠️ Response statusCode is not 200 or body is missing');
         }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ refreshBookingData Error Response:', errorText);
       }
     } catch (error) {
-      console.error('Error refreshing booking data:', error);
+      console.error('🔥 Error in refreshBookingData:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
     }
   };
 
@@ -542,8 +761,11 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
 
   // Function to submit pet extras (items provided)
   const submitPetExtras = async (bookingId: number) => {
-    if (!customerProvides.trim()) {
-      Alert.alert('Error', 'Please enter items you are providing');
+    // Validate that at least one item has both name and count
+    const validItems = petItems.filter(item => item.name.trim() && item.count.trim() && parseInt(item.count) > 0);
+    
+    if (validItems.length === 0) {
+      Alert.alert('Error', 'Please add at least one item with name and quantity');
       return;
     }
 
@@ -555,32 +777,88 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
         return;
       }
 
+      const petExtrasUrl = `${API_CONFIG.BASE_URL}/api/pet-extras`;
+      const requestBody = {
+        boardingId: bookingId,
+        data: validItems.map(item => ({
+          customerProvides: parseInt(item.count),
+          name: item.name.trim()
+        }))
+      };
+
+      // Generate CURL command for debugging
+      const curlCommand = `curl -X POST "${petExtrasUrl}" \\
+  -H "Authorization: Bearer ${token.substring(0, 20)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody)}'`;
+
+      console.log('🔧 CURL command for pet-extras API:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
+      console.log('📤 Pet Extras REQUEST:');
+      console.log('URL:', petExtrasUrl);
+      console.log('Method: POST');
+      console.log('Headers:', {
+        'Authorization': `Bearer ${token.substring(0, 20)}...`,
+        'Content-Type': 'application/json'
+      });
+      console.log('Body:', JSON.stringify(requestBody, null, 2));
+
       // Call pet-extras API
-      const petExtrasResponse = await fetch(`${API_CONFIG.BASE_URL}/api/pet-extras`, {
+      const petExtrasResponse = await fetch(petExtrasUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          customerProvides: customerProvides.trim(),
-          bookingId: bookingId
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('📥 Pet Extras RESPONSE:');
+      console.log('Status:', petExtrasResponse.status);
+      console.log('Status Text:', petExtrasResponse.statusText);
+
+      // Log response headers
+      const responseHeaders: Record<string, string> = {};
+      petExtrasResponse.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
+      console.log('Headers:', JSON.stringify(responseHeaders, null, 2));
+
       if (!petExtrasResponse.ok) {
+        const errorText = await petExtrasResponse.text();
+        console.error('❌ Pet Extras Error Response:', errorText);
         Alert.alert('Error', 'Failed to save items provided');
         return;
       }
 
+      const petExtrasData = await petExtrasResponse.json();
+      console.log('✅ Pet Extras Response Body:', JSON.stringify(petExtrasData, null, 2));
+
       // After successful pet extras submission, update status to handover (status 3)
-      await updateBookingStatus(bookingId, 3);
+      console.log('🔄 Starting updateBookingStatus call with status 3...');
+      console.log('📋 Booking ID for status update:', bookingId);
+      
+      try {
+        await updateBookingStatus(bookingId, 3);
+        console.log('✅ Successfully updated booking status to 3');
+      } catch (statusError) {
+        console.error('❌ Error updating booking status:', statusError);
+        // Don't throw - still close modal and show success for pet extras
+      }
 
       // Close modal and reset
       setShowHandoverModal(false);
-      setCustomerProvides('');
+      setPetItems([{name: '', count: ''}]);
     } catch (error) {
-      console.error('Error submitting pet extras:', error);
+      console.error('🔥 Error submitting pet extras:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
       Alert.alert('Error', 'Failed to process handover');
     } finally {
       setSubmittingHandover(false);
@@ -588,18 +866,40 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
   };
 
   const updateBookingStatus = async (bookingId: number, newStatusId: number) => {
+    console.log('🔄 updateBookingStatus CALLED');
+    console.log('📋 Parameters:', { bookingId, newStatusId });
+    
     setUpdatingStatus(true);
     try {
       const token = await getAuthToken();
+      console.log('🔑 Token retrieved in updateBookingStatus:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
+      
       if (!token) {
+        console.error('❌ No token found in updateBookingStatus');
         Alert.alert('Error', 'Authentication token not found');
         return;
       }
 
       // Get owner ID if not available
       let currentOwnerId = ownerId;
+      console.log('👤 Current ownerId state:', currentOwnerId);
+      
       if (!currentOwnerId) {
-        const ownerResponse = await fetch(`${API_CONFIG.BASE_URL}/pet-owner/findByUserId`, {
+        console.log('📤 Fetching owner ID from API...');
+        const ownerApiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+        
+        // Generate CURL command for owner API
+        const ownerCurlCommand = `curl -X GET "${ownerApiUrl}" \\
+  -H "Authorization: Bearer ${token.substring(0, 20)}..." \\
+  -H "Content-Type: application/json" \\
+  -v`;
+
+        console.log('🔧 CURL command for pet-owner API:');
+        console.log('=====================================');
+        console.log(ownerCurlCommand);
+        console.log('=====================================');
+
+        const ownerResponse = await fetch(ownerApiUrl, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -607,49 +907,121 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           },
         });
 
+        console.log('📥 Owner API Response Status:', ownerResponse.status);
+        console.log('📥 Owner API Response Status Text:', ownerResponse.statusText);
+
         if (ownerResponse.ok) {
           const ownerData = await ownerResponse.json();
+          console.log('✅ Owner API Response:', JSON.stringify(ownerData, null, 2));
+          
           if (ownerData.statusCode === 200) {
             currentOwnerId = ownerData.body.id;
             setOwnerId(currentOwnerId);
+            console.log('✅ Owner ID retrieved:', currentOwnerId);
+          } else {
+            console.error('❌ Owner API returned non-200 statusCode:', ownerData.statusCode);
           }
+        } else {
+          const errorText = await ownerResponse.text();
+          console.error('❌ Owner API Error Response:', errorText);
         }
       }
 
       if (!currentOwnerId) {
+        console.error('❌ Unable to get owner ID');
         Alert.alert('Error', 'Unable to get owner information');
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history`, {
+      console.log('📤 Sending boarding-booking-flow-history request...');
+      const statusApiUrl = `${API_CONFIG.BASE_URL}/api/boarding-booking-flow-history`;
+      
+      // Extract boardingServiceBookings IDs
+      const boardingServiceBookingsIds = currentBookingData.boardingServiceBookings.map(booking => booking.id);
+      console.log('📋 Extracted boardingServiceBookingsIds:', boardingServiceBookingsIds);
+      
+      const statusRequestBody = {
+        customerId: currentOwnerId,
+        boardingBookingFlowOptionsId: newStatusId,
+        boardingBookingId: bookingId,
+        boardingId: currentBookingData.boarding.userId,
+        boardingServiceBookingsId: boardingServiceBookingsIds
+      };
+
+      // Generate CURL command for status update API
+      const statusCurlCommand = `curl -X POST "${statusApiUrl}" \\
+  -H "Authorization: Bearer ${token.substring(0, 20)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(statusRequestBody)}' \\
+  -v`;
+
+      console.log('🔧 CURL command for boarding-booking-flow-history API:');
+      console.log('=====================================');
+      console.log(statusCurlCommand);
+      console.log('=====================================');
+
+      console.log('📤 Status Update REQUEST:');
+      console.log('URL:', statusApiUrl);
+      console.log('Method: POST');
+      console.log('Headers:', {
+        'Authorization': `Bearer ${token.substring(0, 20)}...`,
+        'Content-Type': 'application/json'
+      });
+      console.log('Body:', JSON.stringify(statusRequestBody, null, 2));
+
+      const response = await fetch(statusApiUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          customerId: currentOwnerId,
-          boardingBookingFlowOptionsId: newStatusId,
-          boardingBookingId: bookingId
-        })
+        body: JSON.stringify(statusRequestBody)
       });
 
+      console.log('📥 Status Update RESPONSE:');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+
+      // Log response headers
+      const responseHeaders: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
+      console.log('Headers:', JSON.stringify(responseHeaders, null, 2));
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('✅ Status Update Response Body:', JSON.stringify(responseData, null, 2));
+        
         // Refresh booking data instead of navigating back
+        console.log('🔄 Refreshing booking data...');
         await refreshBookingData(bookingId);
 
         // Show dynamic status message
-        Alert.alert('Success', getStatusChangeMessage(newStatusId));
+        const successMessage = getStatusChangeMessage(newStatusId);
+        console.log('✅ Showing success message:', successMessage);
+        Alert.alert('Success', successMessage);
       } else {
+        const errorText = await response.text();
+        console.error('❌ Status Update Error Response:', errorText);
         Alert.alert('Error', 'Failed to update status');
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('🔥 Error in updateBookingStatus:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
       Alert.alert('Error', 'Failed to update status');
     } finally {
       setUpdatingStatus(false);
+      console.log('✅ updateBookingStatus completed');
     }
   };
+
+  console.log(currentBookingData, 'currentBookingDatacurrentBookingData');
+  
 
   const duration = calculateDuration(currentBookingData.startTime, currentBookingData.endTime);
   const serviceTitle = getServiceTitle(currentBookingData);
@@ -802,18 +1174,40 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           </View>
         )}
 
-        {/* Current Status */}
-        {currentStatus && (
-          <View style={historyStyles.detailsCard}>
-            <Text style={historyStyles.cardTitle}>Current Status</Text>
-            <View style={historyStyles.statusRow}>
-              <MaterialIcons name="info-outline" size={20} color="#58B9D0" />
-              <Text style={historyStyles.statusTextLarge}>
-                {currentStatus.name}
-              </Text>
+        {/* Status Card */}
+        <View style={historyStyles.detailsCard}>
+          <Text style={historyStyles.cardTitle}>Status Information</Text>
+          
+          {/* Payment Status */}
+          {currentBookingData.status && (
+            <View style={{ marginBottom: 12 }}>
+              <View style={historyStyles.statusRow}>
+                <MaterialIcons name="payment" size={20} color="#10B981" />
+                <View style={{ marginLeft: 8, flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 2 }}>Payment Status</Text>
+                  <Text style={historyStyles.statusTextLarge}>
+                    {currentBookingData.status.name}
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
-        )}
+          )}
+
+          {/* Booking Status */}
+          {currentStatus && (
+            <View>
+              <View style={historyStyles.statusRow}>
+                <MaterialIcons name="info-outline" size={20} color="#58B9D0" />
+                <View style={{ marginLeft: 8, flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 2 }}>Booking Status</Text>
+                  <Text style={historyStyles.statusTextLarge}>
+                    {currentStatus.name}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
 
         {/* Daily Updates Section */}
         <View style={historyStyles.detailsCard}>
@@ -1009,15 +1403,205 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
           )}
         </View>
 
-        {/* Pets Summary */}
+        {/* Pets Details */}
         <View style={historyStyles.detailsCard}>
-          <Text style={historyStyles.cardTitle}>Pets</Text>
-          <View style={historyStyles.petsSection}>
-            <MaterialIcons name="pets" size={20} color="#58B9D0" />
-            <Text style={historyStyles.petsTextLarge}>
-              {currentBookingData.boardingServiceBookings.length} pet{currentBookingData.boardingServiceBookings.length !== 1 ? 's' : ''} boarded
-            </Text>
-          </View>
+          <Text style={historyStyles.cardTitle}>
+            Pets ({currentBookingData.boardingServiceBookings.length})
+          </Text>
+          {loadingPets ? (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#58B9D0" />
+              <Text style={{ marginTop: 8, fontSize: 13, color: '#6B7280' }}>
+                Loading pet details...
+              </Text>
+            </View>
+          ) : pets.length > 0 ? (
+            <View style={{ marginTop: 12 }}>
+              {pets.map((pet, index) => {
+                const breedName = typeof pet.breed === 'object'
+                  ? (pet.breed?.name || pet.breed?.breedName)
+                  : pet.breed;
+
+                const genderLower = pet.gender ? String(pet.gender).toLowerCase() : null;
+                const genderIcon = genderLower === 'male' ? 'male' : 'female';
+                const genderColor = genderLower === 'male' ? '#3B82F6' : '#EC4899';
+
+                // Format DOB
+                const formatDOB = (dob: string) => {
+                  try {
+                    const date = new Date(dob);
+                    return date.toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric'
+                    });
+                  } catch {
+                    return dob;
+                  }
+                };
+
+                return (
+                  <View
+                    key={pet.id}
+                    style={{
+                      backgroundColor: '#F9FAFB',
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: index < pets.length - 1 ? 12 : 0,
+                      borderWidth: 1,
+                      borderColor: '#E5E7EB',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                      {/* Pet Image */}
+                      <View
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 32,
+                          backgroundColor: '#E0F2FE',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {pet.profileImg ? (
+                          <Image
+                            source={{ uri: pet.profileImg }}
+                            style={{ width: 64, height: 64 }}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <MaterialIcons name="pets" size={32} color="#58B9D0" />
+                        )}
+                      </View>
+
+                      {/* Pet Info */}
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: '700',
+                            color: '#111827',
+                            marginBottom: 6,
+                          }}
+                        >
+                          {pet.petName || pet.name}
+                        </Text>
+
+                        {breedName && (
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: '#6B7280',
+                              marginBottom: 8,
+                            }}
+                          >
+                            {breedName}
+                          </Text>
+                        )}
+
+                        {/* Pet Details Row */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            flexWrap: 'wrap',
+                            gap: 12,
+                          }}
+                        >
+                          {/* Gender */}
+                          {pet.gender && (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#FFFFFF',
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 6,
+                                gap: 4,
+                              }}
+                            >
+                              <MaterialIcons name={genderIcon} size={14} color={genderColor} />
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: '#374151',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {String(pet.gender)}
+                              </Text>
+                            </View>
+                          )}
+
+                          {/* Weight */}
+                          {pet.weight && (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#FFFFFF',
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 6,
+                                gap: 4,
+                              }}
+                            >
+                              <MaterialIcons name="fitness-center" size={14} color="#10B981" />
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: '#374151',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {pet.weight} kg
+                              </Text>
+                            </View>
+                          )}
+
+                          {/* DOB */}
+                          {pet.dob && (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#FFFFFF',
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 6,
+                                gap: 4,
+                              }}
+                            >
+                              <MaterialIcons name="cake" size={14} color="#F59E0B" />
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: '#374151',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {formatDOB(pet.dob)}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <MaterialIcons name="pets" size={48} color="#D1D5DB" />
+              <Text style={{ marginTop: 12, fontSize: 14, color: '#6B7280' }}>
+                No pet details available
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
       )}
@@ -1107,38 +1691,149 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Items Input */}
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: 8,
-              }}>Items You're Providing</Text>
-              <TextInput
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#E5E7EB',
-                  borderRadius: 12,
-                  padding: 12,
+            {/* Items List */}
+            <View style={{ marginBottom: 16 }}>
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}>
+                <Text style={{
                   fontSize: 14,
-                  color: '#1F2937',
-                  backgroundColor: '#F9FAFB',
-                  minHeight: 100,
-                  textAlignVertical: 'top',
-                }}
-                placeholder="e.g., Food bowl, favorite toy, blanket..."
-                placeholderTextColor="#9CA3AF"
-                value={customerProvides}
-                onChangeText={setCustomerProvides}
-                multiline
-                numberOfLines={4}
-              />
+                  fontWeight: '600',
+                  color: '#374151',
+                }}>Items You're Providing</Text>
+                <TouchableOpacity
+                  onPress={() => setPetItems([...petItems, {name: '', count: ''}])}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#EFF6FF',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                    gap: 4,
+                  }}
+                >
+                  <MaterialIcons name="add" size={18} color="#3B82F6" />
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: '#3B82F6',
+                  }}>Add Item</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
+                {petItems.map((item, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      backgroundColor: '#F9FAFB',
+                      borderRadius: 12,
+                      padding: 12,
+                      marginBottom: 12,
+                      borderWidth: 1,
+                      borderColor: '#E5E7EB',
+                    }}
+                  >
+                    {/* Item Header with Remove Button */}
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: 10,
+                    }}>
+                      <Text style={{
+                        fontSize: 13,
+                        fontWeight: '600',
+                        color: '#6B7280',
+                      }}>Item {index + 1}</Text>
+                      {petItems.length > 1 && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            const newItems = petItems.filter((_, i) => i !== index);
+                            setPetItems(newItems);
+                          }}
+                          style={{
+                            padding: 4,
+                          }}
+                        >
+                          <MaterialIcons name="delete-outline" size={20} color="#EF4444" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    {/* Item Name Input */}
+                    <View style={{ marginBottom: 8 }}>
+                      <Text style={{
+                        fontSize: 12,
+                        fontWeight: '500',
+                        color: '#6B7280',
+                        marginBottom: 6,
+                      }}>Item Name</Text>
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#E5E7EB',
+                          borderRadius: 8,
+                          padding: 10,
+                          fontSize: 14,
+                          color: '#1F2937',
+                          backgroundColor: '#FFFFFF',
+                        }}
+                        placeholder="e.g., Food bowl, Toy, Blanket"
+                        placeholderTextColor="#9CA3AF"
+                        value={item.name}
+                        onChangeText={(text) => {
+                          const newItems = [...petItems];
+                          newItems[index].name = text;
+                          setPetItems(newItems);
+                        }}
+                      />
+                    </View>
+
+                    {/* Quantity Input */}
+                    <View>
+                      <Text style={{
+                        fontSize: 12,
+                        fontWeight: '500',
+                        color: '#6B7280',
+                        marginBottom: 6,
+                      }}>Quantity</Text>
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#E5E7EB',
+                          borderRadius: 8,
+                          padding: 10,
+                          fontSize: 14,
+                          color: '#1F2937',
+                          backgroundColor: '#FFFFFF',
+                        }}
+                        placeholder="Enter quantity"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric"
+                        value={item.count}
+                        onChangeText={(text) => {
+                          // Only allow numbers
+                          const numericText = text.replace(/[^0-9]/g, '');
+                          const newItems = [...petItems];
+                          newItems[index].count = numericText;
+                          setPetItems(newItems);
+                        }}
+                      />
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+
               <Text style={{
                 fontSize: 12,
                 color: '#6B7280',
                 marginTop: 4,
-              }}>List all items you're providing for your pet</Text>
+              }}>Add all items you're providing with quantities</Text>
             </View>
 
             {/* Action Buttons */}
@@ -1147,7 +1842,10 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
               gap: 12,
             }}>
               <TouchableOpacity
-                onPress={() => setShowHandoverModal(false)}
+                onPress={() => {
+                  setShowHandoverModal(false);
+                  setPetItems([{name: '', count: ''}]);
+                }}
                 style={{
                   flex: 1,
                   paddingVertical: 14,
@@ -1165,12 +1863,12 @@ const ViewDetails: React.FC<ViewDetailsProps> = ({ route }) => {
 
               <TouchableOpacity
                 onPress={() => submitPetExtras(currentBookingData.id)}
-                disabled={submittingHandover || !customerProvides.trim()}
+                disabled={submittingHandover || petItems.every(item => !item.name.trim() || !item.count.trim())}
                 style={{
                   flex: 1,
                   paddingVertical: 14,
                   borderRadius: 12,
-                  backgroundColor: customerProvides.trim() ? '#58B9D0' : '#D1D5DB',
+                  backgroundColor: petItems.some(item => item.name.trim() && item.count.trim()) ? '#58B9D0' : '#D1D5DB',
                   alignItems: 'center',
                   flexDirection: 'row',
                   justifyContent: 'center',

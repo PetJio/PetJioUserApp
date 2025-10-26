@@ -97,7 +97,10 @@ import {
   AddPet,
   EditPet,
   VaccinationUpload,
+  PaymentWebView,
   ViewDetails,
+  SettlementCheckout,
+  SettlementSuccess,
 } from '../../screens';
 import TabNavigator from '../TabNavigator';
 import ServiceStackNavigator from '../ServiceStackNavigator';
@@ -230,7 +233,10 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="AddPet" component={AddPet}/>
             <Stack.Screen name="EditPet" component={EditPet}/>
             <Stack.Screen name="VaccinationUpload" component={VaccinationUpload}/>
+            <Stack.Screen name="PaymentWebView" component={PaymentWebView}/>
             <Stack.Screen name="ViewDetails" component={ViewDetails}/>
+            <Stack.Screen name="SettlementCheckout" component={SettlementCheckout}/>
+            <Stack.Screen name="SettlementSuccess" component={SettlementSuccess}/>
 
         </Stack.Navigator>
     );

@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'https://api.petjio.com',
+  BASE_URL: 'https://stage.petgeo.in',
   VERSION: 'v1',
   TIMEOUT: 30000,
 } as const;

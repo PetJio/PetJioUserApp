@@ -235,6 +235,17 @@ const History: React.FC = () => {
       const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-details/get-booking-by-pet-owner/${userId}`;
       console.log('🌐 Fetching booking history from:', apiUrl);
 
+      // Generate CURL command for debugging
+      const curlCommand = `curl -X GET "${apiUrl}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json" \\
+  -v`;
+
+      console.log('🔧 CURL command for loadBookingHistory API:');
+      console.log('=====================================');
+      console.log(curlCommand);
+      console.log('=====================================');
+
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -307,7 +318,7 @@ const History: React.FC = () => {
       const token = await getAuthToken();
       if (!token) return;
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history-options`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/boarding-booking-flow-history-options`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -398,8 +409,20 @@ const History: React.FC = () => {
   };
 
   const getCurrentStatus = (booking: BookingHistoryItem) => {
-    // Return the status from the new API response
-    return booking.status;
+    // Get the latest booking status from flowHistories array (last item in the array)
+    if (booking.flowHistories && booking.flowHistories.length > 0) {
+      const latestFlow = booking.flowHistories[booking.flowHistories.length - 1];
+      const statusId = latestFlow.boardingBookingFlowOptionsId;
+      const statusName = getStatusMessage(statusId);
+      
+      return {
+        id: statusId,
+        name: statusName
+      };
+    }
+    
+    // Return null if no flow histories available (will hide booking status)
+    return null;
   };
 
   const getStatusMessage = (statusId: number) => {
@@ -451,7 +474,7 @@ const History: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boarding-booking-flow-history`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/boarding-booking-flow-history`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -514,12 +537,22 @@ const History: React.FC = () => {
           </Text>
         </View>
 
-        {/* Status */}
+        {/* Payment Status */}
+        {item.status && (
+          <View style={historyStyles.statusRow}>
+            <MaterialIcons name="payment" size={16} color="#666" />
+            <Text style={historyStyles.statusText}>
+              Payment Status: {item.status.name}
+            </Text>
+          </View>
+        )}
+
+        {/* Booking Status */}
         {currentStatus && (
           <View style={historyStyles.statusRow}>
             <MaterialIcons name="info-outline" size={16} color="#666" />
             <Text style={historyStyles.statusText}>
-              Status: {currentStatus.name}
+              Booking Status: {currentStatus.name}
             </Text>
           </View>
         )}

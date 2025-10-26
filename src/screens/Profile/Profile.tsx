@@ -362,16 +362,28 @@ const Profile: React.FC = () => {
                 return;
               }
 
-              const resp = await fetch(
-                `${API_CONFIG.BASE_URL}/api/pet-profile/${petId}`,
-                {
-                  method: 'DELETE',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                  },
+              const deleteUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/${petId}`;
+
+              // Generate and log CURL command for debugging
+              const curlCommand = `curl -X DELETE "${deleteUrl}" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${token}" \\
+  -v`;
+
+              console.log('🔧 Delete Pet CURL Command:');
+              console.log('=====================================');
+              console.log(curlCommand);
+              console.log('=====================================');
+
+              const resp = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
                 },
-              );
+              });
+
+              console.log('📡 Delete response status:', resp.status);
 
               if (resp.status === 401) {
                 await handleUnauthorized();
