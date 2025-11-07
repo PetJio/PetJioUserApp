@@ -105,6 +105,10 @@ export { default as History} from './History/History';
 export { default as ViewDetails} from './History/ViewDetails';
 export { default as SettlementCheckout} from './SettlementCheckout/SettlementCheckout';
 export { default as SettlementSuccess} from './SettlementSuccess/SettlementSuccess';
+export { default as BlogDetails} from './Blog/BlogDetails';
+export { default as AllBlogs} from './Blog/AllBlogs';
+export { default as NewsDetails} from './News/NewsDetails';
+export { default as AllNews} from './News/AllNews';
 
 
 

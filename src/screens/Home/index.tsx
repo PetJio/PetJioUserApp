@@ -21,7 +21,9 @@ import { storageService } from '../../utils/storage';
 import { API_CONFIG } from '../../config/api';
 import { navigate, reset } from '../../utils/navigationService';
 import { useFocusEffect } from '@react-navigation/native';
-import { PetSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
+import { PetSkeleton, AppointmentCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
+import { blogs } from '../../data/blogs';
+import { petNews } from '../../data/news';
 
 interface PetCategory {
   id: number;
@@ -60,11 +62,34 @@ interface PetApiResponse {
   body: PetProfile[];
 }
 
+// Booking interfaces
+interface BookingHistoryItem {
+  id: number;
+  mode: { id: number; value: string };
+  startTime: string;
+  endTime: string;
+  customer: any;
+  status: { id: number; name: string };
+  service: any;
+  boarding: any;
+  boardingServiceBookings: any[];
+  flowHistories?: Array<{
+    id: number;
+    boardingBookingFlowOptionsId: number;
+    createdAt: string;
+  }>;
+}
+
 const Home: React.FC = () => {
   const [userName, setUserName] = useState<string>('User');
   const [pets, setPets] = useState<PetProfile[]>([]);
   const [loadingPets, setLoadingPets] = useState<boolean>(true);
   const [petsError, setPetsError] = useState<string | null>(null);
+
+  // Appointments state
+  const [appointments, setAppointments] = useState<BookingHistoryItem[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState<boolean>(true);
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
 
   // Logout handler for 401 errors
   const handleUnauthorized = async () => {
@@ -110,6 +135,7 @@ const Home: React.FC = () => {
 
     loadUserName();
     fetchPets(); // Fetch pets when component mounts
+    fetchAppointments(); // Fetch appointments when component mounts
   }, []);
 
   const getAuthToken = async () => {
@@ -237,14 +263,14 @@ const Home: React.FC = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Pet Profiles API Error:', errorText);
-        
+
         // Check for 401 Unauthorized status
         if (response.status === 401) {
           console.log('🔒 401 Unauthorized on Pet Profiles - User session expired');
           await handleUnauthorized();
           return;
         }
-        
+
         throw new Error(
           `HTTP error! status: ${response.status}, message: ${errorText}`,
         );
@@ -283,6 +309,106 @@ const Home: React.FC = () => {
     } finally {
       console.log('🏁 fetchPets completed');
       setLoadingPets(false);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    setLoadingAppointments(true);
+    setAppointmentsError(null);
+
+    try {
+      console.log('📅 HOME PAGE - Starting appointments fetch');
+
+      const token = await getAuthToken();
+      if (!token) {
+        console.error('❌ No authentication token found');
+        setAppointmentsError('Authentication token not found');
+        return;
+      }
+
+      // Get the owner ID from API
+      const ownerId = await getOwnerIdFromAPI();
+      if (!ownerId) {
+        console.error('❌ No owner ID found');
+        setAppointmentsError('Owner ID not found');
+        return;
+      }
+
+      console.log('🚀 FETCHING APPOINTMENTS - Using Owner ID:', ownerId);
+
+      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-details/get-booking-by-pet-owner/${ownerId}`;
+      console.log('🌐 Appointments Request URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Appointments Response Status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Appointments API Error:', errorText);
+
+        if (response.status === 401) {
+          console.log('🔒 401 Unauthorized on Appointments');
+          await handleUnauthorized();
+          return;
+        }
+
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Appointments Response:', {
+        statusCode: result.statusCode,
+        bookingCount: result.body ? result.body.length : 0,
+      });
+
+      if (result.statusCode === 200) {
+        const bookingData = result.body || [];
+
+        // Filter for upcoming and ongoing appointments
+        const now = new Date();
+        const upcomingBookings = bookingData.filter((booking: BookingHistoryItem) => {
+          const endTime = new Date(booking.endTime);
+
+          // Get the latest flow status
+          const latestFlowStatus = booking.flowHistories && booking.flowHistories.length > 0
+            ? booking.flowHistories[booking.flowHistories.length - 1].boardingBookingFlowOptionsId
+            : null;
+
+          // Filter criteria:
+          // 1. Booking hasn't ended yet (endTime is in the future)
+          // 2. Status is not completed (status 6)
+          // Flow statuses: 7=Pending, 8=Accepted, 3=Pet Handover, 4=Pet with Boarder, 5=Pet Returned, 6=Completed
+          // If no flow status exists yet (new booking), include it
+          const isNotEnded = endTime > now;
+          const isActiveStatus = latestFlowStatus === null || latestFlowStatus !== 6; // Include if no status or not completed
+
+          console.log(`📊 Booking ${booking.id}: endTime=${booking.endTime}, latestStatus=${latestFlowStatus}, isNotEnded=${isNotEnded}, isActive=${isActiveStatus}`);
+
+          return isNotEnded && isActiveStatus;
+        });
+
+        // Sort by start time (nearest first)
+        const sortedBookings = upcomingBookings.sort((a, b) => {
+          return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        });
+
+        console.log('✅ Filtered Upcoming Appointments:', sortedBookings.length);
+        setAppointments(sortedBookings);
+      } else {
+        throw new Error(result.message || 'Failed to fetch appointments');
+      }
+    } catch (error) {
+      console.error('🔥 Error in fetchAppointments:', error);
+      setAppointmentsError(`Failed to load appointments: ${error.message}`);
+    } finally {
+      setLoadingAppointments(false);
     }
   };
 
@@ -399,6 +525,63 @@ const Home: React.FC = () => {
         contentContainerStyle={{ paddingBottom: responsiveHeight(12) }}
       >
         <View style={styles.subcontainer}>
+          {/* Pets Section Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: responsiveWidth(5),
+              marginTop: responsiveHeight(2),
+              marginBottom: responsiveHeight(1),
+            }}
+          >
+            <View>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '700',
+                  color: '#1F2937',
+                }}
+              >
+                My Pets
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: '#6B7280',
+                  marginTop: 2,
+                }}
+              >
+                {pets.length} {pets.length === 1 ? 'pet' : 'pets'} in your care
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => navigate('AddPet')}
+              style={{
+                backgroundColor: '#58B9D0',
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="add" size={18} color="#FFFFFF" />
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: '#FFFFFF',
+                }}
+              >
+                Add Pet
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Pets Section - Reference Project Style */}
           {loadingPets ? (
             <View style={styles.doctoranddogimagecontainer}>
@@ -483,159 +666,641 @@ const Home: React.FC = () => {
           )}
         </View>
 
-        {/* Attractive empty state for appointments */}
+        {/* Upcoming Appointments Section */}
         <View
           style={{
-            marginTop: responsiveHeight(5),
+            marginTop: responsiveHeight(3),
             paddingHorizontal: responsiveWidth(5),
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: responsiveHeight(2.5),
-            backgroundColor: '#F8F9FB',
-            marginHorizontal: responsiveWidth(5),
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: '#E5E7EB',
-            borderStyle: 'dashed',
           }}
         >
-          <View
+          <Text
             style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#E3F2FD',
-              justifyContent: 'center',
-              alignItems: 'center',
+              fontSize: 18,
+              fontWeight: '700',
+              color: '#1F2937',
               marginBottom: 12,
             }}
           >
-            <MaterialIcons name="event" size={28} color="#58B9D0" />
-          </View>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#1F2937',
-              textAlign: 'center',
-              marginBottom: 4,
-            }}
-          >
-            No upcoming appointments
+            Upcoming Appointments
           </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: '#6B7280',
-              textAlign: 'center',
-              lineHeight: 20,
-            }}
-          >
-            Schedule your pet's next visit with our trusted veterinarians
-          </Text>
+
+          {loadingAppointments ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 12 }}
+            >
+              {[...Array(2)].map((_, index) => (
+                <View key={index} style={{ width: responsiveWidth(85) }}>
+                  <AppointmentCardSkeleton />
+                </View>
+              ))}
+            </ScrollView>
+          ) : appointments.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 12, paddingRight: responsiveWidth(5) }}
+            >
+              {appointments.map((booking) => {
+                const facilityName = booking.boarding?.facilityName || 'Boarding Service';
+                const providerName = booking.service
+                  ? `${booking.service.firstName} ${booking.service.lastName}`
+                  : 'Service Provider';
+                const startDate = new Date(booking.startTime);
+                const endDate = new Date(booking.endTime);
+                const now = new Date();
+
+                // Determine if ongoing or upcoming
+                const isOngoing = startDate <= now && endDate >= now;
+                const statusText = isOngoing ? 'Ongoing' : 'Upcoming';
+                const statusColor = isOngoing ? '#10B981' : '#3B82F6';
+
+                // Get latest flow status
+                const latestFlowStatus = booking.flowHistories && booking.flowHistories.length > 0
+                  ? booking.flowHistories[booking.flowHistories.length - 1].boardingBookingFlowOptionsId
+                  : null;
+
+                let flowStatusText = '';
+                if (latestFlowStatus === 7) flowStatusText = 'Pending Acceptance';
+                else if (latestFlowStatus === 8) flowStatusText = 'Accepted';
+                else if (latestFlowStatus === 3) flowStatusText = 'Pet Handover';
+                else if (latestFlowStatus === 4) flowStatusText = 'Pet with Boarder';
+                else if (latestFlowStatus === 5) flowStatusText = 'Pet Returned';
+
+                // Calculate duration
+                const durationInDays = Math.ceil(
+                  (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+                );
+
+                // Get booking ID
+                const bookingId = `#${booking.id}`;
+
+                return (
+                  <TouchableOpacity
+                    key={booking.id}
+                    onPress={() => navigate('ViewDetails', { bookingItem: booking })}
+                    activeOpacity={0.8}
+                    style={{ width: responsiveWidth(85) }}
+                  >
+                    <LinearGradient
+                      colors={isOngoing ? ['#F0FDF4', '#FFFFFF'] : ['#EFF6FF', '#FFFFFF']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{
+                        borderRadius: 16,
+                        padding: 18,
+                        borderWidth: 1.5,
+                        borderColor: isOngoing ? '#86EFAC' : '#93C5FD',
+                        minHeight: 165,
+                        shadowColor: isOngoing ? '#10B981' : '#3B82F6',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 3,
+                      }}
+                    >
+                      {/* Header Row: Booking ID and Status Badge */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '600',
+                            color: '#58B9D0',
+                          }}
+                        >
+                          {bookingId}
+                        </Text>
+                        <View
+                          style={{
+                            backgroundColor: statusColor,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: 12,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              fontWeight: '700',
+                              color: '#FFFFFF',
+                            }}
+                          >
+                            {statusText}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Facility Name */}
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: '700',
+                          color: '#111827',
+                          marginBottom: 4,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {facilityName}
+                      </Text>
+
+                      {/* Provider Name */}
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: '#6B7280',
+                          marginBottom: 12,
+                        }}
+                      >
+                        {providerName}
+                      </Text>
+
+                      {/* Date Range */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <MaterialIcons name="calendar-today" size={16} color="#58B9D0" />
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            color: '#374151',
+                            marginLeft: 8,
+                            fontWeight: '500',
+                          }}
+                        >
+                          {startDate.toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                          })}{' '}
+                          -{' '}
+                          {endDate.toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: '#6B7280',
+                            marginLeft: 8,
+                          }}
+                        >
+                          ({durationInDays} {durationInDays === 1 ? 'day' : 'days'})
+                        </Text>
+                      </View>
+
+                      {/* Flow Status */}
+                      {flowStatusText && (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <MaterialIcons name="info-outline" size={16} color="#6B7280" />
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: '#6B7280',
+                              marginLeft: 8,
+                            }}
+                          >
+                            Status: {flowStatusText}
+                          </Text>
+                        </View>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingVertical: responsiveHeight(2.5),
+                backgroundColor: '#F8F9FB',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderStyle: 'dashed',
+                minHeight: 150,
+              }}
+            >
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: '#E3F2FD',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
+                <MaterialIcons name="event" size={28} color="#58B9D0" />
+              </View>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: '#1F2937',
+                  textAlign: 'center',
+                  marginBottom: 4,
+                }}
+              >
+                No upcoming appointments
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#6B7280',
+                  textAlign: 'center',
+                  lineHeight: 20,
+                }}
+              >
+                Schedule your pet's next visit with our trusted veterinarians
+              </Text>
+            </View>
+          )}
         </View>
-        {/* Attractive empty state for news */}
+        {/* Pet News Section */}
         <View
           style={{
             marginTop: responsiveHeight(2),
             paddingHorizontal: responsiveWidth(5),
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: responsiveHeight(2.5),
-            backgroundColor: '#F0FCFF',
-            marginHorizontal: responsiveWidth(5),
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: '#B8E6FF',
-            borderStyle: 'dashed',
           }}
         >
-          <View
+          <Text
             style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#DBEAFE',
-              justifyContent: 'center',
-              alignItems: 'center',
+              fontSize: 18,
+              fontWeight: '700',
+              color: '#1F2937',
               marginBottom: 12,
             }}
           >
-            <MaterialIcons name="newspaper" size={28} color="#3B82F6" />
-          </View>
-          <Text
+            Latest Pet News
+          </Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 16, paddingRight: responsiveWidth(5) }}
+          >
+            {petNews.map((news) => {
+              const publishedDate = new Date(news.publishedAt);
+              const now = new Date();
+              const diffTime = Math.abs(now.getTime() - publishedDate.getTime());
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+              let timeAgo = '';
+              if (diffDays === 0) {
+                timeAgo = 'Today';
+              } else if (diffDays === 1) {
+                timeAgo = 'Yesterday';
+              } else if (diffDays < 7) {
+                timeAgo = `${diffDays} days ago`;
+              } else {
+                timeAgo = publishedDate.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                });
+              }
+
+              return (
+                <TouchableOpacity
+                  key={news.id}
+                  onPress={() => navigate('NewsDetails', { news })}
+                  activeOpacity={0.8}
+                  style={{ width: responsiveWidth(80) }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: '#E5E7EB',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* News Image */}
+                    <Image
+                      source={{ uri: news.image }}
+                      style={{
+                        width: '100%',
+                        height: 160,
+                        backgroundColor: '#F3F4F6',
+                      }}
+                      resizeMode="cover"
+                    />
+
+                    {/* News Content */}
+                    <View style={{ padding: 16 }}>
+                      {/* Category Badge and Time */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: '#DBEAFE',
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderRadius: 12,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontWeight: '600',
+                              color: '#3B82F6',
+                            }}
+                          >
+                            {news.category}
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            color: '#6B7280',
+                          }}
+                        >
+                          {timeAgo}
+                        </Text>
+                      </View>
+
+                      {/* News Title */}
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontWeight: '700',
+                          color: '#111827',
+                          marginBottom: 8,
+                          lineHeight: 20,
+                        }}
+                        numberOfLines={2}
+                      >
+                        {news.title}
+                      </Text>
+
+                      {/* News Description */}
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: '#6B7280',
+                          lineHeight: 17,
+                          marginBottom: 12,
+                        }}
+                        numberOfLines={2}
+                      >
+                        {news.description}
+                      </Text>
+
+                      {/* Source */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <MaterialIcons name="source" size={14} color="#58B9D0" />
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#58B9D0',
+                            marginLeft: 4,
+                            fontWeight: '600',
+                          }}
+                        >
+                          {news.source}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Show More Button */}
+          <TouchableOpacity
+            onPress={() => navigate('AllNews')}
+            activeOpacity={0.8}
             style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#1F2937',
-              textAlign: 'center',
-              marginBottom: 4,
+              marginTop: 16,
+              paddingVertical: 12,
+              paddingHorizontal: 20,
+              backgroundColor: '#F8F9FB',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            No news updates
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: '#6B7280',
-              textAlign: 'center',
-              lineHeight: 20,
-            }}
-          >
-            Stay tuned for the latest pet care news and updates
-          </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: '#3B82F6',
+                marginRight: 6,
+              }}
+            >
+              View All News
+            </Text>
+            <MaterialIcons name="arrow-forward" size={18} color="#3B82F6" />
+          </TouchableOpacity>
         </View>
 
+        {/* Blog Posts Section */}
         <View
           style={{
             marginTop: responsiveHeight(2),
             paddingHorizontal: responsiveWidth(5),
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: responsiveHeight(2.5),
-            backgroundColor: '#FEF7ED',
-            marginHorizontal: responsiveWidth(5),
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: '#FED7AA',
-            borderStyle: 'dashed',
-            marginBottom: responsiveHeight(3),
           }}
         >
-          <View
+          <Text
             style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: '#FEF3C7',
-              justifyContent: 'center',
-              alignItems: 'center',
+              fontSize: 18,
+              fontWeight: '700',
+              color: '#1F2937',
               marginBottom: 12,
             }}
           >
-            <MaterialIcons name="article" size={28} color="#F59E0B" />
-          </View>
-          <Text
+            Pet Care Blog
+          </Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 16, paddingRight: responsiveWidth(5) }}
+          >
+            {blogs.map((blog) => (
+              <TouchableOpacity
+                key={blog.id}
+                onPress={() => navigate('BlogDetails', { blog })}
+                activeOpacity={0.8}
+                style={{ width: responsiveWidth(75) }}
+              >
+                <View
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: '#E5E7EB',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Blog Image */}
+                  <Image
+                    source={{ uri: blog.image }}
+                    style={{
+                      width: '100%',
+                      height: 150,
+                      backgroundColor: '#F3F4F6',
+                    }}
+                    resizeMode="cover"
+                  />
+
+                  {/* Blog Content */}
+                  <View style={{ padding: 16 }}>
+                    {/* Category Badge */}
+                    <View
+                      style={{
+                        alignSelf: 'flex-start',
+                        backgroundColor: '#FEF3C7',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 12,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          fontWeight: '600',
+                          color: '#F59E0B',
+                        }}
+                      >
+                        {blog.category}
+                      </Text>
+                    </View>
+
+                    {/* Blog Title */}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '700',
+                        color: '#111827',
+                        marginBottom: 8,
+                        lineHeight: 22,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {blog.title}
+                    </Text>
+
+                    {/* Blog Excerpt */}
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        color: '#6B7280',
+                        lineHeight: 18,
+                        marginBottom: 12,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {blog.excerpt}
+                    </Text>
+
+                    {/* Meta Info */}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="person-outline" size={14} color="#6B7280" />
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#6B7280',
+                            marginLeft: 4,
+                          }}
+                          numberOfLines={1}
+                        >
+                          {blog.author.split(',')[0]}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="access-time" size={14} color="#6B7280" />
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: '#6B7280',
+                            marginLeft: 4,
+                          }}
+                        >
+                          {blog.readTime}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* View More Button for Blogs */}
+          <TouchableOpacity
+            onPress={() => navigate('AllBlogs')}
+            activeOpacity={0.8}
             style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: '#1F2937',
-              textAlign: 'center',
-              marginBottom: 4,
+              marginTop: 16,
+              paddingVertical: 12,
+              paddingHorizontal: 20,
+              backgroundColor: '#FFFBEB',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#FEF3C7',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            No blog posts yet
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: '#6B7280',
-              textAlign: 'center',
-              lineHeight: 20,
-            }}
-          >
-            Discover helpful tips and guides for caring for your pets
-          </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: '#F59E0B',
+                marginRight: 6,
+              }}
+            >
+              View All Blogs
+            </Text>
+            <MaterialIcons name="arrow-forward" size={18} color="#F59E0B" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

@@ -1141,4 +1141,41 @@ export const BoardingCheckoutSkeleton: React.FC = () => {
   );
 };
 
+// Appointment card skeleton component
+export const AppointmentCardSkeleton: React.FC = () => {
+  return (
+    <View style={{
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      marginBottom: 12,
+    }}>
+      {/* Status Badge */}
+      <View style={{ alignItems: 'flex-end', marginBottom: 8 }}>
+        <SkeletonLoader width={70} height={20} borderRadius={12} />
+      </View>
+
+      {/* Facility Name */}
+      <SkeletonLoader width="70%" height={18} borderRadius={4} style={{ marginBottom: 8 }} />
+
+      {/* Provider Name */}
+      <SkeletonLoader width="50%" height={14} borderRadius={4} style={{ marginBottom: 12 }} />
+
+      {/* Date Range with Icon */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <SkeletonLoader width={16} height={16} borderRadius={4} style={{ marginRight: 8 }} />
+        <SkeletonLoader width="60%" height={14} borderRadius={4} />
+      </View>
+
+      {/* Flow Status with Icon */}
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <SkeletonLoader width={16} height={16} borderRadius={4} style={{ marginRight: 8 }} />
+        <SkeletonLoader width="45%" height={14} borderRadius={4} />
+      </View>
+    </View>
+  );
+};
+
 export default SkeletonLoader;

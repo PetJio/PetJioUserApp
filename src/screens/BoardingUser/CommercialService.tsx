@@ -263,8 +263,37 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                           {item?.city || 'Location not specified'}
                         </Text>
                       </View>
+                      {/* Service Price */}
+                      {(() => {
+                        // Extract price from the nested structure
+                        const price = item?.servicePrice ||
+                                     item?.boardingServices?.[0]?.servicePrice ||
+                                     item?.price;
 
-          
+                        if (price !== undefined && price !== null) {
+                          return (
+                            <View
+                              style={{
+                                backgroundColor: '#10B981',
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 6,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: '#FFFFFF',
+                                  fontWeight: '700',
+                                }}
+                              >
+                                {price === 0 ? 'Free' : `₹${price}/day`}
+                              </Text>
+                            </View>
+                          );
+                        }
+                        return null;
+                      })()}
                     </View>
 
                     {/* Description */}

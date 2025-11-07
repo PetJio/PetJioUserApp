@@ -101,6 +101,10 @@ import {
   ViewDetails,
   SettlementCheckout,
   SettlementSuccess,
+  BlogDetails,
+  AllBlogs,
+  NewsDetails,
+  AllNews,
 } from '../../screens';
 import TabNavigator from '../TabNavigator';
 import ServiceStackNavigator from '../ServiceStackNavigator';
@@ -237,6 +241,10 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="ViewDetails" component={ViewDetails}/>
             <Stack.Screen name="SettlementCheckout" component={SettlementCheckout}/>
             <Stack.Screen name="SettlementSuccess" component={SettlementSuccess}/>
+            <Stack.Screen name="BlogDetails" component={BlogDetails}/>
+            <Stack.Screen name="AllBlogs" component={AllBlogs}/>
+            <Stack.Screen name="NewsDetails" component={NewsDetails}/>
+            <Stack.Screen name="AllNews" component={AllNews}/>
 
         </Stack.Navigator>
     );
