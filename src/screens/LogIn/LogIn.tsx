@@ -5,22 +5,19 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import images from '../../../assets/images'; 
-import Icons from '../../../assets/icons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import images from '../../../assets/images';
 import loginstyles from './login.styles';
 import { loginUser, LoginRequest } from '../../services/authService';
-import googleSignInService, { GoogleSignInResponse } from '../../services/googleSignInService';
 import { RootStackParamList } from '../../types/navigation';
 import { storageService } from '../../utils/storage';
 import { STORAGE_KEYS } from '../../constants';
 import FirebaseMessagingService from '../../services/firebaseMessagingService';
+import CustomTextInput from '../../components/CustomTextInput';
 
 type LogInScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -139,27 +136,30 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
 
           console.log('✅ Login data stored successfully');
 
-          // Register FCM token after successful login
-          console.log('🔔 Registering FCM token after login...');
-          try {
-            // Get FCM token from local storage
-            const fcmToken = await storageService.getFCMToken();
+          // Register FCM token after successful login with a small delay
+          // to ensure auth token is fully persisted to storage
+          console.log('🔔 Scheduling FCM token registration after login...');
+          setTimeout(async () => {
+            try {
+              // Get FCM token from local storage
+              const fcmToken = await storageService.getFCMToken();
 
-            if (fcmToken) {
-              console.log('📱 FCM token found, registering with backend...');
-              const registered = await FirebaseMessagingService.registerDeviceToken(fcmToken);
+              if (fcmToken) {
+                console.log('📱 FCM token found, registering with backend...');
+                const registered = await FirebaseMessagingService.registerDeviceToken(fcmToken);
 
-              if (registered) {
-                console.log('✅ FCM token registered successfully after login');
+                if (registered) {
+                  console.log('✅ FCM token registered successfully after login');
+                } else {
+                  console.log('⚠️ Failed to register FCM token after login');
+                }
               } else {
-                console.log('⚠️ Failed to register FCM token after login');
+                console.log('⚠️ No FCM token found to register after login');
               }
-            } else {
-              console.log('⚠️ No FCM token found to register after login');
+            } catch (error) {
+              console.error('❌ Error registering FCM token after login:', error);
             }
-          } catch (error) {
-            console.error('❌ Error registering FCM token after login:', error);
-          }
+          }, 500); // 500ms delay to ensure token persistence
 
           setMessage({type: 'success', text: response.message});
 
@@ -302,57 +302,40 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
         )}
 
         <View style={loginstyles.inputContainer}>
-        <TextInput
-          mode="outlined"
+        <CustomTextInput
           label="Email"
+          icon="email"
           placeholder="Enter your email"
           value={emailPhone}
-          onChangeText={(value) => {
+          onChangeText={(value: string) => {
             setEmailPhone(value);
             clearFieldError('emailPhone');
           }}
-          theme={{
-            roundness: 12,
-            colors: { primary: '#58B9D0', outline: errors.emailPhone ? '#FF6B6B' : '#E2E2E2' }
-          }}
-          error={!!errors.emailPhone}
-          left={<TextInput.Icon icon={() => <MaterialIcons name="email" size={20} color="#58B9D0" />} />}
+          error={errors.emailPhone}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
-        {errors.emailPhone && <Text style={loginstyles.errorText}>{errors.emailPhone}</Text>}
-        
-        <View style={{ position: 'relative' }}>
-        <TextInput
-          mode="outlined"
+
+        <CustomTextInput
           label="Password"
+          icon="lock"
           placeholder="Enter your password"
           value={password}
-          onChangeText={(value) => {
+          onChangeText={(value: string) => {
             setPassword(value);
             clearFieldError('password');
           }}
+          error={errors.password}
+          showPasswordToggle
           secureTextEntry={!showPassword}
-          theme={{
-            roundness: 12,
-            colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E2E2E2' }
-          }}
-          error={!!errors.password}
-          left={<TextInput.Icon icon={() => <MaterialIcons name="lock" size={20} color="#58B9D0" />} />}
-          right={
-            <TextInput.Icon
-              icon={() => <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color="#666" />}
-              onPress={() => setShowPassword(!showPassword)}
-            />
-          }
+          onTogglePassword={() => setShowPassword(!showPassword)}
         />
-        {errors.password && <Text style={loginstyles.errorText}>{errors.password}</Text>}
-      </View>
-
         </View>
   
 
-        <TouchableOpacity>
+        {/* <TouchableOpacity>
           <Text style={loginstyles.forgotText}>Forget Password?</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Dev Mode: Quick Test Login Button */}
         {showDevMode && (
@@ -366,35 +349,13 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
         <TouchableOpacity
          onPress={handleLogin}
          style={[loginstyles.loginButton, isLoginLoading && {opacity: 0.7}]}
-         disabled={isLoginLoading || isGoogleLoading}>
+         disabled={isLoginLoading}>
           {isLoginLoading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <Text style={loginstyles.loginText}>Login</Text>
           )}
         </TouchableOpacity>
-
-        <View style={loginstyles.orContainer}>
-         <View style={loginstyles.line} />
-         <Text style={loginstyles.orText}>Or login with</Text>
-         <View style={loginstyles.line} />
-        </View>
-
-        <View style={loginstyles.socialButtons}>
-          <TouchableOpacity 
-            style={[loginstyles.socialButton, isGoogleLoading && {opacity: 0.7}]}
-            onPress={handleGoogleSignIn}
-            disabled={isLoginLoading || isGoogleLoading}>
-            {isGoogleLoading ? (
-              <ActivityIndicator size="small" color="#666" />
-            ) : (
-              <Image source={Icons.googleIcon} style={loginstyles.socialIcon} />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={loginstyles.socialButton}>
-            <Image source={Icons.facebookIcon} style={loginstyles.socialIcon} />
-          </TouchableOpacity>
-        </View>
 
         <Text style={loginstyles.registerText}>
           Don't have an account?{' '}

@@ -14,8 +14,8 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { TextInput } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomTextInput from '../../components/CustomTextInput';
 import {
   launchImageLibrary,
   MediaType,
@@ -1055,162 +1055,74 @@ const Profile: React.FC = () => {
             </View>
 
             <View style={profileStyles.inputGroup}>
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="First Name"
+                icon="person"
                 placeholder="Enter your first name"
                 value={firstName}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setFirstName(value);
                   clearFieldError('firstName');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.firstName && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.firstName ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.firstName}
+                error={errors.firstName}
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
               />
-              {errors.firstName && (
-                <Text style={profileStyles.errorText}>{errors.firstName}</Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="Last Name"
+                icon="person-outline"
                 placeholder="Enter your last name"
                 value={lastName}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setLastName(value);
                   clearFieldError('lastName');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.lastName && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.lastName ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.lastName}
+                error={errors.lastName}
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="account" iconColor="#58B9D0" />}
               />
-              {errors.lastName && (
-                <Text style={profileStyles.errorText}>{errors.lastName}</Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="Email"
+                icon="email"
                 placeholder="Enter your email"
                 value={email}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setEmail(value);
                   clearFieldError('email');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.email && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.email ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.email}
+                error={errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="email" iconColor="#58B9D0" />}
               />
-              {errors.email && (
-                <Text style={profileStyles.errorText}>{errors.email}</Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="Phone Number"
+                icon="phone"
                 placeholder="Enter your phone number"
                 value={phoneNumber}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setPhoneNumber(value);
                   clearFieldError('phoneNumber');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.phoneNumber && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.phoneNumber ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.phoneNumber}
+                error={errors.phoneNumber}
                 keyboardType="phone-pad"
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="phone" iconColor="#58B9D0" />}
               />
-              {errors.phoneNumber && (
-                <Text style={profileStyles.errorText}>
-                  {errors.phoneNumber}
-                </Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="Alternative Phone Number"
+                icon="phone"
                 placeholder="Enter alternative phone number"
                 value={alterNo}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setAlterNo(value);
                   clearFieldError('alterNo');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.alterNo && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.alterNo ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.alterNo}
+                error={errors.alterNo}
                 keyboardType="phone-pad"
                 editable={isEditingProfile && !isSaving}
-                left={
-                  <TextInput.Icon
-                    icon={() => (
-                      <MaterialIcons name="phone" size={24} color="#58B9D0" />
-                    )}
-                  />
-                }
               />
-              {errors.alterNo && (
-                <Text style={profileStyles.errorText}>{errors.alterNo}</Text>
-              )}
             </View>
           </View>
         )}
@@ -1243,122 +1155,58 @@ const Profile: React.FC = () => {
             </View>
 
             <View style={profileStyles.inputGroup}>
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="Address"
+                icon="home"
                 placeholder="Enter your address"
                 value={address}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setAddress(value);
                   clearFieldError('address');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.address && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.address ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.address}
+                error={errors.address}
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="home" iconColor="#58B9D0" />}
               />
-              {errors.address && (
-                <Text style={profileStyles.errorText}>{errors.address}</Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="City"
+                icon="domain"
                 placeholder="Enter your city"
                 value={city}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setCity(value);
                   clearFieldError('city');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.city && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.city ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.city}
+                error={errors.city}
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="domain" iconColor="#58B9D0" />}
               />
-              {errors.city && (
-                <Text style={profileStyles.errorText}>{errors.city}</Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="State"
+                icon="map"
                 placeholder="Enter your state"
                 value={state}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setState(value);
                   clearFieldError('state');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.state && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.state ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.state}
+                error={errors.state}
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="map" iconColor="#58B9D0" />}
               />
-              {errors.state && (
-                <Text style={profileStyles.errorText}>{errors.state}</Text>
-              )}
 
-              <TextInput
-                mode="outlined"
+              <CustomTextInput
                 label="Zip Code"
+                icon="markunread-mailbox"
                 placeholder="Enter your zip code"
                 value={zipCode}
-                onChangeText={value => {
+                onChangeText={(value: string) => {
                   setZipCode(value);
                   clearFieldError('zipCode');
                 }}
-                style={[
-                  profileStyles.textInput,
-                  errors.zipCode && profileStyles.inputError,
-                ]}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.zipCode ? '#FF6B6B' : '#E5E7EB',
-                    background: '#FFFFFF',
-                  },
-                }}
-                error={!!errors.zipCode}
+                error={errors.zipCode}
                 keyboardType="numeric"
                 editable={isEditingProfile && !isSaving}
-                left={<TextInput.Icon icon="mailbox" iconColor="#58B9D0" />}
               />
-              {errors.zipCode && (
-                <Text style={profileStyles.errorText}>{errors.zipCode}</Text>
-              )}
             </View>
           </View>
         )}

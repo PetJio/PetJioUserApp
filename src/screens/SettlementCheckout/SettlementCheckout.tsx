@@ -18,6 +18,7 @@ import { API_CONFIG } from '../../config/api';
 import { storageService } from '../../utils/storage';
 import settlementCheckoutStyles from './settlementcheckout.styles';
 import { RootStackParamList } from '../../types/navigation';
+import { SettlementCheckoutSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 type SettlementCheckoutScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -203,7 +204,7 @@ const SettlementCheckout: React.FC<SettlementCheckoutProps> = ({
       console.log('💰 Settlement amount (paise):', amountInPaise);
 
       const paymentPayload = {
-        amount: 1 || amountInPaise,
+        amount: amountInPaise,
         email: userEmail,
         contact: userContact,
         bookingsId: bookingId,
@@ -311,12 +312,12 @@ const SettlementCheckout: React.FC<SettlementCheckoutProps> = ({
       </View>
 
       {dataLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#58B9D0" />
-          <Text style={{ marginTop: 12, fontSize: 14, color: '#6B7280' }}>
-            Calculating settlement...
-          </Text>
-        </View>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
+          <SettlementCheckoutSkeleton />
+        </ScrollView>
       ) : settlementData ? (
         <ScrollView
           showsVerticalScrollIndicator={false}

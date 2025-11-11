@@ -176,7 +176,8 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        gap: 4,
+                        gap: 8,
+                        marginBottom: 4,
                       }}
                     >
                       <Text
@@ -184,10 +185,11 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                           fontSize: 15,
                           fontWeight: '700',
                           color: '#111827',
-                          marginBottom: 4,
-                          lineHeight: 22,
+                          lineHeight: 20,
+                          flex: 1,
                         }}
                         numberOfLines={1}
+                        ellipsizeMode="tail"
                       >
                         {item?.facilityName ? `Petjio Boarder (${item.city || 'Location'})` : 'Facility Name Not Available'}
                       </Text>
@@ -196,6 +198,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                           flexDirection: 'row',
                           alignItems: 'center',
                           gap: 3,
+                          flexShrink: 0,
                         }}
                       >
                         <Image
@@ -223,6 +226,8 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                         fontWeight: '500',
                         marginBottom: 6,
                       }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {item?.experience
                         ? `${item.experience} years experience`
@@ -243,6 +248,7 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                           flexDirection: 'row',
                           alignItems: 'center',
                           gap: 4,
+                          flex: 1,
                         }}
                       >
                         <Image
@@ -258,7 +264,10 @@ const BoardingHomeService: React.FC<InSiteServiceProps> = ({ mode, boardingResul
                             fontSize: 11,
                             color: '#6B7280',
                             fontWeight: '500',
+                            flex: 1,
                           }}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
                         >
                           {item?.city || 'Location not specified'}
                         </Text>

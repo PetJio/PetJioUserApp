@@ -239,7 +239,7 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
       console.log('💰 Amount in paise for Razorpay:', amountInPaise);
 
       const paymentPayload = {
-        amount: 1 || amountInPaise, // Dynamic - calculated from booking data, converted to paise
+        amount: amountInPaise, // Dynamic - calculated from booking data, converted to paise
         email: userEmail, // Dynamic - from logged-in user
         contact: userContact, // Dynamic - from logged-in user
         bookingsId: bookingId, // Dynamic - from booking creation

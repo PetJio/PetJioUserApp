@@ -13,8 +13,8 @@ import {
   PermissionsAndroid,
   Linking,
 } from 'react-native';
-import { TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import CustomTextInput from '../../components/CustomTextInput';
 import { RouteProp } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -610,87 +610,53 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
           )}
 
           <View style={locationStyles.inputContainer}>
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Full Address"
-                  placeholder="Enter your full address"
-                  value={locationData.address}
-                  onChangeText={(value) => updateLocationData('address', value)}
-                  theme={{
-                    roundness: 12,
-                    colors: { primary: '#58B9D0', outline: errors.address ? '#FF6B6B' : '#E2E2E2' }
-                  }}
-                  error={!!errors.address}
-                  multiline
-                  numberOfLines={3}
-                  left={<TextInput.Icon icon={() => <MaterialIcons name="home" size={20} color="#58B9D0" />} />}
-                />
-                {errors.address && <Text style={locationStyles.errorText}>{errors.address}</Text>}
-              </View>
+              <CustomTextInput
+                label="Full Address"
+                icon="home"
+                placeholder="Enter your full address"
+                value={locationData.address}
+                onChangeText={(value: string) => updateLocationData('address', value)}
+                error={errors.address}
+                multiline
+                numberOfLines={3}
+              />
 
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="City"
-                  placeholder="Enter your city"
-                  value={locationData.city}
-                  onChangeText={(value) => updateLocationData('city', value)}
-                  theme={{
-                    roundness: 12,
-                    colors: { primary: '#58B9D0', outline: errors.city ? '#FF6B6B' : '#E2E2E2' }
-                  }}
-                  error={!!errors.city}
-                  autoCapitalize="words"
-                  left={<TextInput.Icon icon={() => <MaterialIcons name="location-city" size={20} color="#58B9D0" />} />}
-                />
-                {errors.city && <Text style={locationStyles.errorText}>{errors.city}</Text>}
-              </View>
+              <CustomTextInput
+                label="City"
+                icon="location-city"
+                placeholder="Enter your city"
+                value={locationData.city}
+                onChangeText={(value: string) => updateLocationData('city', value)}
+                error={errors.city}
+                autoCapitalize="words"
+              />
 
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="State"
-                  placeholder="Enter your state"
-                  value={locationData.state}
-                  onChangeText={(value) => updateLocationData('state', value)}
-                  theme={{
-                    roundness: 12,
-                    colors: { primary: '#58B9D0', outline: errors.state ? '#FF6B6B' : '#E2E2E2' }
-                  }}
-                  error={!!errors.state}
-                  autoCapitalize="words"
-                  left={<TextInput.Icon icon={() => <MaterialIcons name="map" size={20} color="#58B9D0" />} />}
-                />
-                {errors.state && <Text style={locationStyles.errorText}>{errors.state}</Text>}
-              </View>
+              <CustomTextInput
+                label="State"
+                icon="map"
+                placeholder="Enter your state"
+                value={locationData.state}
+                onChangeText={(value: string) => updateLocationData('state', value)}
+                error={errors.state}
+                autoCapitalize="words"
+              />
 
-              <View>
-                <TextInput
-                  mode="outlined"
+              <View style={{ position: 'relative' }}>
+                <CustomTextInput
                   label="Pincode"
+                  icon="pin-drop"
                   placeholder="Enter 6-digit pincode"
                   value={locationData.pincode}
-                  onChangeText={(value) => updateLocationData('pincode', value)}
-                  theme={{
-                    roundness: 12,
-                    colors: { primary: '#58B9D0', outline: errors.pincode ? '#FF6B6B' : '#E2E2E2' }
-                  }}
-                  error={!!errors.pincode}
+                  onChangeText={(value: string) => updateLocationData('pincode', value)}
+                  error={errors.pincode}
                   keyboardType="numeric"
                   maxLength={6}
-                  left={<TextInput.Icon icon={() => <MaterialIcons name="pin-drop" size={20} color="#58B9D0" />} />}
-                  right={
-                    isPincodeLoading && locationData.pincode.length === 6 ? (
-                      <TextInput.Icon
-                        icon={() => (
-                          <ActivityIndicator size="small" color="#58B9D0" />
-                        )}
-                      />
-                    ) : null
-                  }
                 />
-                {errors.pincode && <Text style={locationStyles.errorText}>{errors.pincode}</Text>}
+                {isPincodeLoading && locationData.pincode.length === 6 && (
+                  <View style={{ position: 'absolute', right: 16, top: '50%', marginTop: -10 }}>
+                    <ActivityIndicator size="small" color="#58B9D0" />
+                  </View>
+                )}
               </View>
             </View>
 

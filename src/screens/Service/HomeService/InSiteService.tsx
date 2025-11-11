@@ -4,6 +4,7 @@ import images from '../../../../assets/images';
 import Icons from '../../../../assets/icons';
 import insiteservicestyles from './insiteservice.styles';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { ServiceListSkeleton } from '../../../components/SkeletonLoader/SkeletonLoader';
 
 
 // Define stack params
@@ -34,24 +35,12 @@ const InSiteService: React.FC<InSiteServiceProps> = ({ navigation }) => {
 
     if (loading) {
         return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    paddingTop: 50,
-                }}
+            <ScrollView
+                style={{ flex: 1, paddingTop: 20 }}
+                showsVerticalScrollIndicator={false}
             >
-                <ActivityIndicator size="large" color="#58B9D0" />
-                <Text style={{
-                    marginTop: 16,
-                    fontSize: 16,
-                    color: '#6B7280',
-                    fontWeight: '500'
-                }}>
-                    Loading grooming services...
-                </Text>
-            </View>
+                <ServiceListSkeleton />
+            </ScrollView>
         );
     }
 

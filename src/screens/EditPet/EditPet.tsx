@@ -9,11 +9,11 @@ import {
   StatusBar,
   Image,
 } from 'react-native';
-import { TextInput } from 'react-native-paper';
-import { Dropdown } from 'react-native-element-dropdown';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import CustomTextInput from '../../components/CustomTextInput';
+import CustomSelect, { SelectOption } from '../../components/CustomSelect';
+import CustomDatePicker from '../../components/CustomDatePicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary, MediaType, ImagePickerResponse } from 'react-native-image-picker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import {
@@ -26,6 +26,7 @@ import { storageService } from '../../utils/storage';
 import { goBack } from '../../utils/navigationService';
 import { RootStackNavigationProp } from '../../types/navigation';
 import VaccinationDisplay from '../../components/VaccinationDisplay/VaccinationDisplay';
+import { PetFormSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
 import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
@@ -717,29 +718,25 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
                 style={{ tintColor: '#000000', width: 20, height: 20 }}
               />
             </TouchableOpacity>
-            <View style={serviceStyles.headerTitleContainer}>
-              <Text style={serviceStyles.stickyHeaderTitle}>
-                Edit Pet Profile
-              </Text>
-              <Text style={serviceStyles.stickyHeaderSubtitle}>
-                Update {pet?.petName}'s information
-              </Text>
-            </View>
-          </View>
-          <View
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <ActivityIndicator size="large" color="#58B9D0" />
-            <Text style={{ marginTop: 16, color: '#666' }}>
-              Loading pet data...
+          <View style={serviceStyles.headerTitleContainer}>
+            <Text style={serviceStyles.stickyHeaderTitle}>
+              Edit Pet Profile
+            </Text>
+            <Text style={serviceStyles.stickyHeaderSubtitle}>
+              Update {pet?.petName}'s information
             </Text>
           </View>
         </View>
+        <ScrollView 
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <PetFormSkeleton />
+        </ScrollView>
       </View>
-    );
-  }
-
-  const selectedCategory = petCategories.find(c => c.id === category);
+    </View>
+  );
+}  const selectedCategory = petCategories.find(c => c.id === category);
   const isExotic = selectedCategory?.catName?.toLowerCase() === 'exotic';
   const isDog = selectedCategory?.catName?.toLowerCase() === 'dog';
 
@@ -799,521 +796,234 @@ const EditPet: React.FC<EditPetProps> = ({ route }) => {
 
           <View style={signupstyles.inputContainer}>
             {/* Pet Name */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Pet Name"
-                placeholder="Enter your pet's name"
-                value={petName}
-                onChangeText={value => {
-                  setPetName(value);
-                  clearFieldError('petName');
-                }}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="pets" size={20} color="#58B9D0" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: {
-                    primary: '#58B9D0',
-                    outline: errors.petName ? '#FF6B6B' : '#E2E2E2',
-                  },
-                }}
-                error={!!errors.petName}
-              />
-              {errors.petName && (
-                <Text style={signupstyles.errorText}>{errors.petName}</Text>
-              )}
-            </View>
+            <CustomTextInput
+              label="Pet Name"
+              icon="pets"
+              placeholder="Enter your pet's name"
+              value={petName}
+              onChangeText={(value: string) => {
+                setPetName(value);
+                clearFieldError('petName');
+              }}
+              error={errors.petName}
+            />
 
             {/* Date of Birth */}
-            <View>
-              <TouchableOpacity
-                onPress={showDatepicker}
-                style={{
-                  height: 56,
-                  borderColor: errors.dob ? '#FF6B6B' : '#E2E2E2',
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  paddingHorizontal: 16,
-                  backgroundColor: '#fff',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <MaterialIcons name="cake" size={20} color="#58B9D0" />
-                  <Text style={{ fontSize: 16, color: dob ? '#333' : '#666' }}>
-                    {dob || 'Select Date of Birth'}
-                  </Text>
-                </View>
-                <MaterialIcons name="calendar-today" size={20} color="#58B9D0" />
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={dobDate}
-                  mode="date"
-                  display="default"
-                  onChange={onDateChange}
-                  maximumDate={new Date()}
-                  minimumDate={new Date(1990, 0, 1)}
-                />
-              )}
-              {errors.dob && (
-                <Text style={signupstyles.errorText}>{errors.dob}</Text>
-              )}
-            </View>
+            <CustomDatePicker
+              label="Date of Birth"
+              icon="cake"
+              placeholder="Select Date of Birth"
+              value={dob}
+              onChange={(dateString) => {
+                setDob(dateString);
+                clearFieldError('dob');
+              }}
+              error={errors.dob}
+              maximumDate={new Date()}
+              minimumDate={new Date(1990, 0, 1)}
+            />
 
             {/* Category */}
-            <View>
-              <Dropdown
-                style={[
-                  {
-                    height: 56,
-                    borderColor: errors.category ? '#FF6B6B' : '#E2E2E2',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    backgroundColor: '#fff',
-                  },
-                ]}
-                placeholderStyle={{ fontSize: 16, color: '#666' }}
-                selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#E2E2E2',
-                  marginTop: 5,
-                }}
-                itemContainerStyle={{
-                  backgroundColor: '#fff',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#F0F0F0',
-                }}
-                data={petCategories.map(cat => ({ label: cat.catName, value: cat.id }))}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Category"
-                value={category}
-                renderLeftIcon={() => <MaterialIcons name="category" size={20} color="#58B9D0" style={{ marginRight: 10 }} />}
-                onChange={item => {
-                  setCategory(item.value);
-                  clearFieldError('category');
-                  setExoticType('');
-                  setBreed(null);
-                  setBreedOthers('');
-                  setSize(null);
+            <CustomSelect
+              label="Category"
+              icon="category"
+              placeholder="Select Category"
+              data={petCategories.map(cat => ({ label: cat.catName, value: cat.id }))}
+              value={category}
+              onChange={(item) => {
+                setCategory(item.value);
+                clearFieldError('category');
+                setExoticType('');
+                setBreed(null);
+                setBreedOthers('');
+                setSize(null);
 
-                  const selectedCat = petCategories.find(c => c.id === item.value);
-                  if (selectedCat?.catName?.toLowerCase() === 'cat' || selectedCat?.catName?.toLowerCase() === 'dog') {
-                    fetchBreedsByCategory(item.value);
-                  } else {
-                    setPetBreeds([]);
-                  }
-                }}
-              />
-              {errors.category && (
-                <Text style={signupstyles.errorText}>{errors.category}</Text>
-              )}
-            </View>
+                const selectedCat = petCategories.find(c => c.id === item.value);
+                if (selectedCat?.catName?.toLowerCase() === 'cat' || selectedCat?.catName?.toLowerCase() === 'dog') {
+                  fetchBreedsByCategory(item.value);
+                } else {
+                  setPetBreeds([]);
+                }
+              }}
+              error={errors.category}
+            />
 
             {/* Exotic Type (conditional) */}
             {isExotic && (
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Exotic Pet Type"
-                  placeholder="e.g., Rabbit, Hamster, Parrot"
-                  value={exoticType}
-                  onChangeText={value => {
-                    setExoticType(value);
-                    clearFieldError('exoticType');
-                  }}
-                  left={<TextInput.Icon icon={() => <MaterialIcons name="pets" size={20} color="#58B9D0" />} />}
-                  theme={{
-                    roundness: 12,
-                    colors: {
-                      primary: '#58B9D0',
-                      outline: errors.exoticType ? '#FF6B6B' : '#E2E2E2',
-                    },
-                  }}
-                  error={!!errors.exoticType}
-                />
-                {errors.exoticType && (
-                  <Text style={signupstyles.errorText}>{errors.exoticType}</Text>
-                )}
-              </View>
+              <CustomTextInput
+                label="Exotic Pet Type"
+                icon="pets"
+                placeholder="e.g., Rabbit, Hamster, Parrot"
+                value={exoticType}
+                onChangeText={(value: string) => {
+                  setExoticType(value);
+                  clearFieldError('exoticType');
+                }}
+                error={errors.exoticType}
+              />
             )}
 
             {/* Breed (conditional - only for cat/dog) */}
             {!isExotic && petBreeds.length > 0 && (
-              <View>
-                <Dropdown
-                  style={[
-                    {
-                      height: 56,
-                      borderColor: errors.breed ? '#FF6B6B' : '#E2E2E2',
-                      borderWidth: 1,
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      backgroundColor: '#fff',
-                    },
-                  ]}
-                  placeholderStyle={{ fontSize: 16, color: '#666' }}
-                  selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                  itemTextStyle={{ fontSize: 16, color: '#333' }}
-                  containerStyle={{
-                    backgroundColor: '#fff',
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#E2E2E2',
-                    marginTop: 5,
-                  }}
-                  itemContainerStyle={{
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#F0F0F0',
-                  }}
-                  data={petBreeds.map(b => ({ label: b.breedName || b.name, value: b.id }))}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select Breed"
-                  value={breed}
-                  renderLeftIcon={() => <MaterialIcons name="pets" size={20} color="#58B9D0" style={{ marginRight: 10 }} />}
-                  onChange={item => {
-                    setBreed(item.value);
-                    clearFieldError('breed');
-                    if (item.value !== 0) {
-                      setBreedOthers('');
-                    }
-                  }}
-                  search
-                  searchPlaceholder="Search breed..."
-                />
-                {errors.breed && (
-                  <Text style={signupstyles.errorText}>{errors.breed}</Text>
-                )}
-              </View>
+              <CustomSelect
+                label="Breed"
+                icon="pets"
+                placeholder="Select Breed"
+                data={petBreeds.map(b => ({ label: b.breedName || b.name || '', value: b.id }))}
+                value={breed}
+                onChange={(item) => {
+                  setBreed(item.value);
+                  clearFieldError('breed');
+                  if (item.value !== 0) {
+                    setBreedOthers('');
+                  }
+                }}
+                error={errors.breed}
+              />
             )}
 
             {/* Breed (Others) - conditional */}
             {breed === 0 && (
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Breed (Others)"
-                  placeholder="Enter breed name"
-                  value={breedOthers}
-                  onChangeText={value => {
-                    setBreedOthers(value);
-                    clearFieldError('breedOthers');
-                  }}
-                  left={<TextInput.Icon icon={() => <MaterialIcons name="edit" size={20} color="#58B9D0" />} />}
-                  theme={{
-                    roundness: 12,
-                    colors: {
-                      primary: '#58B9D0',
-                      outline: errors.breedOthers ? '#FF6B6B' : '#E2E2E2',
-                    },
-                  }}
-                  error={!!errors.breedOthers}
-                />
-                {errors.breedOthers && (
-                  <Text style={signupstyles.errorText}>{errors.breedOthers}</Text>
-                )}
-              </View>
+              <CustomTextInput
+                label="Breed (Others)"
+                icon="edit"
+                placeholder="Enter breed name"
+                value={breedOthers}
+                onChangeText={(value: string) => {
+                  setBreedOthers(value);
+                  clearFieldError('breedOthers');
+                }}
+                error={errors.breedOthers}
+              />
             )}
 
             {/* Size (conditional - only for dogs) */}
             {isDog && (
-              <View>
-                <Dropdown
-                  style={[
-                    {
-                      height: 56,
-                      borderColor: errors.size ? '#FF6B6B' : '#E2E2E2',
-                      borderWidth: 1,
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      backgroundColor: '#fff',
-                    },
-                  ]}
-                  placeholderStyle={{ fontSize: 16, color: '#666' }}
-                  selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                  itemTextStyle={{ fontSize: 16, color: '#333' }}
-                  containerStyle={{
-                    backgroundColor: '#fff',
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#E2E2E2',
-                    marginTop: 5,
-                  }}
-                  itemContainerStyle={{
-                    backgroundColor: '#fff',
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#F0F0F0',
-                  }}
-                  data={petSizes.map(s => ({ label: s.size, value: s.id }))}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select Size"
-                  value={size}
-                  renderLeftIcon={() => <MaterialIcons name="straighten" size={20} color="#58B9D0" style={{ marginRight: 10 }} />}
-                  onChange={item => {
-                    setSize(item.value);
-                    clearFieldError('size');
-                  }}
-                />
-                {errors.size && (
-                  <Text style={signupstyles.errorText}>{errors.size}</Text>
-                )}
-              </View>
+              <CustomSelect
+                label="Size"
+                icon="photo-size-select-large"
+                placeholder="Select Size"
+                data={petSizes.map(s => ({ label: s.size, value: s.id }))}
+                value={size}
+                onChange={(item) => {
+                  setSize(item.value);
+                  clearFieldError('size');
+                }}
+                error={errors.size}
+              />
             )}
 
             {/* Gender */}
-            <View>
-              <Dropdown
-                style={[
-                  {
-                    height: 56,
-                    borderColor: errors.gender ? '#FF6B6B' : '#E2E2E2',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    backgroundColor: '#fff',
-                  },
-                ]}
-                placeholderStyle={{ fontSize: 16, color: '#666' }}
-                selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#E2E2E2',
-                  marginTop: 5,
-                }}
-                itemContainerStyle={{
-                  backgroundColor: '#fff',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#F0F0F0',
-                }}
-                data={petGenders.map(g => ({ label: g.name, value: g.id }))}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Gender"
-                value={gender}
-                renderLeftIcon={() => <MaterialIcons name="wc" size={20} color="#58B9D0" style={{ marginRight: 10 }} />}
-                onChange={item => {
-                  setGender(item.value);
-                  clearFieldError('gender');
-                }}
-              />
-              {errors.gender && (
-                <Text style={signupstyles.errorText}>{errors.gender}</Text>
-              )}
-            </View>
+            <CustomSelect
+              label="Gender"
+              icon="wc"
+              placeholder="Select Gender"
+              data={petGenders.map(g => ({ label: g.name, value: g.id }))}
+              value={gender}
+              onChange={(item) => {
+                setGender(item.value);
+                clearFieldError('gender');
+              }}
+              error={errors.gender}
+            />
 
             {/* Weight */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Weight (kg)"
-                placeholder="e.g. 18.5"
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="numeric"
-                left={<TextInput.Icon icon={() => <MaterialIcons name="monitor-weight" size={20} color="#58B9D0" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                }}
-              />
-            </View>
+            <CustomTextInput
+              label="Weight (kg)"
+              icon="monitor-weight"
+              placeholder="e.g. 18.5"
+              value={weight}
+              onChangeText={setWeight}
+              keyboardType="numeric"
+            />
 
             {/* Daily Feed Count */}
-            <View>
-              <Dropdown
-                style={[
-                  {
-                    height: 56,
-                    borderColor: errors.feedCount ? '#FF6B6B' : '#E2E2E2',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    backgroundColor: '#fff',
-                  },
-                ]}
-                placeholderStyle={{ fontSize: 16, color: '#666' }}
-                selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#E2E2E2',
-                  marginTop: 5,
-                }}
-                itemContainerStyle={{
-                  backgroundColor: '#fff',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#F0F0F0',
-                }}
-                data={[
-                  { label: '1 time', value: 1 },
-                  { label: '2 times', value: 2 },
-                  { label: '3 times', value: 3 },
-                  { label: '4 times', value: 4 },
-                  { label: '5 times', value: 5 },
-                  { label: '6 times', value: 6 },
-                ]}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Daily Feed Count"
-                value={feedCount}
-                renderLeftIcon={() => <MaterialIcons name="restaurant" size={20} color="#58B9D0" style={{ marginRight: 10 }} />}
-                onChange={item => {
-                  setFeedCount(item.value);
-                  clearFieldError('feedCount');
-                }}
-              />
-              {errors.feedCount && (
-                <Text style={signupstyles.errorText}>{errors.feedCount}</Text>
-              )}
-            </View>
+            <CustomSelect
+              label="Daily Feed Count"
+              icon="restaurant"
+              placeholder="Select Daily Feed Count"
+              data={[
+                { label: '1 time', value: 1 },
+                { label: '2 times', value: 2 },
+                { label: '3 times', value: 3 },
+                { label: '4 times', value: 4 },
+                { label: '5 times', value: 5 },
+                { label: '6 times', value: 6 },
+              ]}
+              value={feedCount}
+              onChange={(item) => {
+                setFeedCount(item.value);
+                clearFieldError('feedCount');
+              }}
+              error={errors.feedCount}
+            />
 
             {/* Food Type */}
-            <View>
-              <Dropdown
-                style={[
-                  {
-                    height: 56,
-                    borderColor: '#E2E2E2',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    backgroundColor: '#fff',
-                  },
-                ]}
-                placeholderStyle={{ fontSize: 16, color: '#666' }}
-                selectedTextStyle={{ fontSize: 16, color: '#333' }}
-                itemTextStyle={{ fontSize: 16, color: '#333' }}
-                containerStyle={{
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#E2E2E2',
-                  marginTop: 5,
-                }}
-                itemContainerStyle={{
-                  backgroundColor: '#fff',
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#F0F0F0',
-                }}
-                data={foodOptions.map(f => ({ label: f.name, value: f.id }))}
-                labelField="label"
-                valueField="value"
-                placeholder="Food Type"
-                value={foodType}
-                onChange={item => {
-                  setFoodType(item.value);
-                }}
-                renderLeftIcon={() => (
-                  <MaterialIcons name="fastfood" size={20} color="#58B9D0" style={{ marginRight: 10 }} />
-                )}
-              />
-            </View>
+            <CustomSelect
+              label="Food Type"
+              icon="fastfood"
+              placeholder="Food Type"
+              data={foodOptions.map(f => ({ label: f.name, value: f.id }))}
+              value={foodType}
+              onChange={(item) => {
+                setFoodType(item.value);
+              }}
+            />
 
             {/* Allergies */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Allergies"
-                placeholder="e.g. Dairy, Nuts"
-                value={allergies}
-                onChangeText={setAllergies}
-                multiline
-                numberOfLines={2}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="warning" size={20} color="#FF9800" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                }}
-              />
-            </View>
+            <CustomTextInput
+              label="Allergies"
+              icon="warning"
+              placeholder="e.g. Dairy, Nuts"
+              value={allergies}
+              onChangeText={setAllergies}
+              multiline
+              numberOfLines={2}
+            />
 
             {/* Disability */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Disability/Special Needs"
-                placeholder="e.g. none, mobility issues"
-                value={disability}
-                onChangeText={setDisability}
-                multiline
-                numberOfLines={2}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="accessible" size={20} color="#58B9D0" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                }}
-              />
-            </View>
+            <CustomTextInput
+              label="Disability/Special Needs"
+              icon="accessible"
+              placeholder="e.g. none, mobility issues"
+              value={disability}
+              onChangeText={setDisability}
+              multiline
+              numberOfLines={2}
+            />
 
             {/* Treats */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Favorite Treats"
-                placeholder="e.g. Chicken jerky, Carrots"
-                value={treats}
-                onChangeText={setTreats}
-                multiline
-                numberOfLines={2}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="favorite" size={20} color="#E91E63" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                }}
-              />
-            </View>
+            <CustomTextInput
+              label="Favorite Treats"
+              icon="favorite"
+              placeholder="e.g. Chicken jerky, Carrots"
+              value={treats}
+              onChangeText={setTreats}
+              multiline
+              numberOfLines={2}
+            />
 
             {/* Favourite Games */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Favourite Games"
-                placeholder="e.g. Tug, Fetch"
-                value={favouriteGames}
-                onChangeText={setFavouriteGames}
-                multiline
-                numberOfLines={2}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="sports-esports" size={20} color="#4CAF50" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                }}
-              />
-            </View>
+            <CustomTextInput
+              label="Favourite Games"
+              icon="sports-esports"
+              placeholder="e.g. Tug, Fetch"
+              value={favouriteGames}
+              onChangeText={setFavouriteGames}
+              multiline
+              numberOfLines={2}
+            />
 
             {/* Medical History */}
-            <View>
-              <TextInput
-                mode="outlined"
-                label="Medical History"
-                placeholder="Any medical conditions or treatments"
-                value={medicalHistory}
-                onChangeText={setMedicalHistory}
-                multiline
-                numberOfLines={3}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="medical-services" size={20} color="#F44336" />} />}
-                theme={{
-                  roundness: 12,
-                  colors: { primary: '#58B9D0', outline: '#E2E2E2' },
-                }}
-              />
-            </View>
+            <CustomTextInput
+              label="Medical History"
+              icon="medical-services"
+              placeholder="Any medical conditions or treatments"
+              value={medicalHistory}
+              onChangeText={setMedicalHistory}
+              multiline
+              numberOfLines={3}
+            />
 
             {/* Photo/Video Upload Section */}
             <View style={{

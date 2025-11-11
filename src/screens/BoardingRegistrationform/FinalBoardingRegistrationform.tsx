@@ -6,7 +6,7 @@ import registrationformstyles from './registrationform_new.styles';
 import CheckBox from 'react-native-check-box';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
-import { Dropdown } from 'react-native-element-dropdown';
+import CustomSelect, { SelectOption } from '../../components/CustomSelect';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { useNavigation } from '@react-navigation/native';
 import BouncyCheckbox from "react-native-bouncy-checkbox";

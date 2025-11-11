@@ -6,7 +6,7 @@ import registrationformstyles from './registrationform_new.styles';
 import CheckBox from 'react-native-check-box';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
-import { Dropdown } from 'react-native-element-dropdown';
+import CustomSelect, { SelectOption } from '../../components/CustomSelect';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { useNavigation } from '@react-navigation/native';
 import BouncyCheckbox from "react-native-bouncy-checkbox";
@@ -203,20 +203,12 @@ const BoardingRegistrationform: React.FC<BoardingFormProps> = () => {
 
     const renderDropdown = (label: string, field: string, data: any[], placeholder: string = 'Select option') => (
         <View style={registrationformstyles.inputContainer}>
-            <Text style={registrationformstyles.inputLabel}>{label}</Text>
-            <Dropdown
-                style={registrationformstyles.dropdown}
-                selectedTextStyle={registrationformstyles.selectedTextStyle}
-                placeholderStyle={registrationformstyles.placeholderStyle}
-                iconStyle={registrationformstyles.iconStyle}
-                maxHeight={200}
-                value={formData[field as keyof typeof formData]}
-                data={data}
-                valueField="value"
-                labelField="lable"
+            <CustomSelect
+                label={label}
                 placeholder={placeholder}
-                searchPlaceholder="Search..."
-                onChange={(e) => handleInputChange(field, e.value)}
+                data={data.map(item => ({ label: item.lable || item.label, value: item.value }))}
+                value={formData[field as keyof typeof formData]}
+                onChange={(item) => handleInputChange(field, item.value)}
             />
         </View>
     );

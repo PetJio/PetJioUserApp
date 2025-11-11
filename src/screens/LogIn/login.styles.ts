@@ -53,7 +53,7 @@ const loginstyles = StyleSheet.create({
         height: responsiveHeight(5.8),
         borderRadius: responsiveHeight(1),
         backgroundColor: '#58B9D0',
-        marginBottom: responsiveHeight(2)
+        marginVertical: responsiveHeight(2)
       },
       loginText: {
         color: '#fff',

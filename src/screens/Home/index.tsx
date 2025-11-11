@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
 import Icons from '../../../assets/icons';
 import {
@@ -139,25 +138,19 @@ const Home: React.FC = () => {
   }, []);
 
   const getAuthToken = async () => {
-    const possibleTokenKeys = [
-      'token',
-      'user_token',
-      'authToken',
-      'access_token',
-      'loginToken',
-    ];
-
-    for (const key of possibleTokenKeys) {
-      const value = await AsyncStorage.getItem(key);
-      if (value) {
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value;
-        }
+    try {
+      // Use storageService to get the token - it handles JSON parsing correctly
+      const token = await storageService.getUserToken();
+      if (token) {
+        console.log('✅ Auth token retrieved successfully');
+        return token;
       }
+      console.warn('⚠️ No auth token found in storage');
+      return null;
+    } catch (error) {
+      console.error('❌ Error getting auth token:', error);
+      return null;
     }
-    return null;
   };
 
   const getOwnerIdFromAPI = async () => {
@@ -168,8 +161,26 @@ const Home: React.FC = () => {
         return null;
       }
 
-      console.log('🚀 HOME PAGE DEBUG - Fetching owner data');
       const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
+
+      // Print CURL command
+      console.log('\n========================================');
+      console.log('📡 GET OWNER ID API CALL');
+      console.log('========================================');
+      console.log('🔗 CURL Command:');
+      console.log(`curl -X GET '${apiUrl}' \\`);
+      console.log(`  -H 'Content-Type: application/json' \\`);
+      console.log(`  -H 'Authorization: Bearer ${token}'`);
+      console.log('========================================\n');
+
+      console.log('📤 Request Details:');
+      console.log('  URL:', apiUrl);
+      console.log('  Method: GET');
+      console.log('  Headers:', {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.substring(0, 20)}...`,
+      });
+
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -178,26 +189,33 @@ const Home: React.FC = () => {
         },
       });
 
+      console.log('\n📥 Response Details:');
+      console.log('  Status:', response.status, response.statusText);
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.log('  Body (Error):', errorText);
+        console.log('========================================\n');
         console.error('❌ API Error Response:', errorText);
-        
+
         // Check for 401 Unauthorized status
         if (response.status === 401) {
           console.log('🔒 401 Unauthorized - User session expired');
           await handleUnauthorized();
           return null;
         }
-        
+
         return null;
       }
 
       const responseText = await response.text();
-      console.log('📄 Raw Response Text for Home Page:', responseText);
+      console.log('  Body (Raw):', responseText);
 
       let data;
       try {
         data = JSON.parse(responseText);
+        console.log('  Body (Parsed):', JSON.stringify(data, null, 2));
+        console.log('========================================\n');
         console.log('✅ Parsed Response Data:', {
           statusCode: data.statusCode,
           message: data.message,
@@ -205,6 +223,7 @@ const Home: React.FC = () => {
           ownerId: data.body?.id,
         });
       } catch (parseError) {
+        console.log('========================================\n');
         console.error('❌ JSON Parse Error:', parseError);
         return null;
       }
@@ -466,56 +485,6 @@ const Home: React.FC = () => {
               Welcome back to PetJio
             </Text>
           </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 16,
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: '#F8F9FB',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-              }}
-            >
-              <MaterialIcons name="calendar-today" size={22} color="#58B9D0" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: '#F8F9FB',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                position: 'relative',
-              }}
-            >
-              <MaterialIcons name="notifications" size={22} color="#58B9D0" />
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: '#EF4444',
-                  borderWidth: 1,
-                  borderColor: '#FFFFFF',
-                }}
-              />
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
 
@@ -612,7 +581,8 @@ const Home: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{
-                paddingHorizontal: responsiveWidth(5),
+                paddingLeft: responsiveWidth(5),
+                paddingRight: responsiveWidth(5),
                 paddingVertical: responsiveHeight(2),
                 gap: 16,
               }}
@@ -670,7 +640,6 @@ const Home: React.FC = () => {
         <View
           style={{
             marginTop: responsiveHeight(3),
-            paddingHorizontal: responsiveWidth(5),
           }}
         >
           <Text
@@ -679,6 +648,7 @@ const Home: React.FC = () => {
               fontWeight: '700',
               color: '#1F2937',
               marginBottom: 12,
+              paddingHorizontal: responsiveWidth(5),
             }}
           >
             Upcoming Appointments
@@ -688,7 +658,11 @@ const Home: React.FC = () => {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12 }}
+              contentContainerStyle={{ 
+                gap: 12,
+                paddingLeft: responsiveWidth(5),
+                paddingRight: responsiveWidth(5),
+              }}
             >
               {[...Array(2)].map((_, index) => (
                 <View key={index} style={{ width: responsiveWidth(85) }}>
@@ -700,7 +674,11 @@ const Home: React.FC = () => {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12, paddingRight: responsiveWidth(5) }}
+              contentContainerStyle={{ 
+                gap: 12, 
+                paddingLeft: responsiveWidth(5),
+                paddingRight: responsiveWidth(5) 
+              }}
             >
               {appointments.map((booking) => {
                 const facilityName = booking.boarding?.facilityName || 'Boarding Service';
@@ -941,7 +919,6 @@ const Home: React.FC = () => {
         <View
           style={{
             marginTop: responsiveHeight(2),
-            paddingHorizontal: responsiveWidth(5),
           }}
         >
           <Text
@@ -950,6 +927,7 @@ const Home: React.FC = () => {
               fontWeight: '700',
               color: '#1F2937',
               marginBottom: 12,
+              paddingHorizontal: responsiveWidth(5),
             }}
           >
             Latest Pet News
@@ -958,7 +936,11 @@ const Home: React.FC = () => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16, paddingRight: responsiveWidth(5) }}
+            contentContainerStyle={{ 
+              gap: 16, 
+              paddingLeft: responsiveWidth(5),
+              paddingRight: responsiveWidth(5) 
+            }}
           >
             {petNews.map((news) => {
               const publishedDate = new Date(news.publishedAt);
@@ -1135,7 +1117,6 @@ const Home: React.FC = () => {
         <View
           style={{
             marginTop: responsiveHeight(2),
-            paddingHorizontal: responsiveWidth(5),
           }}
         >
           <Text
@@ -1144,6 +1125,7 @@ const Home: React.FC = () => {
               fontWeight: '700',
               color: '#1F2937',
               marginBottom: 12,
+              paddingHorizontal: responsiveWidth(5),
             }}
           >
             Pet Care Blog
@@ -1152,7 +1134,11 @@ const Home: React.FC = () => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16, paddingRight: responsiveWidth(5) }}
+            contentContainerStyle={{ 
+              gap: 16, 
+              paddingLeft: responsiveWidth(5),
+              paddingRight: responsiveWidth(5) 
+            }}
           >
             {blogs.map((blog) => (
               <TouchableOpacity

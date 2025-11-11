@@ -28,6 +28,7 @@ import boardinguserstyles from '../BoardingUser/boardinguser.styles';
 import serviceStyles from '../Service/styles';
 import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
 import { storageService } from '../../utils/storage';
+import { BoardingDetailsSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
@@ -387,16 +388,30 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
 
   if (loading) {
     return (
-      <View
-        style={[
-          boardingdetailstyles.container,
-          { justifyContent: 'center', alignItems: 'center' },
-        ]}
-      >
-        <ActivityIndicator size="large" color="#58B9D0" />
-        <Text style={{ marginTop: 10, color: '#666' }}>
-          Loading boarding details...
-        </Text>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        
+        {/* Header */}
+        <View style={[serviceStyles.stickyHeader, { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
+            <Image
+              source={Icons.LeftArrow}
+              style={{ tintColor: '#000000', width: 20, height: 20 }}
+            />
+          </TouchableOpacity>
+          <View style={serviceStyles.headerTitleContainer}>
+            <Text style={serviceStyles.stickyHeaderTitle}>
+              Boarding Details
+            </Text>
+            <Text style={serviceStyles.stickyHeaderSubtitle}>
+              Loading facility information...
+            </Text>
+          </View>
+        </View>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <BoardingDetailsSkeleton />
+        </ScrollView>
       </View>
     );
   }

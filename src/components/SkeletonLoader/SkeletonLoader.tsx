@@ -1178,4 +1178,458 @@ export const AppointmentCardSkeleton: React.FC = () => {
   );
 };
 
+// Skeleton component for Add/Edit Pet form loading
+export const PetFormSkeleton: React.FC = () => {
+  return (
+    <View style={{ padding: responsiveWidth(4), gap: responsiveHeight(2) }}>
+      {/* Form input skeletons - matching CustomTextInput/CustomSelect style */}
+      {[...Array(8)].map((_, index) => (
+        <View key={index} style={{
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+          borderRadius: 14,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          backgroundColor: '#F9FAFB',
+          minHeight: responsiveHeight(7.5),
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}>
+          {/* Icon */}
+          <SkeletonLoader
+            width={24}
+            height={24}
+            borderRadius={4}
+            style={{ marginRight: 14 }}
+          />
+
+          {/* Label and input area */}
+          <View style={{ flex: 1, justifyContent: 'center', gap: 4 }}>
+            {/* Label */}
+            <SkeletonLoader
+              width={80 + Math.random() * 40}
+              height={11}
+              borderRadius={4}
+            />
+            {/* Input value */}
+            <SkeletonLoader
+              width={120 + Math.random() * 100}
+              height={15}
+              borderRadius={4}
+            />
+          </View>
+        </View>
+      ))}
+
+      {/* Photo/Video Upload Section Skeleton */}
+      <View style={{
+        marginTop: responsiveHeight(2),
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        {/* Section Header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <SkeletonLoader width={24} height={24} borderRadius={4} />
+            <SkeletonLoader width={140} height={16} borderRadius={4} />
+          </View>
+          <SkeletonLoader width={40} height={16} borderRadius={4} />
+        </View>
+
+        {/* Description */}
+        <SkeletonLoader width="90%" height={13} borderRadius={4} style={{ marginBottom: 8 }} />
+        <SkeletonLoader width="95%" height={12} borderRadius={4} style={{ marginBottom: 12 }} />
+
+        {/* Upload Grid */}
+        <View style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          marginHorizontal: -4,
+        }}>
+          {[...Array(3)].map((_, index) => (
+            <SkeletonLoader
+              key={index}
+              width={`${31.33}%`}
+              height={100}
+              borderRadius={12}
+              style={{
+                marginHorizontal: '1%',
+                marginBottom: 8,
+              }}
+            />
+          ))}
+        </View>
+
+        {/* Upload Stats */}
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginTop: 12,
+          paddingTop: 12,
+          borderTopWidth: 1,
+          borderTopColor: '#F3F4F6',
+        }}>
+          {[...Array(3)].map((_, index) => (
+            <View key={index} style={{ alignItems: 'center' }}>
+              <SkeletonLoader width={50} height={12} borderRadius={4} style={{ marginBottom: 4 }} />
+              <SkeletonLoader width={30} height={16} borderRadius={4} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Submit Button Skeleton */}
+      <SkeletonLoader
+        width="100%"
+        height={50}
+        borderRadius={12}
+        style={{ marginTop: responsiveHeight(2) }}
+      />
+    </View>
+  );
+};
+
+// Skeleton component for Settlement Checkout page
+export const SettlementCheckoutSkeleton: React.FC = () => {
+  return (
+    <View style={{ paddingHorizontal: responsiveWidth(5), paddingTop: 20, gap: 16 }}>
+      {/* Booking Info Card */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <SkeletonLoader width={20} height={20} borderRadius={4} />
+          <SkeletonLoader width={120} height={18} borderRadius={4} />
+        </View>
+        <View style={{ gap: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <SkeletonLoader width="35%" height={14} borderRadius={4} />
+            <SkeletonLoader width="40%" height={14} borderRadius={4} />
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <SkeletonLoader width="40%" height={14} borderRadius={4} />
+            <SkeletonLoader width="30%" height={16} borderRadius={4} />
+          </View>
+        </View>
+      </View>
+
+      {/* Additional Services Card */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <SkeletonLoader width={20} height={20} borderRadius={4} />
+          <SkeletonLoader width={180} height={18} borderRadius={4} />
+        </View>
+        <View style={{ gap: 10 }}>
+          {[...Array(4)].map((_, index) => (
+            <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <SkeletonLoader width="60%" height={14} borderRadius={4} />
+              <SkeletonLoader width={60} height={14} borderRadius={4} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Settlement Summary Card */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <SkeletonLoader width={20} height={20} borderRadius={4} />
+          <SkeletonLoader width={140} height={18} borderRadius={4} />
+        </View>
+        <View style={{ gap: 12 }}>
+          {[...Array(3)].map((_, index) => (
+            <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <SkeletonLoader width="50%" height={14} borderRadius={4} />
+              <SkeletonLoader width="25%" height={14} borderRadius={4} />
+            </View>
+          ))}
+          <View style={{ height: 1, backgroundColor: '#E5E7EB', marginVertical: 8 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <SkeletonLoader width="40%" height={18} borderRadius={4} />
+            <SkeletonLoader width="30%" height={20} borderRadius={4} />
+          </View>
+        </View>
+      </View>
+
+      {/* Payment Button Skeleton */}
+      <SkeletonLoader
+        width="100%"
+        height={55}
+        borderRadius={12}
+        style={{ marginTop: 20 }}
+      />
+    </View>
+  );
+};
+
+// Skeleton component for Grooming/Service List (InSiteService)
+export const ServiceListSkeleton: React.FC = () => {
+  return (
+    <View style={{ paddingHorizontal: 16, gap: 16 }}>
+      {[...Array(3)].map((_, index) => (
+        <View
+          key={index}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 12,
+            padding: 16,
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {/* Profile Image */}
+            <SkeletonLoader width={80} height={80} borderRadius={12} />
+
+            {/* Service Info */}
+            <View style={{ flex: 1, gap: 8 }}>
+              {/* Name and Badge */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <SkeletonLoader width={100} height={16} borderRadius={4} />
+                <SkeletonLoader width={70} height={20} borderRadius={10} />
+              </View>
+
+              {/* Rating */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <SkeletonLoader width={16} height={16} borderRadius={4} />
+                <SkeletonLoader width={30} height={14} borderRadius={4} />
+              </View>
+
+              {/* Experience */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <SkeletonLoader width={16} height={16} borderRadius={4} />
+                <SkeletonLoader width={120} height={14} borderRadius={4} />
+              </View>
+
+              {/* Location */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <SkeletonLoader width={16} height={16} borderRadius={4} />
+                <SkeletonLoader width={90} height={14} borderRadius={4} />
+              </View>
+            </View>
+          </View>
+
+          {/* Specialties */}
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            {[...Array(3)].map((_, i) => (
+              <SkeletonLoader key={i} width={80} height={24} borderRadius={12} />
+            ))}
+          </View>
+
+          {/* Price and Button */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+            <SkeletonLoader width={80} height={20} borderRadius={4} />
+            <SkeletonLoader width={100} height={36} borderRadius={8} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
+// Skeleton component for Vaccination Upload page
+export const VaccinationUploadSkeleton: React.FC = () => {
+  return (
+    <View style={{ paddingHorizontal: responsiveWidth(4), paddingTop: 20, gap: 16 }}>
+      {/* Header */}
+      <View>
+        <SkeletonLoader width="80%" height={24} borderRadius={4} style={{ marginBottom: 8 }} />
+        <SkeletonLoader width="95%" height={14} borderRadius={4} style={{ marginBottom: 4 }} />
+        <SkeletonLoader width="90%" height={14} borderRadius={4} />
+      </View>
+
+      {/* Upload Area */}
+      <View style={{
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        borderColor: '#E5E7EB',
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+      }}>
+        <SkeletonLoader width={60} height={60} borderRadius={30} style={{ marginBottom: 12 }} />
+        <SkeletonLoader width={150} height={16} borderRadius={4} style={{ marginBottom: 8 }} />
+        <SkeletonLoader width={120} height={12} borderRadius={4} />
+      </View>
+
+      {/* Certificate Preview Cards */}
+      {[...Array(2)].map((_, index) => (
+        <View
+          key={index}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 12,
+            padding: 16,
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+          }}
+        >
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {/* Thumbnail */}
+            <SkeletonLoader width={80} height={80} borderRadius={8} />
+
+            {/* Info */}
+            <View style={{ flex: 1, gap: 8 }}>
+              <SkeletonLoader width="70%" height={16} borderRadius={4} />
+              <SkeletonLoader width="50%" height={14} borderRadius={4} />
+              <SkeletonLoader width="60%" height={14} borderRadius={4} />
+            </View>
+
+            {/* Delete Icon */}
+            <SkeletonLoader width={24} height={24} borderRadius={12} />
+          </View>
+        </View>
+      ))}
+
+      {/* Submit Button */}
+      <SkeletonLoader
+        width="100%"
+        height={50}
+        borderRadius={12}
+        style={{ marginTop: 20 }}
+      />
+    </View>
+  );
+};
+
+// Skeleton component for Boarding Details page
+export const BoardingDetailsSkeleton: React.FC = () => {
+  return (
+    <View style={{ paddingHorizontal: responsiveWidth(4), paddingTop: responsiveHeight(2), gap: 24 }}>
+      {/* Facility Card */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', gap: 16 }}>
+          {/* Profile Image */}
+          <SkeletonLoader width={85} height={85} borderRadius={16} />
+
+          {/* Facility Info */}
+          <View style={{ flex: 1, gap: 8 }}>
+            <SkeletonLoader width="80%" height={20} borderRadius={4} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <SkeletonLoader width={20} height={20} borderRadius={4} />
+              <SkeletonLoader width={40} height={16} borderRadius={4} />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <SkeletonLoader width={16} height={16} borderRadius={4} />
+              <SkeletonLoader width={100} height={14} borderRadius={4} />
+            </View>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+          <SkeletonLoader width="48%" height={44} borderRadius={12} />
+          <SkeletonLoader width="48%" height={44} borderRadius={12} />
+        </View>
+      </View>
+
+      {/* Tab Navigation */}
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        {[...Array(3)].map((_, index) => (
+          <SkeletonLoader key={index} width={100} height={40} borderRadius={20} />
+        ))}
+      </View>
+
+      {/* About Section */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <SkeletonLoader width={20} height={20} borderRadius={4} />
+          <SkeletonLoader width={80} height={18} borderRadius={4} />
+        </View>
+        <SkeletonLoader width="100%" height={14} borderRadius={4} style={{ marginBottom: 6 }} />
+        <SkeletonLoader width="95%" height={14} borderRadius={4} style={{ marginBottom: 6 }} />
+        <SkeletonLoader width="90%" height={14} borderRadius={4} />
+      </View>
+
+      {/* Services/Features Grid */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <SkeletonLoader width={20} height={20} borderRadius={4} />
+          <SkeletonLoader width={120} height={18} borderRadius={4} />
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          {[...Array(6)].map((_, index) => (
+            <View key={index} style={{
+              width: `${(100 - 24) / 3}%`,
+              backgroundColor: '#F9FAFB',
+              borderRadius: 8,
+              padding: 12,
+              alignItems: 'center',
+            }}>
+              <SkeletonLoader width={32} height={32} borderRadius={16} style={{ marginBottom: 8 }} />
+              <SkeletonLoader width={60} height={12} borderRadius={4} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Gallery Section */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <SkeletonLoader width={20} height={20} borderRadius={4} />
+          <SkeletonLoader width={100} height={18} borderRadius={4} />
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {[...Array(4)].map((_, index) => (
+            <SkeletonLoader
+              key={index}
+              width={`${(100 - 12) / 2}%`}
+              height={120}
+              borderRadius={12}
+            />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
+
 export default SkeletonLoader;

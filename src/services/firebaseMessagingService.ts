@@ -112,14 +112,31 @@ export class FirebaseMessagingService {
    * Get authentication token from storage
    */
   private static async getAuthToken(): Promise<string | null> {
+    try {
+      // First try using storageService which handles the JSON parsing correctly
+      const { storageService } = require('../utils/storage');
+      const token = await storageService.getUserToken();
+      if (token) {
+        console.log('✅ Auth token retrieved from storageService');
+        return token;
+      }
+    } catch (error) {
+      console.error('⚠️ Error getting token from storageService:', error);
+    }
+
+    // Fallback to checking multiple keys (for backward compatibility)
     const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
 
     for (const key of possibleTokenKeys) {
       const value = await AsyncStorage.getItem(key);
       if (value) {
         try {
-          return JSON.parse(value);
+          // Try to parse as JSON first (if it was stored using JSON.stringify)
+          const parsed = JSON.parse(value);
+          // If parsed result is a string, return it; otherwise return the original value
+          return typeof parsed === 'string' ? parsed : value;
         } catch {
+          // If parsing fails, it's already a plain string
           return value;
         }
       }
@@ -142,30 +159,57 @@ export class FirebaseMessagingService {
         return false;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/notifications/register-device`, {
+      const url = `${API_CONFIG.BASE_URL}/api/notifications/register-device`;
+      const requestBody = {
+        fcmToken: fcmToken,
+      };
+
+      // Print CURL command
+      console.log('\n========================================');
+      console.log('📡 REGISTER DEVICE TOKEN API CALL');
+      console.log('========================================');
+      console.log('🔗 CURL Command:');
+      console.log(`curl -X POST '${url}' \\`);
+      console.log(`  -H 'Content-Type: application/json' \\`);
+      console.log(`  -H 'Authorization: Bearer ${authToken}' \\`);
+      console.log(`  -d '${JSON.stringify(requestBody, null, 2)}'`);
+      console.log('========================================\n');
+
+      console.log('📤 Request Details:');
+      console.log('  URL:', url);
+      console.log('  Method: POST');
+      console.log('  Headers:', {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken.substring(0, 20)}...`,
+      });
+      console.log('  Body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
         },
-        body: JSON.stringify({
-          fcmToken: fcmToken,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
 
+      console.log('\n📥 Response Details:');
+      console.log('  Status:', response.status, response.statusText);
+      console.log('  Body:', JSON.stringify(result, null, 2));
+      console.log('========================================\n');
+
       if (response.ok) {
-        console.log('Device token registered successfully:', result);
+        console.log('✅ Device token registered successfully:', result);
         console.log('SUCCESS! FCM Token sent to backend API');
-        console.log('API Response:', JSON.stringify(result, null, 2));
 
         // Store registration status
         await AsyncStorage.setItem('fcm_token_registered', 'true');
         await AsyncStorage.setItem('registered_fcm_token', fcmToken);
         return true;
       } else {
-        console.error('Failed to register device token:', result);
+        console.error('❌ Failed to register device token:', result);
         console.error('API Error Response:', JSON.stringify(result, null, 2));
         return false;
       }

@@ -7,21 +7,15 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-  Animated,
   ActivityIndicator,
-  StatusBar,
+  Animated,
 } from 'react-native';
-import { TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
-import Icons from '../../../assets/icons';
 import signupstyles from './signup.styles';
-import profileStyles from '../Profile/profileStyles';
 import { RootStackParamList } from '../../types/navigation';
-import googleSignInService, { GoogleSignInResponse } from '../../services/googleSignInService';
+import CustomTextInput from '../../components/CustomTextInput';
 
 export interface UserSignUpData {
   firstName: string;
@@ -221,134 +215,90 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
           )}
 
           <View style={signupstyles.inputContainer}>
-          <TextInput
-            mode="outlined"
-            label="Enter First Name"
-            placeholder="First Name"
+          <CustomTextInput
+            label="First Name"
+            icon="person"
+            placeholder="Enter your first name"
             value={firstName}
-            onChangeText={(value) => {
+            onChangeText={(value: string) => {
               setFirstName(value);
               clearFieldError('firstName');
             }}
-            theme={{
-              roundness: 12,
-              colors: { primary: '#58B9D0', outline: errors.firstName ? '#FF6B6B' : '#E2E2E2' }
-            }}
-            error={!!errors.firstName}
-            left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} color="#58B9D0" />} />}
+            error={errors.firstName}
           />
-          {errors.firstName && <Text style={signupstyles.errorText}>{errors.firstName}</Text>}
-          
-          <TextInput
-            mode="outlined"
-            label="Enter Last Name"
-            placeholder="Last Name"
+
+          <CustomTextInput
+            label="Last Name"
+            icon="person-outline"
+            placeholder="Enter your last name"
             value={lastName}
-            onChangeText={(value) => {
+            onChangeText={(value: string) => {
               setLastName(value);
               clearFieldError('lastName');
             }}
-            theme={{
-              roundness: 12,
-              colors: { primary: '#58B9D0', outline: errors.lastName ? '#FF6B6B' : '#E2E2E2' }
-            }}
-            error={!!errors.lastName}
-            left={<TextInput.Icon icon={() => <MaterialIcons name="person-outline" size={20} color="#58B9D0" />} />}
+            error={errors.lastName}
           />
-          {errors.lastName && <Text style={signupstyles.errorText}>{errors.lastName}</Text>}
 
-          <TextInput
-            mode="outlined"
+          <CustomTextInput
             label="Email Address"
+            icon="email"
             placeholder="Enter your email"
             value={email}
-            onChangeText={(value) => {
+            onChangeText={(value: string) => {
               setEmail(value);
               clearFieldError('email');
             }}
-            theme={{
-              roundness: 12,
-              colors: { primary: '#58B9D0', outline: errors.email ? '#FF6B6B' : '#E2E2E2' }
-            }}
-            error={!!errors.email}
+            error={errors.email}
             keyboardType="email-address"
             autoCapitalize="none"
-            left={<TextInput.Icon icon={() => <MaterialIcons name="email" size={20} color="#58B9D0" />} />}
           />
-          {errors.email && <Text style={signupstyles.errorText}>{errors.email}</Text>}
 
-          <TextInput
-            mode="outlined"
+          <CustomTextInput
             label="Phone Number"
+            icon="phone"
             placeholder="Enter your phone number"
             value={phoneNumber}
-            onChangeText={(value) => {
+            onChangeText={(value: string) => {
               setPhoneNumber(value);
               clearFieldError('phoneNumber');
             }}
-            theme={{
-              roundness: 12,
-              colors: { primary: '#58B9D0', outline: errors.phoneNumber ? '#FF6B6B' : '#E2E2E2' }
-            }}
-            error={!!errors.phoneNumber}
+            error={errors.phoneNumber}
             keyboardType="phone-pad"
             maxLength={10}
-            left={<TextInput.Icon icon={() => <MaterialIcons name="phone" size={20} color="#58B9D0" />} />}
           />
-          {errors.phoneNumber && <Text style={signupstyles.errorText}>{errors.phoneNumber}</Text>}
 
-          <TextInput
-            mode="outlined"
+          <CustomTextInput
             label="Password"
+            icon="lock"
             placeholder="Enter your password"
             value={password}
-            onChangeText={(value) => {
+            onChangeText={(value: string) => {
               setPassword(value);
               clearFieldError('password');
             }}
+            error={errors.password}
+            showPasswordToggle
             secureTextEntry={!showPassword}
-            theme={{
-              roundness: 12,
-              colors: { primary: '#58B9D0', outline: errors.password ? '#FF6B6B' : '#E2E2E2' }
-            }}
-            error={!!errors.password}
-            left={<TextInput.Icon icon={() => <MaterialIcons name="lock" size={20} color="#58B9D0" />} />}
-            right={
-              <TextInput.Icon
-                icon={() => <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color="#666" />}
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            }
+            onTogglePassword={() => setShowPassword(!showPassword)}
           />
-          {errors.password && <Text style={signupstyles.errorText}>{errors.password}</Text>}
 
-          <TextInput
-            mode="outlined"
+          <CustomTextInput
             label="Confirm Password"
+            icon="lock-outline"
             placeholder="Confirm your password"
             value={confirmPassword}
-            onChangeText={(value) => {
+            onChangeText={(value: string) => {
               setConfirmPassword(value);
               clearFieldError('confirmPassword');
             }}
+            error={errors.confirmPassword}
+            showPasswordToggle
             secureTextEntry={!showConfirmPassword}
-            theme={{
-              roundness: 12,
-              colors: { primary: '#58B9D0', outline: errors.confirmPassword ? '#FF6B6B' : '#E2E2E2' }
-            }}
-            error={!!errors.confirmPassword}
-            left={<TextInput.Icon icon={() => <MaterialIcons name="lock-outline" size={20} color="#58B9D0" />} />}
-            right={
-              <TextInput.Icon
-                icon={() => <MaterialIcons name={showConfirmPassword ? "visibility" : "visibility-off"} size={20} color="#666" />}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              />
-            }
+            onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
           />
-          {errors.confirmPassword && <Text style={signupstyles.errorText}>{errors.confirmPassword}</Text>}
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
            onPress={handleSignIn}
            style={[signupstyles.loginButton, isLoading && {opacity: 0.7}]}
            disabled={isLoading}>
@@ -358,28 +308,6 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
               <Text style={signupstyles.loginText}>Next</Text>
             )}
           </TouchableOpacity>
-
-          <View style={signupstyles.orContainer}>
-           <View style={signupstyles.line} />
-           <Text style={signupstyles.orText}>Or register with</Text>
-           <View style={signupstyles.line} />
-          </View>
-
-          <View style={signupstyles.socialButtons}>
-            <TouchableOpacity 
-              style={[signupstyles.socialButton, isLoading && {opacity: 0.7}]}
-              onPress={handleGoogleSignUp}
-              disabled={isLoading}>
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#666" />
-              ) : (
-                <Image source={Icons.googleIcon} style={signupstyles.socialIcon} />
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity style={signupstyles.socialButton}>
-              <Image source={Icons.facebookIcon} style={signupstyles.socialIcon} />
-            </TouchableOpacity>
-          </View>
 
           <Text style={signupstyles.registerText}>
             Have an account?{' '}
