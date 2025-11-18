@@ -1632,4 +1632,166 @@ export const BoardingDetailsSkeleton: React.FC = () => {
   );
 };
 
+// Dashboard/Home Screen Skeleton Loader
+export const DashboardSkeleton: React.FC = () => {
+  return (
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {/* Header Skeleton */}
+      <View style={{ padding: responsiveWidth(5), paddingTop: responsiveHeight(2) }}>
+        <SkeletonLoader width={150} height={24} borderRadius={4} style={{ marginBottom: 4 }} />
+        <SkeletonLoader width={180} height={14} borderRadius={4} />
+      </View>
+
+      {/* My Pets Section */}
+      <View style={{ paddingHorizontal: responsiveWidth(5), marginTop: responsiveHeight(2) }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <View>
+            <SkeletonLoader width={80} height={18} borderRadius={4} style={{ marginBottom: 4 }} />
+            <SkeletonLoader width={120} height={12} borderRadius={4} />
+          </View>
+          <SkeletonLoader width={90} height={36} borderRadius={18} />
+        </View>
+
+        {/* Pet Avatars */}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          {[...Array(5)].map((_, index) => (
+            <View key={index} style={{ alignItems: 'center' }}>
+              <SkeletonLoader width={60} height={60} borderRadius={30} style={{ marginBottom: 4 }} />
+              <SkeletonLoader width={40} height={10} borderRadius={4} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Upcoming Appointments Section */}
+      <View style={{ paddingHorizontal: responsiveWidth(5), marginTop: responsiveHeight(2) }}>
+        <SkeletonLoader width={180} height={18} borderRadius={4} style={{ marginBottom: 12 }} />
+        
+        {/* Appointment Card */}
+        <View style={{
+          backgroundColor: '#F8F9FB',
+          borderRadius: 16,
+          padding: 16,
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+        }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <SkeletonLoader width={60} height={16} borderRadius={8} />
+            <SkeletonLoader width={70} height={24} borderRadius={12} />
+          </View>
+          
+          <SkeletonLoader width={100} height={20} borderRadius={4} style={{ marginBottom: 8 }} />
+          <SkeletonLoader width={140} height={14} borderRadius={4} style={{ marginBottom: 12 }} />
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <SkeletonLoader width={16} height={16} borderRadius={4} />
+            <SkeletonLoader width={150} height={12} borderRadius={4} />
+          </View>
+        </View>
+      </View>
+
+      {/* Latest Pet News Section */}
+      <View style={{ marginTop: responsiveHeight(2) }}>
+        <SkeletonLoader 
+          width={140} 
+          height={18} 
+          borderRadius={4} 
+          style={{ marginBottom: 12, marginLeft: responsiveWidth(5) }} 
+        />
+        
+        <View style={{ flexDirection: 'row', gap: 16, paddingLeft: responsiveWidth(5) }}>
+          {[...Array(2)].map((_, index) => (
+            <View
+              key={index}
+              style={{
+                width: responsiveWidth(80),
+                backgroundColor: '#FFFFFF',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                overflow: 'hidden',
+              }}
+            >
+              {/* News Image */}
+              <SkeletonLoader width="100%" height={160} borderRadius={0} />
+              
+              {/* News Content */}
+              <View style={{ padding: 16 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <SkeletonLoader width={60} height={20} borderRadius={12} />
+                  <SkeletonLoader width={70} height={12} borderRadius={4} />
+                </View>
+                
+                <SkeletonLoader width="100%" height={16} borderRadius={4} style={{ marginBottom: 6 }} />
+                <SkeletonLoader width="80%" height={16} borderRadius={4} style={{ marginBottom: 12 }} />
+                
+                <SkeletonLoader width="100%" height={12} borderRadius={4} style={{ marginBottom: 4 }} />
+                <SkeletonLoader width="60%" height={12} borderRadius={4} style={{ marginBottom: 12 }} />
+                
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <SkeletonLoader width={14} height={14} borderRadius={4} />
+                  <SkeletonLoader width={120} height={11} borderRadius={4} />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* View All News Button */}
+        <View style={{ paddingHorizontal: responsiveWidth(5), marginTop: 16 }}>
+          <SkeletonLoader width="100%" height={48} borderRadius={12} />
+        </View>
+      </View>
+
+      {/* Pet Care Blog Section */}
+      <View style={{ marginTop: responsiveHeight(2), paddingBottom: responsiveHeight(2) }}>
+        <SkeletonLoader 
+          width={120} 
+          height={18} 
+          borderRadius={4} 
+          style={{ marginBottom: 12, marginLeft: responsiveWidth(5) }} 
+        />
+        
+        <View style={{ flexDirection: 'row', gap: 16, paddingLeft: responsiveWidth(5) }}>
+          {[...Array(2)].map((_, index) => (
+            <View
+              key={index}
+              style={{
+                width: responsiveWidth(75),
+                backgroundColor: '#FFFFFF',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Blog Image */}
+              <SkeletonLoader width="100%" height={140} borderRadius={0} />
+              
+              {/* Blog Content */}
+              <View style={{ padding: 16 }}>
+                <SkeletonLoader width={70} height={20} borderRadius={12} style={{ marginBottom: 8 }} />
+                
+                <SkeletonLoader width="100%" height={16} borderRadius={4} style={{ marginBottom: 4 }} />
+                <SkeletonLoader width="90%" height={16} borderRadius={4} style={{ marginBottom: 12 }} />
+                
+                <SkeletonLoader width="100%" height={12} borderRadius={4} style={{ marginBottom: 4 }} />
+                <SkeletonLoader width="70%" height={12} borderRadius={4} style={{ marginBottom: 12 }} />
+                
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <SkeletonLoader width={20} height={20} borderRadius={10} />
+                    <SkeletonLoader width={80} height={11} borderRadius={4} />
+                  </View>
+                  <SkeletonLoader width={70} height={11} borderRadius={4} />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
+
 export default SkeletonLoader;
