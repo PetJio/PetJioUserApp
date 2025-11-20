@@ -18,9 +18,11 @@ import { TextInput } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
 import styles from './styles';
+import { RootStackNavigationProp} from '../../types/navigation';
 
 const Mart: React.FC = () => {
-  const naviagtion = useNavigation();
+  const navigation = useNavigation<RootStackNavigationProp<'Main'>['navigation']>();
+
 
   // Force status bar to be white whenever Service screen is focused
   useFocusEffect(
@@ -45,7 +47,7 @@ const Mart: React.FC = () => {
   const funcName = (type: { name: string }) => {
     // Navigate directly to BoardingUser instead of Boarding (Date and Time page)
     if (type.name === 'Boarding') {
-      naviagtion.navigate(
+      navigation.navigate(
         'BoardingUser' as never,
         {
           selectedDate: new Date().toISOString().split('T')[0],
@@ -54,7 +56,7 @@ const Mart: React.FC = () => {
         } as never,
       );
     } else {
-      naviagtion.navigate(type.name as never);
+      navigation.navigate(type.name as never);
     }
   };
 
@@ -120,21 +122,35 @@ const Mart: React.FC = () => {
                 index % 2 !== 0 ? (
                   <View key={index} />
                 ) : (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => item.name === 'Boarding' ? funcName({ name: item.name }) : null}
-                    disabled={item.name !== 'Boarding'}
-                    activeOpacity={item.name === 'Boarding' ? 0.7 : 1}
-                  >
-                    <View style={styles.serviceImageContainer}>
-                      <Image source={item.image} style={styles.image} />
-                      {item.name !== 'Boarding' && (
-                        <View style={styles.comingSoonOverlay}>
-                          <Text style={styles.comingSoonText}>Coming Soon</Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
+                 <TouchableOpacity
+  key={index}
+  onPress={() => {
+    if (item.name === 'Boarding') {
+      funcName({ name: item.name });
+      return;
+    }
+
+    if (item.name === 'Veterinary') {
+      navigation.navigate('Veterinary');
+      return;
+    }
+
+    console.log(item.name + " Coming Soon");
+  }}
+  disabled={!(item.name === 'Boarding' || item.name === 'Veterinary')}
+  activeOpacity={(item.name === 'Boarding' || item.name === 'Veterinary') ? 0.7 : 1}
+>
+  <View style={styles.serviceImageContainer}>
+    <Image source={item.image} style={styles.image} />
+
+    {(item.name !== 'Boarding' && item.name !== 'Veterinary') && (
+      <View style={styles.comingSoonOverlay}>
+        <Text style={styles.comingSoonText}>Coming Soon</Text>
+      </View>
+    )}
+  </View>
+</TouchableOpacity>
+
                 ),
               )}
             </View>
@@ -143,21 +159,35 @@ const Mart: React.FC = () => {
                 index % 2 === 0 ? (
                   <View key={index} />
                 ) : (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => item.name === 'Boarding' ? funcName({ name: item.name }) : null}
-                    disabled={item.name !== 'Boarding'}
-                    activeOpacity={item.name === 'Boarding' ? 0.7 : 1}
-                  >
-                    <View style={styles.serviceImageContainer}>
-                      <Image source={item.image} style={styles.image} />
-                      {item.name !== 'Boarding' && (
-                        <View style={styles.comingSoonOverlay}>
-                          <Text style={styles.comingSoonText}>Coming Soon</Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
+                 <TouchableOpacity
+  key={index}
+  onPress={() => {
+    if (item.name === 'Boarding') {
+      funcName({ name: item.name });
+      return;
+    }
+
+    if (item.name === 'Veterinary') {
+      navigation.navigate('Veterinary' as never);
+      return;
+    }
+
+    console.log(item.name + ' Coming Soon');
+  }}
+  disabled={!(item.name === 'Boarding' || item.name === 'Veterinary')}
+  activeOpacity={(item.name === 'Boarding' || item.name === 'Veterinary') ? 0.7 : 1}
+>
+  <View style={styles.serviceImageContainer}>
+    <Image source={item.image} style={styles.image} />
+
+    {(item.name !== 'Boarding' && item.name !== 'Veterinary') && (
+      <View style={styles.comingSoonOverlay}>
+        <Text style={styles.comingSoonText}>Coming Soon</Text>
+      </View>
+    )}
+  </View>
+</TouchableOpacity>
+
                 ),
               )}
             </View>
