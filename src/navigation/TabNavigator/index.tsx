@@ -3,17 +3,12 @@ import {
     createBottomTabNavigator,
     BottomTabNavigationProp,
 } from '@react-navigation/bottom-tabs';
-import { RouteProp, getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import { Home, Mart, Visits, Profile } from '../../screens';
-import { Image, StatusBar, Platform, View } from 'react-native';
+import { RouteProp } from '@react-navigation/native';
+import { Home, Profile } from '../../screens';
+import { StatusBar, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import iconsPaths from '../../../assets/icons';
-import styles from './styles';
-import colors from '../../styles/colors/index';
 import ServiceStackNavigator from '../ServiceStackNavigator';
-import ChatStackNavigator from '../ChatStackNavigator';
-import History from '../../screens/History/History';
 
 
 
@@ -22,8 +17,8 @@ type TabParamList = {
     // Mart: undefined;
     // Visits: undefined;
     Service: undefined;
-    History: undefined;
-    Chats: undefined;
+    // History: undefined;
+    // Chats: undefined;
     Profile: undefined;
 };
 
@@ -75,10 +70,6 @@ const TabNavigator: React.FC = () => {
                 );
             case 'Service':
                 return <MaterialIcons name="medical-services" size={size} color={color} />;
-            case 'History':
-                return <MaterialIcons name="history" size={size} color={color} />;
-            case 'Chats':
-                return <MaterialIcons name="chat" size={size} color={color} />;
             case 'Profile':
                 return <MaterialIcons name="person" size={size} color={color} />;
             default:
@@ -115,14 +106,6 @@ const TabNavigator: React.FC = () => {
                 },
             })}>
             <Tab.Screen
-                name="History"
-                component={History}
-                options={{
-                    headerShown: false,
-                    tabBarLabel: 'History'
-                }}
-            />
-            <Tab.Screen
                 name="Service"
                 component={ServiceStackNavigator}
                 options={{
@@ -138,28 +121,6 @@ const TabNavigator: React.FC = () => {
                     tabBarLabel: 'Home'
                 }}
             />
-            <Tab.Screen
-                name="Chats"
-                component={ChatStackNavigator}
-                options={({ route }) => {
-                    const routeName = getFocusedRouteNameFromRoute(route) ?? 'ChatList';
-                    return {
-                        headerShown: false,
-                        tabBarLabel: 'Chats',
-                        tabBarStyle: routeName === 'Chat' ? { display: 'none' } : {
-                            backgroundColor: '#FFFFFF',
-                            borderTopWidth: 1,
-                            borderTopColor: '#E8EBF0',
-                            elevation: 0,
-                            height: 80,
-                            paddingTop: 8,
-                            paddingBottom: 12,
-                        }
-                    };
-                }}
-            />
-            {/* <Tab.Screen name="Visits" component={Visits} options={{ headerShown: false }} /> */}
-            {/* <Tab.Screen name="Mart" component={Mart} options={{ headerShown: false }} /> */}
             <Tab.Screen
                 name="Profile"
                 component={Profile}

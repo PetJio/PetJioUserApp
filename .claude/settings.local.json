@@ -61,7 +61,8 @@
       "Bash(pnpm start:*)",
       "Bash(timeout 3 adb shell:*)",
       "Bash(.gradlew.bat assembleRelease)",
-      "Bash(gradlew.bat assembleRelease:*)"
+      "Bash(gradlew.bat assembleRelease:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": [],

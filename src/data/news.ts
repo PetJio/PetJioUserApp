@@ -25,7 +25,7 @@ export const petNews: NewsArticle[] = [
     source: "Pet Health Journal",
     publishedAt: getRecentDate(0, 3), // 3 hours ago
     url: "https://www.pethealthjournal.com/cancer-detection-dogs",
-    image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800",
+    image: "https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "Health"
   },
   {
@@ -35,7 +35,7 @@ export const petNews: NewsArticle[] = [
     source: "India Today Pets",
     publishedAt: getRecentDate(1), // Yesterday
     url: "https://www.indiatoday.in/pets/metro-service",
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800",
+    image: "https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "News"
   },
   {
@@ -45,7 +45,7 @@ export const petNews: NewsArticle[] = [
     source: "Veterinary Times",
     publishedAt: getRecentDate(2), // 2 days ago
     url: "https://www.vettimes.com/telemedicine-growth",
-    image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800",
+    image: "https://images.pexels.com/photos/4750271/pexels-photo-4750271.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "Technology"
   },
   {
@@ -55,7 +55,7 @@ export const petNews: NewsArticle[] = [
     source: "Pet Food Institute",
     publishedAt: getRecentDate(3), // 3 days ago
     url: "https://www.petfoodinstitute.org/regulations-2025",
-    image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=800",
+    image: "https://images.pexels.com/photos/1404819/pexels-photo-1404819.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "Regulations"
   },
   {
@@ -65,7 +65,7 @@ export const petNews: NewsArticle[] = [
     source: "Feline Medical Journal",
     publishedAt: getRecentDate(4), // 4 days ago
     url: "https://www.felinemedicaljournal.com/diabetes-treatment",
-    image: "https://images.unsplash.com/photo-1573865526739-10c1dd7adaa7?w=800",
+    image: "https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "Health"
   },
   {
@@ -75,7 +75,7 @@ export const petNews: NewsArticle[] = [
     source: "Animal Welfare Board",
     publishedAt: getRecentDate(5), // 5 days ago
     url: "https://www.awbi.org/adoption-rates-2025",
-    image: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800",
+    image: "https://images.pexels.com/photos/1851164/pexels-photo-1851164.jpeg?auto=compress&cs=tinysrgb&w=800",
     category: "Adoption"
   }
 ];

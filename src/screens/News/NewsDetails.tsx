@@ -6,10 +6,6 @@ import {
   Image,
   TouchableOpacity,
   StatusBar,
-  Platform,
-  Share,
-  Alert,
-  Linking,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
@@ -26,34 +22,6 @@ interface NewsDetailsProps {
 
 const NewsDetails: React.FC<NewsDetailsProps> = ({ route, navigation }) => {
   const { news } = route.params;
-
-  const handleShare = async () => {
-    try {
-      const result = await Share.share({
-        message: `${news.title}\n\n${news.description}\n\nRead more: ${news.url}\n\nSource: ${news.source}`,
-        title: news.title,
-      });
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log('Shared with activity type:', result.activityType);
-        } else {
-          console.log('News shared successfully');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Share dismissed');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Unable to share this article');
-      console.error('Share error:', error);
-    }
-  };
-
-  const handleReadFullArticle = () => {
-    Linking.openURL(news.url).catch(() => {
-      Alert.alert('Error', 'Unable to open the article link');
-    });
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -269,64 +237,6 @@ const NewsDetails: React.FC<NewsDetailsProps> = ({ route, navigation }) => {
               {news.description}
             </Text>
           </View>
-
-          {/* Read Full Article Button */}
-          <TouchableOpacity
-            onPress={handleReadFullArticle}
-            activeOpacity={0.8}
-            style={{
-              marginTop: 24,
-              padding: 16,
-              backgroundColor: '#3B82F6',
-              borderRadius: 12,
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'center',
-            }}
-          >
-            <MaterialIcons name="open-in-new" size={20} color="#FFFFFF" />
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '600',
-                color: '#FFFFFF',
-                marginLeft: 8,
-              }}
-            >
-              Read Full Article
-            </Text>
-          </TouchableOpacity>
-
-          {/* Share Section */}
-          <TouchableOpacity
-            onPress={handleShare}
-            activeOpacity={0.8}
-            style={{
-              marginTop: 16,
-              padding: 20,
-              backgroundColor: '#F8F9FB',
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: '#E5E7EB',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <MaterialIcons name="share" size={20} color="#3B82F6" />
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#111827',
-                  marginLeft: 8,
-                }}
-              >
-                Share this article
-              </Text>
-            </View>
-            <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 20 }}>
-              Found this interesting? Share it with other pet parents!
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

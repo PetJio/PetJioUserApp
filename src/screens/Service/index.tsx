@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  FlatList,
   ScrollView,
   StatusBar,
   Platform,
@@ -14,8 +13,6 @@ import {
   responsiveHeight,
 } from 'react-native-responsive-dimensions';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { TextInput } from 'react-native-paper';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import images from '../../../assets/images';
 import styles from './styles';
 
@@ -81,33 +78,9 @@ const Mart: React.FC = () => {
         style={{
           flex: 1,
           padding: responsiveWidth(4),
-          gap: responsiveHeight(2),
           backgroundColor: '#F8F9FB',
         }}
       >
-        <View style={styles.searchContainer}>
-          <TextInput
-            mode="outlined"
-            placeholder="Search for services"
-            theme={{
-              roundness: 16,
-              colors: { primary: '#58B9D0', outline: '#E8E8E8' },
-            }}
-            style={styles.textInput}
-            contentStyle={styles.inputContent}
-            outlineStyle={styles.inputOutline}
-            left={
-              <TextInput.Icon
-                icon={() => (
-                  <MaterialIcons name="search" size={20} color="#666" />
-                )}
-              />
-            }
-          />
-          <TouchableOpacity style={styles.filterButton}>
-            <MaterialIcons name="tune" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
