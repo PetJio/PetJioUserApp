@@ -199,12 +199,12 @@ const SettlementCheckout: React.FC<SettlementCheckoutProps> = ({
         return;
       }
 
-      // Amount in paise (Razorpay format)
-      const amountInPaise = Math.round(settlementData.totalAmountPending);
-      console.log('💰 Settlement amount (paise):', amountInPaise);
+      // Amount in paise (Razorpay format) - Static for testing
+      const amountInPaise = 100; // Static - 1 rupee (100 paise) for testing
+      console.log('💰 Settlement amount (paise - static):', amountInPaise);
 
       const paymentPayload = {
-        amount: amountInPaise,
+        amount: amountInPaise, // Static - 1 rupee (100 paise) for testing
         email: userEmail,
         contact: userContact,
         bookingsId: bookingId,

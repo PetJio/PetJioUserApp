@@ -228,18 +228,13 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
         return;
       }
 
-      // Create payment link payload with calculated total amount
-      // All values are dynamic from the logged-in user and booking data
-      const totalAmount = calculateTotal();
-      console.log('💰 Calculated total amount (INR):', totalAmount);
-
-      // Razorpay requires amount in paise (smallest currency unit)
-      // 1 INR = 100 paise, so multiply by 100
-      const amountInPaise = Math.round(totalAmount);
-      console.log('💰 Amount in paise for Razorpay:', amountInPaise);
+      // Create payment link payload with static amount for testing
+      // Amount is set to 1 rupee (100 paise) for testing purposes
+      const amountInPaise = 100; // Static - 1 rupee = 100 paise
+      console.log('💰 Amount in paise for Razorpay (static):', amountInPaise);
 
       const paymentPayload = {
-        amount: amountInPaise, // Dynamic - calculated from booking data, converted to paise
+        amount: amountInPaise, // Static - 1 rupee (100 paise) for testing
         email: userEmail, // Dynamic - from logged-in user
         contact: userContact, // Dynamic - from logged-in user
         bookingsId: bookingId, // Dynamic - from booking creation
