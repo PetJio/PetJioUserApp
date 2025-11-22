@@ -12,8 +12,6 @@ import {
   Animated,
   PermissionsAndroid,
   Linking,
-  FlatList,
-  TextInput,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import CustomTextInput from '../../components/CustomTextInput';
@@ -64,17 +62,6 @@ interface ValidationErrors {
   pincode?: string;
 }
 
-const GOOGLE_PLACES_API_KEY = 'AIzaSyDGOiY3A75dX2nnVvPyPGTqJ4FXPIlx50U'; // Replace with your actual API key
-
-interface PlacePrediction {
-  place_id: string;
-  description: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
-  };
-}
-
 const Location: React.FC<LocationProps> = ({ navigation, route }) => {
   const { userSignUpData } = route.params;
   const [locationData, setLocationData] = useState<LocationData>({
@@ -93,94 +80,6 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
   const [hasCoordinates, setHasCoordinates] = useState<boolean>(false);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const scrollY = new Animated.Value(0);
-
-  // Google Places Autocomplete states
-  const [addressPredictions, setAddressPredictions] = useState<PlacePrediction[]>([]);
-  const [showPredictions, setShowPredictions] = useState<boolean>(false);
-  const [isLoadingPredictions, setIsLoadingPredictions] = useState<boolean>(false);
-
-  const fetchPlacePredictions = async (input: string) => {
-    if (input.length < 3) {
-      setAddressPredictions([]);
-      setShowPredictions(false);
-      return;
-    }
-
-    setIsLoadingPredictions(true);
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_PLACES_API_KEY}&components=country:in&types=address`
-      );
-      const data = await response.json();
-
-      if (data.status === 'OK' && data.predictions) {
-        setAddressPredictions(data.predictions);
-        setShowPredictions(true);
-      } else {
-        setAddressPredictions([]);
-        setShowPredictions(false);
-      }
-    } catch (error) {
-      console.error('Error fetching place predictions:', error);
-      setAddressPredictions([]);
-      setShowPredictions(false);
-    } finally {
-      setIsLoadingPredictions(false);
-    }
-  };
-
-  const fetchPlaceDetails = async (placeId: string) => {
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_PLACES_API_KEY}&fields=address_components,geometry,formatted_address`
-      );
-      const data = await response.json();
-
-      if (data.status === 'OK' && data.result) {
-        const place = data.result;
-        const addressComponents = place.address_components;
-
-        // Extract address details
-        let city = '';
-        let state = '';
-        let pincode = '';
-
-        addressComponents.forEach((component: any) => {
-          if (component.types.includes('locality')) {
-            city = component.long_name;
-          } else if (component.types.includes('administrative_area_level_3') && !city) {
-            city = component.long_name;
-          } else if (component.types.includes('administrative_area_level_1')) {
-            state = component.long_name;
-          } else if (component.types.includes('postal_code')) {
-            pincode = component.long_name;
-          }
-        });
-
-        // Update all location fields
-        setLocationData(prev => ({
-          ...prev,
-          address: place.formatted_address || prev.address,
-          city: city || prev.city,
-          state: state || prev.state,
-          pincode: pincode || prev.pincode,
-          lat: place.geometry?.location?.lat || prev.lat,
-          lng: place.geometry?.location?.lng || prev.lng,
-        }));
-
-        setMessage({type: 'success', text: 'Address details filled successfully!'});
-        setShowPredictions(false);
-        setHasCoordinates(true);
-      }
-    } catch (error) {
-      console.error('Error fetching place details:', error);
-      setMessage({type: 'error', text: 'Failed to fetch address details'});
-    }
-  };
-
-  const handleSelectPrediction = (prediction: PlacePrediction) => {
-    fetchPlaceDetails(prediction.place_id);
-  };
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
@@ -669,11 +568,6 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
-
-    // Trigger autocomplete for address field
-    if (field === 'address') {
-      fetchPlacePredictions(value);
-    }
   };
 
   return (
@@ -716,94 +610,16 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
           )}
 
           <View style={locationStyles.inputContainer}>
-              {/* Custom Address Input with Autocomplete */}
-              <View style={{ marginBottom: 16, position: 'relative', zIndex: 1000 }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: '#374151',
-                  marginBottom: 8,
-                }}>Full Address</Text>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#F9FAFB',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: errors.address ? '#EF4444' : '#E5E7EB',
-                  paddingHorizontal: 16,
-                  minHeight: 80,
-                }}>
-                  <MaterialIcons name="home" size={20} color="#9CA3AF" style={{ marginRight: 12 }} />
-                  <TextInput
-                    placeholder="Enter your full address"
-                    placeholderTextColor="#9CA3AF"
-                    value={locationData.address}
-                    onChangeText={(value: string) => updateLocationData('address', value)}
-                    multiline
-                    numberOfLines={3}
-                    style={{
-                      flex: 1,
-                      fontSize: 15,
-                      color: '#1F2937',
-                      textAlignVertical: 'top',
-                      paddingVertical: 12,
-                    }}
-                  />
-                  {isLoadingPredictions && (
-                    <ActivityIndicator size="small" color="#58B9D0" style={{ marginLeft: 8 }} />
-                  )}
-                </View>
-                {errors.address && (
-                  <Text style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors.address}</Text>
-                )}
-
-                {/* Autocomplete Predictions Dropdown */}
-                {showPredictions && addressPredictions.length > 0 && (
-                  <View style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#E5E7EB',
-                    marginTop: 4,
-                    maxHeight: 200,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 5,
-                    zIndex: 2000,
-                  }}>
-                    <FlatList
-                      data={addressPredictions}
-                      keyExtractor={(item) => item.place_id}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => handleSelectPrediction(item)}
-                          style={{
-                            paddingVertical: 12,
-                            paddingHorizontal: 16,
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#F3F4F6',
-                          }}
-                        >
-                          <Text style={{ fontSize: 15, fontWeight: '600', color: '#1F2937' }}>
-                            {item.structured_formatting.main_text}
-                          </Text>
-                          <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
-                            {item.structured_formatting.secondary_text}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      nestedScrollEnabled
-                    />
-                  </View>
-                )}
-              </View>
+              <CustomTextInput
+                label="Full Address"
+                icon="home"
+                placeholder="Enter your full address"
+                value={locationData.address}
+                onChangeText={(value: string) => updateLocationData('address', value)}
+                error={errors.address}
+                multiline
+                numberOfLines={3}
+              />
 
               <CustomTextInput
                 label="City"
