@@ -624,69 +624,12 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           </View>
         </View>
 
-        {/* Tab Navigation */}
-        <View style={{
-          flexDirection: 'row',
-          backgroundColor: '#F8F9FB',
-          borderRadius: 12,
-          padding: 4,
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: '#E5E7EB',
-        }}>
-          <TouchableOpacity
-            onPress={() => setActiveTab('about')}
-            style={{
-              flex: 1,
-              paddingVertical: 12,
-              alignItems: 'center',
-              backgroundColor: activeTab === 'about' ? '#58B9D0' : 'transparent',
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{
-              fontSize: 14,
-              fontWeight: '600',
-              color: activeTab === 'about' ? '#FFFFFF' : '#6B7280',
-            }}>
-              About
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={() => setActiveTab('reviews')}
-            style={{
-              flex: 1,
-              paddingVertical: 12,
-              alignItems: 'center',
-              backgroundColor: activeTab === 'reviews' ? '#58B9D0' : 'transparent',
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{
-              fontSize: 14,
-              fontWeight: '600',
-              color: activeTab === 'reviews' ? '#FFFFFF' : '#6B7280',
-            }}>
-              Reviews ({bookingDetailsData?.reviewCount || 0})
-            </Text>
-          </TouchableOpacity>
-
-          {/* Updates tab removed - functionality moved to Booking Details page */}
-        </View>
-
-        {/* Tab Content */}
+        {/* Reviews Section */}
         <View style={{ flex: 1 }}>
-          {activeTab === 'about' && (
-            <BoardingAbout serviceDetails={bookingDetailsData} />
-          )}
-          {activeTab === 'reviews' && (
-            <BoardingReview
-              rating={bookingDetailsData?.reviewAvg ? parseFloat(bookingDetailsData.reviewAvg) : 0}
-              reviews={bookingDetailsData?.reviewCount || 0}
-            />
-          )}
-          {/* Updates tab removed — daily updates are available on the Booking Details page */}
+          <BoardingReview
+            rating={bookingDetailsData?.reviewAvg ? parseFloat(bookingDetailsData.reviewAvg) : 0}
+            reviews={bookingDetailsData?.reviewCount || 0}
+          />
         </View>
 
         </ScrollView>

@@ -1,701 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  StatusBar,
-  RefreshControl,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import {
-  responsiveWidth,
-  responsiveHeight,
-} from 'react-native-responsive-dimensions';
+import React from 'react';
+import { View, Text, StatusBar } from 'react-native';
+import { responsiveHeight } from 'react-native-responsive-dimensions';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_CONFIG } from '../../config/api';
-import { navigate } from '../../utils/navigationService';
-import historyStyles from './history.styles';
-import { HistoryCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
-
-// Interface definitions based on NEW API response
-interface Status {
-  id: number;
-  name: string;
-}
-
-interface Mode {
-  id: number;
-  value: string;
-}
-
-interface Customer {
-  id: number;
-  userId: number;
-  pets: any;
-  alterNo: string;
-  profileImg: string;
-}
-
-interface ServiceProvider {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  mobile: string;
-  city: string;
-  state: string;
-  address: string;
-  businessName?: string;
-  fcmToken?: string;
-}
-
-interface Boarding {
-  id: number;
-  facilityName: string;
-  userId: number;
-  description: string;
-  regNo: string;
-  serviceUploads: string[];
-  profileImg: string;
-  experience: number;
-  keepCustomerPossessions: boolean;
-  checkinTime: number;
-  checkoutTime: number;
-  lastCheckoutTime: number;
-  capacity: number;
-  acAvailable: boolean;
-  medicatedBath: number;
-  swimming: number;
-  nailClipping: number;
-  commercialFood: number;
-  walksPerDay: number;
-  docAvailibility: boolean;
-}
-
-interface BookingDetail {
-  id: number;
-  startTime: string;
-  endTime: string;
-}
-
-interface BoardingServiceBooking {
-  id: number;
-  possessions: boolean;
-  isDocReqd: boolean;
-  nailClipping: boolean;
-  swimmingPool: boolean;
-  walksPerDay: number | null;
-  medicatedBath: boolean;
-  bookingDetails: BookingDetail;
-}
-
-interface FlowHistory {
-  id: number;
-  boardingBookingId: number;
-  boardingBookingFlowOptionsId: number;
-  customerId?: number;
-  boardingId?: number;
-  createdAt: string;
-}
-
-interface FlowOption {
-  id: number;
-  name: string;
-}
-
-interface BookingHistoryItem {
-  id: number;
-  mode: Mode;
-  startTime: string;
-  endTime: string;
-  customer: Customer;
-  status: Status;
-  service: ServiceProvider;
-  boarding: Boarding;
-  boardingServiceBookings: BoardingServiceBooking[];
-  flowHistories?: FlowHistory[];
-}
-
-interface ApiResponse {
-  statusCode: number;
-  message: string;
-  body: BookingHistoryItem[];
-}
-
-interface FlowOptionsResponse {
-  statusCode: number;
-  message: string;
-  body: FlowOption[];
-}
 
 const History: React.FC = () => {
-  const [bookings, setBookings] = useState<BookingHistoryItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [ownerId, setOwnerId] = useState<number | null>(null);
-  const [flowOptions, setFlowOptions] = useState<FlowOption[]>([]);
-  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
-
-  useEffect(() => {
-    initializeAndLoadData();
-    loadFlowOptions();
-  }, []);
-
-  // Refresh data when screen comes into focus (after returning from ViewDetails)
-  useFocusEffect(
-    React.useCallback(() => {
-      if (ownerId && bookings.length > 0) {
-        // Only refresh if we already have data and ownerId
-        loadBookingHistory(ownerId);
-      }
-    }, [ownerId, bookings.length])
-  );
-
-  // Function to get auth token
-  const getAuthToken = async () => {
-    const possibleTokenKeys = ['token', 'user_token', 'authToken', 'access_token', 'loginToken'];
-
-    for (const key of possibleTokenKeys) {
-      const value = await AsyncStorage.getItem(key);
-      if (value) {
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value;
-        }
-      }
-    }
-    return null;
-  };
-
-  // Function to get owner ID from API
-  const getOwnerIdFromAPI = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        console.error('No authentication token found');
-        return null;
-      }
-
-      const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/findByUserId`;
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        console.error('❌ API Error Response:', response.status);
-        return null;
-      }
-
-      const result = await response.json();
-
-      if (result.statusCode === 200) {
-        return result.body.id;
-      } else {
-        console.error('❌ API returned non-200 status:', result.statusCode);
-        return null;
-      }
-    } catch (error) {
-      console.error('🔥 Critical Error in getOwnerIdFromAPI:', error);
-      return null;
-    }
-  };
-
-  const initializeAndLoadData = async () => {
-    const ownerIdFromAPI = await getOwnerIdFromAPI();
-    if (ownerIdFromAPI) {
-      setOwnerId(ownerIdFromAPI);
-      loadBookingHistory(ownerIdFromAPI);
-    } else {
-      setError('Unable to retrieve owner information. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const loadBookingHistory = async (userId: number) => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        setError('Authentication token not found. Please login again.');
-        return;
-      }
-
-      const apiUrl = `${API_CONFIG.BASE_URL}/api/booking-details/get-booking-by-pet-owner/${userId}`;
-      console.log('🌐 Fetching booking history from:', apiUrl);
-
-      // Generate CURL command for debugging
-      const curlCommand = `curl -X GET "${apiUrl}" \\
-  -H "Authorization: Bearer ${token}" \\
-  -H "Content-Type: application/json" \\
-  -v`;
-
-      console.log('🔧 CURL command for loadBookingHistory API:');
-      console.log('=====================================');
-      console.log(curlCommand);
-      console.log('=====================================');
-
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('📥 Booking History API Response Status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Booking History API Error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-      console.log('📄 Booking History Raw Response length:', responseText.length);
-      console.log('📄 Booking History Raw Response (first 500 chars):', responseText.substring(0, 500));
-
-      let result: ApiResponse;
-      try {
-        result = JSON.parse(responseText);
-        console.log('✅ Booking History Parsed Response:', {
-          statusCode: result.statusCode,
-          message: result.message,
-          bookingCount: result.body ? result.body.length : 0,
-          fullResponse: result,
-        });
-      } catch (parseError) {
-        console.error('❌ Booking History JSON Parse Error:', parseError);
-        console.error('📄 Raw response that failed to parse:', responseText);
-        throw new Error(`Invalid JSON response`);
-      }
-
-      // Handle both statusCode 200 and direct success responses
-      if (result.statusCode === 200 || (Array.isArray(result.body) && result.body.length >= 0)) {
-        const bookingData = result.body || [];
-        console.log('✅ Booking History Success - Data loaded:', bookingData.length, 'bookings');
-        console.log('📊 First booking (if exists):', bookingData[0]);
-
-        // Sort bookings by start time in descending order (newest first)
-        const sortedBookings = bookingData.sort((a, b) => {
-          const dateA = new Date(a.startTime || 0);
-          const dateB = new Date(b.startTime || 0);
-          return dateB.getTime() - dateA.getTime();
-        });
-
-        setBookings(sortedBookings);
-
-        if (bookingData.length === 0) {
-          setError('No booking history found');
-        }
-      } else {
-        console.error('❌ Booking History API returned non-200 status:', result.statusCode);
-        console.error('❌ Full response:', result);
-        throw new Error(result.message || 'Failed to fetch booking history');
-      }
-    } catch (error) {
-      console.error('🔥 Critical Error in loadBookingHistory:', error);
-      setError(`Failed to load booking history: ${error.message}`);
-    } finally {
-      console.log('🏁 loadBookingHistory completed');
-      setLoading(false);
-    }
-  };
-
-  const loadFlowOptions = async () => {
-    try {
-      const token = await getAuthToken();
-      if (!token) return;
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/boarding-booking-flow-history-options`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const result: FlowOptionsResponse = await response.json();
-        if (result.statusCode === 200) {
-          setFlowOptions(result.body);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading flow options:', error);
-    }
-  };
-
-  const onRefresh = async () => {
-    if (ownerId) {
-      setRefreshing(true);
-      await loadBookingHistory(ownerId);
-      setRefreshing(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
-    } catch {
-      return 'Invalid Date';
-    }
-  };
-
-  const formatDateTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return 'Invalid Date';
-    }
-  };
-
-  const calculateDuration = (startTime: string, endTime: string) => {
-    try {
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-      const diffInMs = end.getTime() - start.getTime();
-      const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-      return diffInDays;
-    } catch {
-      return 0;
-    }
-  };
-
-  const getServiceTitle = (booking: BookingHistoryItem) => {
-    return booking.boarding?.facilityName || 'Boarding Service';
-  };
-
-  const getProviderName = (booking: BookingHistoryItem) => {
-    const service = booking.service;
-    if (service) {
-      return `${service.firstName} ${service.lastName}`;
-    }
-    return 'Service Provider';
-  };
-
-  const getServiceFeatures = (booking: BoardingServiceBooking) => {
-    const features = [];
-    if (booking.possessions) features.push('Possessions');
-    if (booking.isDocReqd) features.push('Doctor Required');
-    if (booking.nailClipping) features.push('Nail Clipping');
-    if (booking.swimmingPool) features.push('Swimming Pool');
-    if (booking.medicatedBath) features.push('Medicated Bath');
-    if (booking.walksPerDay) features.push(`${booking.walksPerDay} Walks/day`);
-    return features;
-  };
-
-  const getCurrentStatus = (booking: BookingHistoryItem) => {
-    // Get the latest booking status from flowHistories array (last item in the array)
-    if (booking.flowHistories && booking.flowHistories.length > 0) {
-      const latestFlow = booking.flowHistories[booking.flowHistories.length - 1];
-      const statusId = latestFlow.boardingBookingFlowOptionsId;
-      const statusName = getStatusMessage(statusId);
-      
-      return {
-        id: statusId,
-        name: statusName
-      };
-    }
-    
-    // Return null if no flow histories available (will hide booking status)
-    return null;
-  };
-
-  const getStatusMessage = (statusId: number) => {
-    switch (statusId) {
-      case 7:
-        return 'Waiting for boarder to accept the booking';
-      case 8:
-        return 'Booking accepted by boarder';
-      case 3:
-        return 'Waiting for boarder to accept the pet';
-      case 4:
-        return 'Pet accepted by boarder';
-      case 5:
-        return 'Pet returned by boarder';
-      case 6:
-        return 'Pet accepted by user after service';
-      default:
-        return 'Status unknown';
-    }
-  };
-
-  const getActionButton = (statusId: number, bookingId: number) => {
-    switch (statusId) {
-      case 8:
-        return {
-          text: 'Handover Pet',
-          action: () => updateBookingStatus(bookingId, 3),
-          color: '#58B9D0'
-        };
-      case 5:
-        return {
-          text: 'Accept Pet',
-          action: () => updateBookingStatus(bookingId, 6),
-          color: '#10B981'
-        };
-      default:
-        return null;
-    }
-  };
-
-  const updateBookingStatus = async (bookingId: number, newStatusId: number) => {
-    if (!ownerId) return;
-
-    setUpdatingStatus(bookingId);
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        Alert.alert('Error', 'Authentication token not found');
-        return;
-      }
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/boarding-booking-flow-history`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          customerId: ownerId,
-          boardingBookingFlowOptionsId: newStatusId,
-          boardingBookingId: bookingId
-        })
-      });
-
-      if (response.ok) {
-        Alert.alert('Success', 'Status updated successfully');
-        await loadBookingHistory(ownerId);
-      } else {
-        Alert.alert('Error', 'Failed to update status');
-      }
-    } catch (error) {
-      console.error('Error updating status:', error);
-      Alert.alert('Error', 'Failed to update status');
-    } finally {
-      setUpdatingStatus(null);
-    }
-  };
-
-  const handleViewDetails = (item: BookingHistoryItem) => {
-    navigate('ViewDetails', { bookingItem: item });
-  };
-
-  const renderBookingItem = ({ item }: { item: BookingHistoryItem }) => {
-    const duration = calculateDuration(item.startTime, item.endTime);
-    const serviceTitle = getServiceTitle(item);
-    const providerName = getProviderName(item);
-    const currentStatus = getCurrentStatus(item);
-
-    return (
-      <View style={historyStyles.bookingCard}>
-        {/* Header */}
-        <View style={historyStyles.cardHeader}>
-          <View style={historyStyles.headerLeft}>
-            <View style={historyStyles.serviceIcon}>
-              <MaterialIcons name="pets" size={20} color="#58B9D0" />
-            </View>
-            <View>
-              <Text style={historyStyles.serviceTitle}>{serviceTitle}</Text>
-              <Text style={historyStyles.providerName}>{providerName}</Text>
-            </View>
-          </View>
-          <View style={historyStyles.headerRight}>
-            <Text style={historyStyles.bookingId}>#{item.id}</Text>
-            <Text style={historyStyles.duration}>{duration} days</Text>
-          </View>
-        </View>
-
-        {/* Minimal Date Info */}
-        <View style={historyStyles.minimalDateSection}>
-          <Text style={historyStyles.dateRange}>
-            {formatDate(item.startTime)} - {formatDate(item.endTime)}
-          </Text>
-        </View>
-
-        {/* Payment Status */}
-        {item.status && (
-          <View style={historyStyles.statusRow}>
-            <MaterialIcons name="payment" size={16} color="#666" />
-            <Text style={historyStyles.statusText}>
-              Payment Status: {item.status.name}
-            </Text>
-          </View>
-        )}
-
-        {/* Booking Status */}
-        {currentStatus && (
-          <View style={historyStyles.statusRow}>
-            <MaterialIcons name="info-outline" size={16} color="#666" />
-            <Text style={historyStyles.statusText}>
-              Booking Status: {currentStatus.name}
-            </Text>
-          </View>
-        )}
-
-        {/* Footer */}
-        <View style={historyStyles.cardFooter}>
-          <Text style={historyStyles.bookingDate}>
-            {item.boardingServiceBookings.length} pet{item.boardingServiceBookings.length !== 1 ? 's' : ''}
-          </Text>
-          <TouchableOpacity
-            style={historyStyles.viewButton}
-            onPress={() => handleViewDetails(item)}
-          >
-            <Text style={historyStyles.viewButtonText}>View Details</Text>
-            <MaterialIcons name="chevron-right" size={16} color="#58B9D0" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
   return (
-    <View style={historyStyles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#FFFFFF"
-        translucent={false}
-        animated={true}
-      />
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Sticky Header - Services Style */}
-      <View style={historyStyles.stickyHeader}>
-        <View style={historyStyles.headerTitleContainer}>
-          <Text style={historyStyles.stickyHeaderTitle}>History</Text>
-          <Text style={historyStyles.stickyHeaderSubtitle}>View your booking history and details</Text>
-        </View>
+      {/* Header */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 16,
+          backgroundColor: '#FFFFFF',
+          borderBottomWidth: 1,
+          borderBottomColor: '#E5E7EB',
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: '700',
+            color: '#1F2937',
+          }}
+        >
+          History
+        </Text>
       </View>
 
-      {/* Content */}
-      <View style={historyStyles.content}>
-        {loading && !refreshing ? (
-          <View style={{ flex: 1, paddingTop: 20 }}>
-            {[...Array(5)].map((_, index) => (
-              <HistoryCardSkeleton key={index} />
-            ))}
-          </View>
-        ) : error ? (
-          <View style={historyStyles.errorContainer}>
-            <View style={historyStyles.errorIconContainer}>
-              <MaterialIcons name="cloud-off" size={56} color="#58B9D0" />
-            </View>
-            <Text style={historyStyles.errorTitle}>Oops! Something went wrong</Text>
-            <Text style={historyStyles.errorMessage}>{error}</Text>
-            <TouchableOpacity
-              style={historyStyles.retryButton}
-              onPress={initializeAndLoadData}
-              activeOpacity={0.8}>
-              <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
-              <Text style={historyStyles.retryButtonText}>Try Again</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={bookings}
-            renderItem={renderBookingItem}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={[
-              historyStyles.listContainer,
-              bookings.length === 0 && historyStyles.emptyList
-            ]}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={['#58B9D0']}
-                tintColor="#58B9D0"
-              />
-            }
-            ListEmptyComponent={
-              !loading && !error ? (
-                <View style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  paddingVertical: 80,
-                  paddingHorizontal: 20,
-                }}>
-                  <View style={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 50,
-                    backgroundColor: '#F3F4F6',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginBottom: 24,
-                  }}>
-                    <MaterialIcons name="history" size={48} color="#9CA3AF" />
-                  </View>
-                  <Text style={{
-                    fontSize: 20,
-                    fontWeight: '700',
-                    color: '#374151',
-                    textAlign: 'center',
-                    marginBottom: 8,
-                  }}>
-                    No Booking History
-                  </Text>
-                  <Text style={{
-                    fontSize: 14,
-                    color: '#6B7280',
-                    textAlign: 'center',
-                    lineHeight: 20,
-                    marginBottom: 32,
-                  }}>
-                    Your booking history will appear here{'\n'}once you make your first booking
-                  </Text>
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#58B9D0',
-                      paddingHorizontal: 32,
-                      paddingVertical: 16,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                    onPress={() => navigate('Main')}
-                  >
-                    <MaterialIcons name="pets" size={20} color="#FFFFFF" />
-                    <Text style={{
-                      color: '#FFFFFF',
-                      fontSize: 16,
-                      fontWeight: '600',
-                    }}>
-                      Book a Service
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ) : null
-            }
-          />
-        )}
+      {/* Coming Soon Message */}
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 40,
+        }}
+      >
+        <View
+          style={{
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            backgroundColor: '#E3F2FD',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
+          <MaterialIcons name="history" size={50} color="#58B9D0" />
+        </View>
+        <Text
+          style={{
+            fontSize: 22,
+            fontWeight: '700',
+            color: '#1F2937',
+            textAlign: 'center',
+            marginBottom: 12,
+          }}
+        >
+          Coming Soon
+        </Text>
+        <Text
+          style={{
+            fontSize: 16,
+            color: '#6B7280',
+            textAlign: 'center',
+            lineHeight: 24,
+          }}
+        >
+          Booking history feature is under development and will be available soon.
+        </Text>
       </View>
     </View>
   );

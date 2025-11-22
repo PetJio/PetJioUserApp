@@ -463,46 +463,6 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                 </TouchableOpacity>
             </View>
 
-            {/* Search and Filter */}
-            <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 12,
-                paddingHorizontal: 20,
-                // marginBottom: 12,
-            }}>
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    flex: 1,
-                    backgroundColor: '#F6F6F6',
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    height: 48,
-                }}>
-                    <MaterialIcons name="search" size={20} color="#999" style={{ marginRight: 12 }} />
-                    <TextInput
-                        placeholder="Search for Boarders"
-                        placeholderTextColor="#999"
-                        style={{
-                            flex: 1,
-                            fontSize: 16,
-                            color: '#333',
-                        }}
-                    />
-                </View>
-                <TouchableOpacity style={{
-                    width: 48,
-                    height: 48,
-                    backgroundColor: '#58B9D0',
-                    borderRadius: 12,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}>
-                    <MaterialIcons name="tune" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-            </View>
-
             {/* Selected Pets Display */}
             {selectedPets.size > 0 && (
                 <View style={{

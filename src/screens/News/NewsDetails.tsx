@@ -269,64 +269,6 @@ const NewsDetails: React.FC<NewsDetailsProps> = ({ route, navigation }) => {
               {news.description}
             </Text>
           </View>
-
-          {/* Read Full Article Button */}
-          <TouchableOpacity
-            onPress={handleReadFullArticle}
-            activeOpacity={0.8}
-            style={{
-              marginTop: 24,
-              padding: 16,
-              backgroundColor: '#3B82F6',
-              borderRadius: 12,
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'center',
-            }}
-          >
-            <MaterialIcons name="open-in-new" size={20} color="#FFFFFF" />
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '600',
-                color: '#FFFFFF',
-                marginLeft: 8,
-              }}
-            >
-              Read Full Article
-            </Text>
-          </TouchableOpacity>
-
-          {/* Share Section */}
-          <TouchableOpacity
-            onPress={handleShare}
-            activeOpacity={0.8}
-            style={{
-              marginTop: 16,
-              padding: 20,
-              backgroundColor: '#F8F9FB',
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: '#E5E7EB',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <MaterialIcons name="share" size={20} color="#3B82F6" />
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#111827',
-                  marginLeft: 8,
-                }}
-              >
-                Share this article
-              </Text>
-            </View>
-            <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 20 }}>
-              Found this interesting? Share it with other pet parents!
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

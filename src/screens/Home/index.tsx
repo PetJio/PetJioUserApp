@@ -624,14 +624,6 @@ const Home: React.FC = () => {
                   </View>
                 </TouchableOpacity>
               ))}
-
-              <TouchableOpacity
-                style={styles.pluscontainer}
-                onPress={() => navigate('AddPet')}
-                activeOpacity={0.8}
-              >
-                <Image source={Icons.BiPlus} />
-              </TouchableOpacity>
             </ScrollView>
           )}
         </View>
