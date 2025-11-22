@@ -229,12 +229,12 @@ const BoardingCheckout: React.FC<BoardingCheckoutProps> = ({
       }
 
       // Create payment link payload with static amount for testing
-      // Amount is set to 1 rupee (100 paise) for testing purposes
-      const amountInPaise = 100; // Static - 1 rupee = 100 paise
-      console.log('💰 Amount in paise for Razorpay (static):', amountInPaise);
+      // Amount is set to 1 for testing purposes
+      const amountInPaise = 1; // Static - 1 for testing
+      console.log('💰 Amount for Razorpay (static):', amountInPaise);
 
       const paymentPayload = {
-        amount: amountInPaise, // Static - 1 rupee (100 paise) for testing
+        amount: amountInPaise, // Static - 1 for testing
         email: userEmail, // Dynamic - from logged-in user
         contact: userContact, // Dynamic - from logged-in user
         bookingsId: bookingId, // Dynamic - from booking creation
