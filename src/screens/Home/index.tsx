@@ -11,6 +11,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles';
+import Icons from '../../../assets/icons';
 import {
   responsiveHeight,
   responsiveWidth,
@@ -19,7 +20,7 @@ import { storageService } from '../../utils/storage';
 import { API_CONFIG } from '../../config/api';
 import { navigate, reset } from '../../utils/navigationService';
 import { useFocusEffect } from '@react-navigation/native';
-import { DashboardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
+import { PetSkeleton, AppointmentCardSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 import { blogs } from '../../data/blogs';
 import { petNews } from '../../data/news';
 
@@ -89,9 +90,6 @@ const Home: React.FC = () => {
   const [loadingAppointments, setLoadingAppointments] = useState<boolean>(true);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
 
-  // News image error tracking
-  const [newsImageErrors, setNewsImageErrors] = useState<{ [key: number]: boolean }>({});
-
   // Logout handler for 401 errors
   const handleUnauthorized = async () => {
     try {
@@ -135,15 +133,9 @@ const Home: React.FC = () => {
     };
 
     loadUserName();
+    fetchPets(); // Fetch pets when component mounts
+    fetchAppointments(); // Fetch appointments when component mounts
   }, []);
-
-  // Refetch pets and appointments when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchPets();
-      fetchAppointments();
-    }, []),
-  );
 
   const getAuthToken = async () => {
     try {
@@ -439,20 +431,6 @@ const Home: React.FC = () => {
     }
   };
 
-  // Show dashboard skeleton while initial data is loading
-  if (loadingPets && loadingAppointments) {
-    return (
-      <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="#FFFFFF"
-          translucent={false}
-        />
-        <DashboardSkeleton />
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
       <StatusBar
@@ -504,7 +482,7 @@ const Home: React.FC = () => {
                 marginTop: 2,
               }}
             >
-              Welcome back to PetJio!
+              Welcome back to PetJio
             </Text>
           </View>
         </View>
@@ -574,65 +552,27 @@ const Home: React.FC = () => {
           </View>
 
           {/* Pets Section - Reference Project Style */}
-          {petsError ? (
-            <View style={{ paddingHorizontal: responsiveWidth(5), paddingVertical: responsiveHeight(1) }}>
-              <View style={{
-                backgroundColor: '#FEF2F2',
-                borderRadius: 12,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: '#FECACA',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 12,
-              }}>
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: '#FEE2E2',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <MaterialIcons name="error-outline" size={24} color="#EF4444" />
+          {loadingPets ? (
+            <View style={styles.doctoranddogimagecontainer}>
+              <PetSkeleton />
+            </View>
+          ) : petsError ? (
+            <View style={styles.doctoranddogimagecontainer}>
+              <View style={styles.errorContainer}>
+                <View style={styles.errorIconWrapper}>
+                  <MaterialIcons name="pets" size={40} color="#58B9D0" />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: '#991B1B',
-                    marginBottom: 2,
-                  }}>
-                    Unable to load pets
-                  </Text>
-                  <Text style={{
-                    fontSize: 12,
-                    color: '#DC2626',
-                  }}>
-                    Please check your connection
-                  </Text>
-                </View>
+                <Text style={styles.errorTitle}>Unable to load pets</Text>
+                <Text style={styles.errorMessage}>
+                  We couldn't fetch your pet profiles. Please check your connection and try again.
+                </Text>
                 <TouchableOpacity
+                  style={styles.retryButton}
                   onPress={fetchPets}
                   activeOpacity={0.8}
-                  style={{
-                    backgroundColor: '#EF4444',
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
                 >
-                  <MaterialIcons name="refresh" size={16} color="#FFFFFF" />
-                  <Text style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: '#FFFFFF',
-                  }}>
-                    Retry
-                  </Text>
+                  <MaterialIcons name="refresh" size={18} color="#FFFFFF" />
+                  <Text style={styles.retryButtonText}>Retry</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -684,6 +624,14 @@ const Home: React.FC = () => {
                   </View>
                 </TouchableOpacity>
               ))}
+
+              <TouchableOpacity
+                style={styles.pluscontainer}
+                onPress={() => navigate('AddPet')}
+                activeOpacity={0.8}
+              >
+                <Image source={Icons.BiPlus} />
+              </TouchableOpacity>
             </ScrollView>
           )}
         </View>
@@ -706,7 +654,23 @@ const Home: React.FC = () => {
             Upcoming Appointments
           </Text>
 
-          {appointments.length > 0 ? (
+          {loadingAppointments ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ 
+                gap: 12,
+                paddingLeft: responsiveWidth(5),
+                paddingRight: responsiveWidth(5),
+              }}
+            >
+              {[...Array(2)].map((_, index) => (
+                <View key={index} style={{ width: responsiveWidth(85) }}>
+                  <AppointmentCardSkeleton />
+                </View>
+              ))}
+            </ScrollView>
+          ) : appointments.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -900,9 +864,57 @@ const Home: React.FC = () => {
                 );
               })}
             </ScrollView>
-          ) : null}
+          ) : (
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingVertical: responsiveHeight(2.5),
+                backgroundColor: '#F8F9FB',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderStyle: 'dashed',
+                minHeight: 150,
+              }}
+            >
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: '#E3F2FD',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
+                <MaterialIcons name="event" size={28} color="#58B9D0" />
+              </View>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: '#1F2937',
+                  textAlign: 'center',
+                  marginBottom: 4,
+                }}
+              >
+                No upcoming appointments
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#6B7280',
+                  textAlign: 'center',
+                  lineHeight: 20,
+                }}
+              >
+                Schedule your pet's next visit with our trusted veterinarians
+              </Text>
+            </View>
+          )}
         </View>
-
         {/* Pet News Section */}
         <View
           style={{
@@ -926,7 +938,8 @@ const Home: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ 
               gap: 16, 
-              paddingHorizontal: responsiveWidth(5),
+              paddingLeft: responsiveWidth(5),
+              paddingRight: responsiveWidth(5) 
             }}
           >
             {petNews.map((news) => {
@@ -968,21 +981,13 @@ const Home: React.FC = () => {
                   >
                     {/* News Image */}
                     <Image
-                      source={
-                        newsImageErrors[news.id]
-                          ? require('../../../assets/images/petdogImage.webp')
-                          : { uri: news.image }
-                      }
+                      source={{ uri: news.image }}
                       style={{
                         width: '100%',
                         height: 160,
                         backgroundColor: '#F3F4F6',
                       }}
                       resizeMode="cover"
-                      onError={() => {
-                        console.log('Image load error for news:', news.id);
-                        setNewsImageErrors(prev => ({ ...prev, [news.id]: true }));
-                      }}
                     />
 
                     {/* News Content */}
@@ -1083,7 +1088,6 @@ const Home: React.FC = () => {
             activeOpacity={0.8}
             style={{
               marginTop: 16,
-              marginHorizontal: responsiveWidth(5),
               paddingVertical: 12,
               paddingHorizontal: 20,
               backgroundColor: '#F8F9FB',
@@ -1260,7 +1264,6 @@ const Home: React.FC = () => {
             activeOpacity={0.8}
             style={{
               marginTop: 16,
-              marginHorizontal: responsiveWidth(5),
               paddingVertical: 12,
               paddingHorizontal: 20,
               backgroundColor: '#FFFBEB',

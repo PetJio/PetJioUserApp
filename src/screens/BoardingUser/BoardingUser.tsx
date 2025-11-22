@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, Modal, FlatList, StatusBar, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, Modal, FlatList, StatusBar, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Calendar, DateData } from 'react-native-calendars';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -463,6 +463,45 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                 </TouchableOpacity>
             </View>
 
+            {/* Search and Filter */}
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                paddingHorizontal: 20,
+                // marginBottom: 12,
+            }}>
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1,
+                    backgroundColor: '#F6F6F6',
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    height: 48,
+                }}>
+                    <MaterialIcons name="search" size={20} color="#999" style={{ marginRight: 12 }} />
+                    <TextInput
+                        placeholder="Search for Boarders"
+                        placeholderTextColor="#999"
+                        style={{
+                            flex: 1,
+                            fontSize: 16,
+                            color: '#333',
+                        }}
+                    />
+                </View>
+                <TouchableOpacity style={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: '#58B9D0',
+                    borderRadius: 12,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}>
+                    <MaterialIcons name="tune" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+            </View>
 
             {/* Selected Pets Display */}
             {selectedPets.size > 0 && (
@@ -661,8 +700,11 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                 transparent={true}
                 visible={showPetModal}
                 onRequestClose={() => {
-                    setShowPetModal(false);
-                    navigation.goBack();
+                    if (selectedPets.size === 0) {
+                        alert('Please select at least one pet to continue');
+                    } else {
+                        setShowPetModal(false);
+                    }
                 }}
             >
                 <View style={{
@@ -734,8 +776,11 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
-                                    setShowPetModal(false);
-                                    navigation.goBack();
+                                    if (selectedPets.size === 0) {
+                                        alert('Please select at least one pet to continue');
+                                    } else {
+                                        setShowPetModal(false);
+                                    }
                                 }}
                                 style={{
                                     width: 32,

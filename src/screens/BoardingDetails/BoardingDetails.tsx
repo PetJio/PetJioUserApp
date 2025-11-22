@@ -20,6 +20,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import boardingdetailstyles from './boardingdetails.styles';
 import BoardingAbout from './BoardingAbout';
+import BoardingReview from './BoardingReview';
 import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
@@ -29,6 +30,7 @@ import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.style
 import { storageService } from '../../utils/storage';
 import { BoardingDetailsSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
+// Define your navigation stack's param list
 type RootStackParamList = {
   UserService: undefined;
   UserReview: undefined;
@@ -61,6 +63,16 @@ type RootStackParamList = {
     serviceBookings?: number[];
     petOwnerId?: number | null;
     boardDetails?: any;
+  };
+  BoardingQuestions: {
+    startDate?: string;
+    endDate?: string;
+    mode?: number;
+    selectedPets?: number[];
+    petOwnerId?: number | null;
+    boardingId?: number;
+    serviceIds?: number[];
+    serviceBookings?: number[];
   };
   BoardingCheckout: {
     bookingId: number;
@@ -612,9 +624,69 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           </View>
         </View>
 
-        {/* About Content */}
+        {/* Tab Navigation */}
+        <View style={{
+          flexDirection: 'row',
+          backgroundColor: '#F8F9FB',
+          borderRadius: 12,
+          padding: 4,
+          marginBottom: 20,
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
+        }}>
+          <TouchableOpacity
+            onPress={() => setActiveTab('about')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              alignItems: 'center',
+              backgroundColor: activeTab === 'about' ? '#58B9D0' : 'transparent',
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: activeTab === 'about' ? '#FFFFFF' : '#6B7280',
+            }}>
+              About
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => setActiveTab('reviews')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              alignItems: 'center',
+              backgroundColor: activeTab === 'reviews' ? '#58B9D0' : 'transparent',
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: activeTab === 'reviews' ? '#FFFFFF' : '#6B7280',
+            }}>
+              Reviews ({bookingDetailsData?.reviewCount || 0})
+            </Text>
+          </TouchableOpacity>
+
+          {/* Updates tab removed - functionality moved to Booking Details page */}
+        </View>
+
+        {/* Tab Content */}
         <View style={{ flex: 1 }}>
-          <BoardingAbout serviceDetails={bookingDetailsData} />
+          {activeTab === 'about' && (
+            <BoardingAbout serviceDetails={bookingDetailsData} />
+          )}
+          {activeTab === 'reviews' && (
+            <BoardingReview
+              rating={bookingDetailsData?.reviewAvg ? parseFloat(bookingDetailsData.reviewAvg) : 0}
+              reviews={bookingDetailsData?.reviewCount || 0}
+            />
+          )}
+          {/* Updates tab removed — daily updates are available on the Booking Details page */}
         </View>
 
         </ScrollView>
@@ -629,24 +701,29 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
       }}>
-        {/* Book Now Button - Temporarily Disabled */}
+        {/* Book Now Button */}
         <TouchableOpacity
-          disabled={true}
+          onPress={handleBookNow}
+          disabled={loading}
           style={{
-            backgroundColor: '#9CA3AF',
+            backgroundColor: loading ? '#A0D8E8' : '#58B9D0',
             paddingVertical: 16,
             borderRadius: 12,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Text style={{
-            fontSize: 16,
-            fontWeight: '700',
-            color: '#FFFFFF',
-          }}>
-            Booking Coming Soon
-          </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '700',
+              color: '#FFFFFF',
+            }}>
+              Book Now
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 

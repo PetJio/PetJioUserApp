@@ -541,45 +541,6 @@ const Profile: React.FC = () => {
           const s3ImageUrl = presignedUrl.split('?')[0];
           console.log('📷 Final S3 Image URL:', s3ImageUrl);
 
-          // Step 3: Call the save API to persist the profile image URL
-          console.log('🔄 Step 3: Saving profile image URL to database...');
-
-          // Build update payload with current user data + new profile image
-          const profileUpdatePayload: any = {
-            profileImg: s3ImageUrl,
-          };
-
-          // Add other required fields to ensure backend has values to update
-          if (firstName) profileUpdatePayload.firstName = firstName;
-          if (lastName) profileUpdatePayload.lastName = lastName;
-          if (email) profileUpdatePayload.email = email;
-          if (phoneNumber) profileUpdatePayload.phoneNumber = phoneNumber;
-
-          console.log('📤 Profile update payload:', profileUpdatePayload);
-
-          const saveResponse = await fetch(
-            `${API_CONFIG.BASE_URL}/api/pet-owner/update-profile`,
-            {
-              method: 'PATCH',
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(profileUpdatePayload),
-            },
-          );
-
-          console.log('📡 Save response status:', saveResponse.status);
-
-          if (!saveResponse.ok) {
-            const errorText = await saveResponse.text();
-            console.error('❌ Failed to save profile image:', errorText);
-            throw new Error(`Failed to save profile image to database: ${saveResponse.status}`);
-          }
-
-          const saveResult = await saveResponse.json();
-          console.log('✅ Profile image saved to database:', saveResult);
-
           // Update local state with the new profile image
           setPetOwner(prev => ({ ...prev, profileImg: s3ImageUrl }));
 
@@ -634,18 +595,9 @@ const Profile: React.FC = () => {
         return;
       }
 
-      // Only include non-empty fields in the update
-      const updateData: any = {};
-
-      if (firstName.trim()) updateData.firstName = firstName.trim();
-      if (lastName.trim()) updateData.lastName = lastName.trim();
-      if (email.trim()) updateData.email = email.trim();
-      if (phoneNumber.trim()) updateData.phoneNumber = phoneNumber.trim();
-      if (alterNo.trim()) updateData.alterNo = alterNo.trim();
-      if (address.trim()) updateData.address = address.trim();
-      if (city.trim()) updateData.city = city.trim();
-      if (state.trim()) updateData.state = state.trim();
-      if (zipCode.trim()) updateData.zipCode = zipCode.trim();
+      const updateData = {
+        email: firstName.trim(),
+      };
 
       const apiUrl = `${API_CONFIG.BASE_URL}/api/pet-owner/update-profile`;
 
