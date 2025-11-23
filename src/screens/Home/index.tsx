@@ -628,50 +628,51 @@ const Home: React.FC = () => {
           )}
         </View>
 
-        {/* Upcoming Appointments Section */}
-        <View
-          style={{
-            marginTop: responsiveHeight(3),
-          }}
-        >
-          <Text
+        {/* Upcoming Appointments Section - Only show if loading or has appointments */}
+        {(loadingAppointments || appointments.length > 0) && (
+          <View
             style={{
-              fontSize: 18,
-              fontWeight: '700',
-              color: '#1F2937',
-              marginBottom: 12,
-              paddingHorizontal: responsiveWidth(5),
+              marginTop: responsiveHeight(3),
             }}
           >
-            Upcoming Appointments
-          </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: '#1F2937',
+                marginBottom: 12,
+                paddingHorizontal: responsiveWidth(5),
+              }}
+            >
+              Upcoming Appointments
+            </Text>
 
-          {loadingAppointments ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ 
-                gap: 12,
-                paddingLeft: responsiveWidth(5),
-                paddingRight: responsiveWidth(5),
-              }}
-            >
-              {[...Array(2)].map((_, index) => (
-                <View key={index} style={{ width: responsiveWidth(85) }}>
-                  <AppointmentCardSkeleton />
-                </View>
-              ))}
-            </ScrollView>
-          ) : appointments.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ 
-                gap: 12, 
-                paddingLeft: responsiveWidth(5),
-                paddingRight: responsiveWidth(5) 
-              }}
-            >
+            {loadingAppointments ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  gap: 12,
+                  paddingLeft: responsiveWidth(5),
+                  paddingRight: responsiveWidth(5),
+                }}
+              >
+                {[...Array(2)].map((_, index) => (
+                  <View key={index} style={{ width: responsiveWidth(85) }}>
+                    <AppointmentCardSkeleton />
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  gap: 12,
+                  paddingLeft: responsiveWidth(5),
+                  paddingRight: responsiveWidth(5)
+                }}
+              >
               {appointments.map((booking) => {
                 const facilityName = booking.boarding?.facilityName || 'Boarding Service';
                 const providerName = booking.service
@@ -856,57 +857,9 @@ const Home: React.FC = () => {
                 );
               })}
             </ScrollView>
-          ) : (
-            <View
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingVertical: responsiveHeight(2.5),
-                backgroundColor: '#F8F9FB',
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                borderStyle: 'dashed',
-                minHeight: 150,
-              }}
-            >
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: '#E3F2FD',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}
-              >
-                <MaterialIcons name="event" size={28} color="#58B9D0" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: '#1F2937',
-                  textAlign: 'center',
-                  marginBottom: 4,
-                }}
-              >
-                No upcoming appointments
-              </Text>
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: '#6B7280',
-                  textAlign: 'center',
-                  lineHeight: 20,
-                }}
-              >
-                Schedule your pet's next visit with our trusted veterinarians
-              </Text>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
+        )}
         {/* Pet News Section */}
         <View
           style={{
@@ -1080,6 +1033,7 @@ const Home: React.FC = () => {
             activeOpacity={0.8}
             style={{
               marginTop: 16,
+              marginHorizontal: responsiveWidth(5),
               paddingVertical: 12,
               paddingHorizontal: 20,
               backgroundColor: '#F8F9FB',
@@ -1256,6 +1210,7 @@ const Home: React.FC = () => {
             activeOpacity={0.8}
             style={{
               marginTop: 16,
+              marginHorizontal: responsiveWidth(5),
               paddingVertical: 12,
               paddingHorizontal: 20,
               backgroundColor: '#FFFBEB',
