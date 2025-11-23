@@ -316,6 +316,67 @@ const locationStyles = StyleSheet.create({
         textAlign: 'center',
         fontWeight: typography.fontWeight.semibold,
     },
+    
+    // Quick Options Styles
+    quickOptionsContainer: {
+        marginVertical: spacing.lg,
+    },
+    quickOptionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: responsiveHeight(1.8),
+        paddingHorizontal: spacing.xl,
+        borderRadius: BORDER_RADIUS.lg,
+        marginBottom: spacing.md,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    primaryOption: {
+        backgroundColor: '#58B9D0',
+    },
+    quickOptionTextPrimary: {
+        color: colors.white,
+        fontSize: FONT_SIZES.lg,
+        fontWeight: typography.fontWeight.bold,
+        marginLeft: spacing.sm,
+    },
+    
+    // Divider Styles
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: spacing.lg,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#E8EBF0',
+    },
+    dividerText: {
+        paddingHorizontal: spacing.md,
+        color: '#999',
+        fontSize: FONT_SIZES.sm,
+        fontWeight: typography.fontWeight.medium,
+    },
+    
+    // Manual Entry Section
+    manualEntrySection: {
+        marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+        fontSize: FONT_SIZES.md,
+        fontWeight: typography.fontWeight.semibold,
+        color: '#666',
+        marginBottom: spacing.md,
+        textAlign: 'center',
+    },
 });
 
 export default locationStyles;
