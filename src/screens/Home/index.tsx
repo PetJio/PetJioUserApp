@@ -857,7 +857,6 @@ const Home: React.FC = () => {
                 );
               })}
             </ScrollView>
-            )}
           </View>
         )}
         {/* Pet News Section */}
