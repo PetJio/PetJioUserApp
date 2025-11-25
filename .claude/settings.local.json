@@ -61,7 +61,14 @@
       "Bash(pnpm start:*)",
       "Bash(timeout 3 adb shell:*)",
       "Bash(.gradlew.bat assembleRelease)",
-      "Bash(gradlew.bat assembleRelease:*)"
+      "Bash(gradlew.bat assembleRelease:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(.androidgradlew.bat assembleRelease)",
+      "Bash(timeout:*)",
+      "Bash(gradlew.bat app:installDebug:*)",
+      "Bash(.\\android\\gradlew.bat:*)",
+      "Bash(.gradlew.bat:*)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "ask": [],

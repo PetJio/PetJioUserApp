@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, useColorScheme, Platform, ActivityIndicator, View } from 'react-native';
+import { StatusBar, useColorScheme, Platform, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
@@ -9,7 +9,6 @@ import colors from './src/styles/colors/index';
 import { storageService } from './src/utils/storage';
 import { navigationRef } from './src/utils/navigationService';
 import NotificationNavigationService from './src/services/notificationNavigationService';
-import { AppLoadingSkeleton } from './src/components/SkeletonLoader/SkeletonLoader';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +58,7 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Show loading skeleton while checking login status
+  // Show simple loading while checking login status
   if (isLoading) {
     return (
       <Provider store={store}>
@@ -70,7 +69,7 @@ const App = () => {
             translucent={false}
             animated={false}
           />
-          <AppLoadingSkeleton />
+          <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />
         </SafeAreaProvider>
       </Provider>
     );

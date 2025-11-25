@@ -311,7 +311,7 @@ const SignUp: React.FC<SignUpProps> = ({ navigation }) => {
 
           <Text style={signupstyles.registerText}>
             Have an account?{' '}
-           <TouchableOpacity onPress={()=>navigation.navigate("LogIn")}>
+           <TouchableOpacity onPress={()=>navigation.replace("LogIn")}>
             <Text style={signupstyles.registerLink}>Log in</Text>
            </TouchableOpacity>
           </Text>

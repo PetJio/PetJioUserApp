@@ -7,7 +7,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   Animated,
   PermissionsAndroid,
@@ -19,12 +18,14 @@ import { RouteProp } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from '@react-native-community/geolocation';
-import images from '../../../assets/images'; 
+import images from '../../../assets/images';
 import Icons from '../../../assets/icons';
 import locationStyles from './location.styles';
 import profileStyles from '../Profile/profileStyles';
 import { registerUser, RegisterRequest } from '../../services/authService';
 import { RootStackParamList } from '../../types/navigation';
+import LocationEnableModal from '../../components/LocationEnableModal';
+import CustomAlert from '../../components/CustomAlert';
 
 export interface UserSignUpData {
   firstName: string;
@@ -77,6 +78,8 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
   const [isPincodeLoading, setIsPincodeLoading] = useState<boolean>(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
+  const [showPermissionAlert, setShowPermissionAlert] = useState<boolean>(false);
 
 
 
@@ -192,11 +195,10 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
   // Simplified location detection
   const detectCurrentLocation = async () => {
     setIsDetectingLocation(true);
-    
+
     try {
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
-        setMessage({ type: 'error', text: 'Location permission is needed to auto-fill your address.' });
         setIsDetectingLocation(false);
         return;
       }
@@ -208,25 +210,10 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
           setIsDetectingLocation(false);
         },
         (error) => {
-          let errorMessage = 'Unable to detect location. Please enter manually.';
-          
-          if (error.code === 1) {
-            errorMessage = 'Location permission denied. Please enable it in settings.';
-          } else if (error.code === 2) {
-            errorMessage = 'GPS unavailable. Please enable location services.';
-            Alert.alert(
-              'Enable Location',
-              'Please turn on location services to auto-fill your address.',
-              [
-                { text: 'OK', style: 'cancel' },
-                { text: 'Open Settings', onPress: () => Linking.openSettings() },
-              ]
-            );
-          } else if (error.code === 3) {
-            errorMessage = 'Location request timed out. Please try again.';
+          if (error.code === 2) {
+            // Location services are off - show modal
+            setShowLocationModal(true);
           }
-          
-          setMessage({ type: 'error', text: errorMessage });
           setIsDetectingLocation(false);
         },
         {
@@ -246,32 +233,37 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
     if (Platform.OS === 'ios') {
       return true; // iOS permissions handled in Info.plist
     }
-    
+
     try {
+      // First check current permission status
+      const checkPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      if (checkPermission) {
+        return true;
+      }
+
+      // Request permission - this will show Android's native dialog
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
           title: 'Location Access',
-          message: 'PetJio needs your location to auto-fill your address.',
+          message: 'Petjio needs your location to auto-fill your address.',
           buttonPositive: 'Allow',
           buttonNegative: 'Deny',
         }
       );
 
+      // If user selected "Never ask again" or denied permanently
       if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-        Alert.alert(
-          'Permission Required',
-          'Please enable location permission in app settings.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Settings', onPress: () => Linking.openSettings() },
-          ]
-        );
+        setShowPermissionAlert(true);
         return false;
       }
 
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
+      console.error('Error requesting location permission:', err);
       return false;
     }
   };
@@ -489,6 +481,25 @@ const Location: React.FC<LocationProps> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <LocationEnableModal
+        visible={showLocationModal}
+        onDismiss={() => setShowLocationModal(false)}
+      />
+
+      <CustomAlert
+        visible={showPermissionAlert}
+        title="Permission Required"
+        message="Please enable location permission in app settings to use this feature."
+        icon="warning"
+        iconColor="#FF9800"
+        iconBackgroundColor="#FFF3E0"
+        buttons={[
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]}
+        onDismiss={() => setShowPermissionAlert(false)}
+      />
     </KeyboardAvoidingView>
   );
 };

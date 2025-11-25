@@ -359,7 +359,7 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
 
         <Text style={loginstyles.registerText}>
           Don't have an account?{' '}
-         <TouchableOpacity onPress={()=>navigation.navigate("SignUp")}>
+         <TouchableOpacity onPress={()=>navigation.replace("SignUp")}>
           <Text style={loginstyles.registerLink}>Register</Text>
          </TouchableOpacity>
         </Text>

@@ -624,18 +624,56 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
           </View>
         </View>
 
-        {/* Reviews Section */}
-        <View style={{ flex: 1 }}>
-          <BoardingReview
-            rating={bookingDetailsData?.reviewAvg ? parseFloat(bookingDetailsData.reviewAvg) : 0}
-            reviews={bookingDetailsData?.reviewCount || 0}
-          />
+        {/* Image Gallery Section */}
+        {bookingDetailsData?.boardingServiceImages && bookingDetailsData.boardingServiceImages.length > 0 && (
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '700',
+              color: '#111827',
+              marginBottom: 12,
+            }}>
+              Facility Photos
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 12 }}
+            >
+              {bookingDetailsData.boardingServiceImages.map((imageObj: any, index: number) => (
+                <View
+                  key={index}
+                  style={{
+                    width: 280,
+                    height: 180,
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    backgroundColor: '#F3F4F6',
+                  }}
+                >
+                  <Image
+                    source={{ uri: imageObj.image }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    resizeMode="cover"
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* About Section */}
+        <View style={{ marginBottom: 24 }}>
+          <BoardingAbout serviceDetails={bookingDetailsData} />
         </View>
 
         </ScrollView>
       </View>
 
-      {/* Bottom action area with Continue button */}
+      {/* Bottom action area with Coming Soon message */}
       <View style={{
         backgroundColor: '#FFFFFF',
         paddingHorizontal: responsiveWidth(4),
@@ -644,29 +682,24 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
       }}>
-        {/* Book Now Button */}
+        {/* Coming Soon Button */}
         <TouchableOpacity
-          onPress={handleBookNow}
-          disabled={loading}
+          disabled={true}
           style={{
-            backgroundColor: loading ? '#A0D8E8' : '#58B9D0',
+            backgroundColor: '#D1D5DB',
             paddingVertical: 16,
             borderRadius: 12,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={{
-              fontSize: 16,
-              fontWeight: '700',
-              color: '#FFFFFF',
-            }}>
-              Book Now
-            </Text>
-          )}
+          <Text style={{
+            fontSize: 16,
+            fontWeight: '700',
+            color: '#6B7280',
+          }}>
+            Coming Soon
+          </Text>
         </TouchableOpacity>
       </View>
 

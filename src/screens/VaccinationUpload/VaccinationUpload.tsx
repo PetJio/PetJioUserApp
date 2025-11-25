@@ -304,8 +304,8 @@ const VaccinationUpload: React.FC<VaccinationUploadProps> = ({ route }) => {
       });
 
       setTimeout(() => {
-        // Navigate back to the previous screen (e.g., BoardingQuestions or EditPet)
-        goBack();
+        // Navigate to Profile screen (Pet Profile listing page)
+        navigate('Main', { screen: 'Profile' });
       }, 1500);
     } catch (error) {
       console.error('Error saving vaccinations:', error);

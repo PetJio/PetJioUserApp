@@ -660,11 +660,8 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                 transparent={true}
                 visible={showPetModal}
                 onRequestClose={() => {
-                    if (selectedPets.size === 0) {
-                        alert('Please select at least one pet to continue');
-                    } else {
-                        setShowPetModal(false);
-                    }
+                    setShowPetModal(false);
+                    navigation.goBack();
                 }}
             >
                 <View style={{
@@ -736,11 +733,8 @@ const BoardingUser: React.FC<UserDetailsProps> = ({ navigation, route }) => {
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
-                                    if (selectedPets.size === 0) {
-                                        alert('Please select at least one pet to continue');
-                                    } else {
-                                        setShowPetModal(false);
-                                    }
+                                    setShowPetModal(false);
+                                    navigation.goBack();
                                 }}
                                 style={{
                                     width: 32,

@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   StatusBar,
   Animated,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -45,6 +44,7 @@ import {
   AddressInfoSkeleton,
   PetsTabSkeleton,
 } from '../../components/SkeletonLoader/SkeletonLoader';
+import CustomAlert from '../../components/CustomAlert';
 
 interface PetOwner {
   userId: number;
@@ -121,6 +121,19 @@ const Profile: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [deletingPetId, setDeletingPetId] = useState<number | null>(null);
+
+  // Custom alert states
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorAlertConfig, setErrorAlertConfig] = useState({ title: '', message: '' });
+  const [showDeletePetAlert, setShowDeletePetAlert] = useState(false);
+  const [petToDelete, setPetToDelete] = useState<number | null>(null);
+
+  // Helper function to show error alert
+  const showError = (title: string, message: string) => {
+    setErrorAlertConfig({ title, message });
+    setShowErrorAlert(true);
+  };
 
   // Logout handler for 401 errors
   const handleUnauthorized = async () => {
@@ -340,18 +353,10 @@ const Profile: React.FC = () => {
   };
 
   // Delete pet handler - calls same pet-profile endpoint with DELETE and pet id
-  const handleDeletePet = (petId: number) => {
-    Alert.alert(
-      'Delete Pet',
-      'Are you sure you want to delete this pet? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeletingPetId(petId);
+  const performDeletePet = async () => {
+    if (petToDelete === null) return;
+    try {
+      setDeletingPetId(petToDelete);
               const token = await storageService.getUserToken();
               if (!token) {
                 setMessage({
@@ -362,7 +367,7 @@ const Profile: React.FC = () => {
                 return;
               }
 
-              const deleteUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/${petId}`;
+              const deleteUrl = `${API_CONFIG.BASE_URL}/api/pet-profile/${petToDelete}`;
 
               // Generate and log CURL command for debugging
               const curlCommand = `curl -X DELETE "${deleteUrl}" \\
@@ -421,11 +426,13 @@ const Profile: React.FC = () => {
               });
             } finally {
               setDeletingPetId(null);
+              setPetToDelete(null);
             }
-          },
-        },
-      ],
-    );
+  };
+
+  const handleDeletePet = (petId: number) => {
+    setPetToDelete(petId);
+    setShowDeletePetAlert(true);
   };
 
   // Helper function to generate curl command for debugging
@@ -447,8 +454,8 @@ const Profile: React.FC = () => {
           PermissionsAndroid.PERMISSIONS.CAMERA,
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert(
-            'Permission denied',
+          showError(
+            'Permission Denied',
             'Camera permission is required to take photos.',
           );
           return;
@@ -476,7 +483,7 @@ const Profile: React.FC = () => {
       });
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to open image picker');
+      showError('Error', 'Failed to open image picker');
     }
   };
 
@@ -486,7 +493,7 @@ const Profile: React.FC = () => {
     try {
       const token = await storageService.getUserToken();
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found');
+        showError('Error', 'Authentication token not found');
         return;
       }
 
@@ -567,7 +574,7 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload profile image. Please try again.');
+      showError('Error', 'Failed to upload profile image. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -671,15 +678,9 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsLoggingOut(true);
+  const performLogout = async () => {
+    try {
+      setIsLoggingOut(true);
 
             // Unregister FCM token before logout
             console.log('🔔 Unregistering FCM token before logout...');
@@ -698,16 +699,17 @@ const Profile: React.FC = () => {
             // Clear local storage and sign out
             await storageService.logout();
             await googleSignInService.signOut();
-            reset('SignIn');
-          } catch (error) {
-            console.error('Logout error:', error);
-            setMessage({ type: 'error', text: 'Error during logout' });
-          } finally {
-            setIsLoggingOut(false);
-          }
-        },
-      },
-    ]);
+        reset('SignIn');
+      } catch (error) {
+        console.error('Logout error:', error);
+        setMessage({ type: 'error', text: 'Error during logout' });
+      } finally {
+        setIsLoggingOut(false);
+      }
+  };
+
+  const handleLogout = () => {
+    setShowLogoutAlert(true);
   };
 
   useEffect(() => {
@@ -1700,6 +1702,51 @@ const Profile: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Logout Confirmation Alert */}
+      <CustomAlert
+        visible={showLogoutAlert}
+        title="Confirm Logout"
+        message="Are you sure you want to log out?"
+        icon="logout"
+        iconColor="#FF6B6B"
+        iconBackgroundColor="#FFE8E8"
+        buttons={[
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Logout', style: 'destructive', onPress: performLogout },
+        ]}
+        onDismiss={() => setShowLogoutAlert(false)}
+      />
+
+      {/* Error Alert */}
+      <CustomAlert
+        visible={showErrorAlert}
+        title={errorAlertConfig.title}
+        message={errorAlertConfig.message}
+        icon="error"
+        iconColor="#FF6B6B"
+        iconBackgroundColor="#FFE8E8"
+        buttons={[{ text: 'OK', style: 'default' }]}
+        onDismiss={() => setShowErrorAlert(false)}
+      />
+
+      {/* Delete Pet Confirmation Alert */}
+      <CustomAlert
+        visible={showDeletePetAlert}
+        title="Delete Pet"
+        message="Are you sure you want to delete this pet? This action cannot be undone."
+        icon="delete"
+        iconColor="#FF6B6B"
+        iconBackgroundColor="#FFE8E8"
+        buttons={[
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: performDeletePet },
+        ]}
+        onDismiss={() => {
+          setShowDeletePetAlert(false);
+          setPetToDelete(null);
+        }}
+      />
     </View>
   );
 };
