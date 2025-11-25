@@ -12,7 +12,12 @@
           "package_name": "com.petjiouser"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "204778693525-fkdqq0o8i3ae06nnku942mmffagp978u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDeDOip7ymdZIDXP-ZbjIuXRo-NUFhiDGs"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "204778693525-fkdqq0o8i3ae06nnku942mmffagp978u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,12 @@
           "package_name": "com.petjiovendorapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "204778693525-fkdqq0o8i3ae06nnku942mmffagp978u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDeDOip7ymdZIDXP-ZbjIuXRo-NUFhiDGs"
@@ -39,7 +54,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "204778693525-fkdqq0o8i3ae06nnku942mmffagp978u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -46,7 +46,7 @@ class GoogleSignInService {
     if (this.configured) return;
 
     GoogleSignin.configure({
-      webClientId: '983696737650-7ciq1l2fqd8c901m11rnjicrhqgh9kb7.apps.googleusercontent.com',
+      webClientId: '204778693525-fkdqq0o8i3ae06nnku942mmffagp978u.apps.googleusercontent.com',
       offlineAccess: true,
       hostedDomain: '',
       forceCodeForRefreshToken: true,
@@ -63,7 +63,14 @@ class GoogleSignInService {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
 
-      console.log('🔍 Google Sign-In userInfo:', userInfo);
+      // ====== RAW GOOGLE RESPONSE ======
+      console.log('🔍 Raw Google Sign-In Response:', JSON.stringify(userInfo, null, 2));
+      console.log('👤 User Object:', userInfo.user);
+      console.log('📧 Email:', userInfo.user?.email);
+      console.log('🆔 User ID:', userInfo.user?.id);
+      console.log('📛 Name:', userInfo.user?.name);
+      console.log('🖼️ Photo:', userInfo.user?.photo);
+      console.log('==========================================');
 
       if (userInfo.user) {
         const googleUserInfo: GoogleUserInfo = {
@@ -160,9 +167,18 @@ class GoogleSignInService {
         }
       );
 
+      // ====== BACKEND AUTHENTICATION RESPONSE ======
+      console.log('📥 Backend Auth Response:', JSON.stringify(result, null, 2));
+      console.log('✅ Success:', result.success);
+      console.log('📦 Data:', result.data);
+      console.log('==========================================');
+
       if (result.success && result.data) {
         const userData = result.data.body?.user || result.data.user;
         const userToken = result.data.body?.token || result.data.token;
+
+        console.log('👤 Extracted User Data:', userData);
+        console.log('🔑 Extracted Token:', userToken);
 
         if (userData && userToken) {
           return {

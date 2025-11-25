@@ -18,6 +18,7 @@ import { storageService } from '../../utils/storage';
 import { STORAGE_KEYS } from '../../constants';
 import FirebaseMessagingService from '../../services/firebaseMessagingService';
 import CustomTextInput from '../../components/CustomTextInput';
+import googleSignInService, { GoogleSignInResponse } from '../../services/googleSignInService';
 
 type LogInScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -195,6 +196,17 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
         console.log('🚀 Starting Google Sign-In...');
         const response: GoogleSignInResponse = await googleSignInService.signIn();
 
+        // ====== FULL GOOGLE SIGN-IN RESPONSE ======
+        console.log('📦 Full Google Sign-In Response:', JSON.stringify(response, null, 2));
+        console.log('✅ Success Status:', response.success);
+        console.log('👤 User Data:', response.user);
+        console.log('🔑 Auth Token:', response.token);
+        console.log('💬 Message:', response.message);
+        if (response.error) {
+          console.log('❌ Error:', response.error);
+        }
+        console.log('==========================================');
+
         if (response.success && response.user && response.token) {
           console.log('✅ Google Sign-In successful:', response.user.name);
 
@@ -354,6 +366,31 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <Text style={loginstyles.loginText}>Login</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={{flexDirection: 'row', alignItems: 'center', marginVertical: 20}}>
+          <View style={{flex: 1, height: 1, backgroundColor: '#E0E0E0'}} />
+          <Text style={{marginHorizontal: 10, color: '#666', fontSize: 14}}>OR</Text>
+          <View style={{flex: 1, height: 1, backgroundColor: '#E0E0E0'}} />
+        </View>
+
+        {/* Google Sign-In Button */}
+        <TouchableOpacity
+          onPress={handleGoogleSignIn}
+          style={[loginstyles.googleButton, isGoogleLoading && {opacity: 0.7}]}
+          disabled={isGoogleLoading}>
+          {isGoogleLoading ? (
+            <ActivityIndicator size="small" color="#4285F4" />
+          ) : (
+            <>
+              <Image
+                source={{uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'}}
+                style={{width: 20, height: 20, marginRight: 10}}
+              />
+              <Text style={loginstyles.googleButtonText}>Sign in with Google</Text>
+            </>
           )}
         </TouchableOpacity>
 

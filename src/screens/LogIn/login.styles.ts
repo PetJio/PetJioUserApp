@@ -272,6 +272,34 @@ errorText: {
   marginBottom: 8,
   marginLeft: 4,
   fontWeight: '500',
+},
+
+// Google Sign-In Button
+googleButton: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: responsiveWidth(90),
+  height: responsiveHeight(5.8),
+  borderRadius: responsiveHeight(1),
+  backgroundColor: '#FFFFFF',
+  borderWidth: 1,
+  borderColor: '#E0E0E0',
+  marginBottom: responsiveHeight(2),
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 2,
+  },
+  shadowOpacity: 0.1,
+  shadowRadius: 3,
+  elevation: 2,
+},
+googleButtonText: {
+  color: '#666',
+  fontSize: 16,
+  fontWeight: '600',
+  letterSpacing: 0.5,
 }
 
 });
