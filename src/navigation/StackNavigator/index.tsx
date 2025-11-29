@@ -105,6 +105,7 @@ import {
   AllBlogs,
   NewsDetails,
   AllNews,
+  PrivacyPolicy,
 } from '../../screens';
 import TabNavigator from '../TabNavigator';
 import ServiceStackNavigator from '../ServiceStackNavigator';
@@ -133,13 +134,13 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="Location" component={Location}/>
             <Stack.Screen name="LogIn" component={LogIn}/>
             <Stack.Screen name="Main" component={TabNavigator} />
-            <Stack.Screen name="ServiceStackNavigator" component={ServiceStackNavigator} />
+            {/* <Stack.Screen name="ServiceStackNavigator" component={ServiceStackNavigator} />
             <Stack.Screen name="Grooming" component={Grooming} />
-            <Stack.Screen name="CalendarSheet" component={CalendarSheet}/>
+            <Stack.Screen name="CalendarSheet" component={CalendarSheet}/> */}
             {/* @ts-ignore - Legacy component with custom props interface */}
-            <Stack.Screen name="Locality" component={Locality} />
+            {/* <Stack.Screen name="Locality" component={Locality} />
             <Stack.Screen name="HomeService" component={HomeService} />
-            <Stack.Screen name="UserDetails" component={UserDetails} />
+            <Stack.Screen name="UserDetails" component={UserDetails} /> */}
             {/* @ts-ignore - Legacy component with custom props interface */}
             <Stack.Screen name="UserService" component={UserService} />
             <Stack.Screen name="ServicePrice" component={ServicePrice} />
@@ -245,6 +246,7 @@ const StackNavigator: React.FC<StackNavigatorProps> = ({ initialRouteName }) => 
             <Stack.Screen name="AllBlogs" component={AllBlogs}/>
             <Stack.Screen name="NewsDetails" component={NewsDetails}/>
             <Stack.Screen name="AllNews" component={AllNews}/>
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy}/>
 
         </Stack.Navigator>
     );

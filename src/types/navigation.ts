@@ -155,7 +155,8 @@ export type RootStackParamList = {
   DonatePaymentMethod: undefined;
   DonatePaymentconfirmmethod: undefined;
   DogAdoptionScreeningForm: undefined;
-  
+  PrivacyPolicy: undefined;
+
   // Fallback for any missing screens
   [key: string]: any;
 };

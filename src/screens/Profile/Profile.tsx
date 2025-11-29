@@ -1653,6 +1653,42 @@ const Profile: React.FC = () => {
           </View>
         )}
 
+        {/* Privacy Policy Button */}
+        <View
+          style={[
+            profileStyles.actionButtonsContainer,
+            { marginHorizontal: 16 },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => navigate('PrivacyPolicy')}
+            style={[
+              profileStyles.commonButton,
+              {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1.5,
+                borderColor: '#58B9D0',
+              },
+            ]}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons
+              name="privacy-tip"
+              size={20}
+              color="#58B9D0"
+              style={profileStyles.commonButtonIcon}
+            />
+            <Text
+              style={[
+                profileStyles.commonButtonText,
+                { color: '#58B9D0' },
+              ]}
+            >
+              Privacy Policy
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Logout Button - Always visible */}
         <View
           style={[

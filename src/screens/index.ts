@@ -109,6 +109,7 @@ export { default as BlogDetails} from './Blog/BlogDetails';
 export { default as AllBlogs} from './Blog/AllBlogs';
 export { default as NewsDetails} from './News/NewsDetails';
 export { default as AllNews} from './News/AllNews';
+export { default as PrivacyPolicy} from './PrivacyPolicy/PrivacyPolicy';
 
 
 
