@@ -16,21 +16,6 @@ export type RootStackParamList = {
   
   // Service Screens
   Service: undefined;
-  Grooming: undefined;
-  GroomingDetails: undefined;
-  GroomingPaymentmethod: undefined;
-  GroomingPaymentconfirmmethod: undefined;
-  Walking: undefined;
-  WalkingDetails: undefined;
-  WalkingUser: undefined;
-  Training: undefined;
-  TrainingDetails: undefined;
-  TrainingLocalAddress: undefined;
-  TrainingUser: undefined;
-  TrainerAbout: undefined;
-  TrainingConfirmDetails: undefined;
-  TrainingPaymentmethod: undefined;
-  TrainingPaymentconfirmmethod: undefined;
   Boarding: undefined;
   BoardingDetails: {
     providerId?: number;
@@ -41,38 +26,6 @@ export type RootStackParamList = {
     mode?: number;
   };
   BoardingUser: undefined;
-  BoardingQuestions: undefined;
-  BoardingRegistrationform: undefined;
-  BoardingPaymentmethod: undefined;
-  BoardingSuccess: undefined;
-  BoardingBooking: undefined;
-  BookBoarder: undefined;
-  ParaVet: undefined;
-  ParavetDetails: undefined;
-  ParaVetLocatlity: undefined;
-  ParaVetUser: undefined;
-  ParavetServices: undefined;
-  ParaVetCheckout: undefined;
-  ParaVetPaymentmethod: undefined;
-  ParaVetPaymentconfirmmethod: undefined;
-  ParaVetGoogleMap: undefined;
-  Veterinary: undefined;
-  VeterinaryDetails: undefined;
-  VeterinaryLocal: undefined;
-  VeterinariansDetails: undefined;
-  VeterinaryCalendar: undefined;
-  VoiceCallWithVeterinary: undefined;
-  OnlineChatWithVeterinary: undefined;
-  LiveTalkToVeterinary: undefined;
-  PharmacyOrderOverview: undefined;
-  VeterinaryPaymentMethod: undefined;
-  PharmacyOrderOnTheWay: undefined;
-  VeterinaryHomeVisiteDetails: undefined;
-  NGO: undefined;
-  NGODetails: undefined;
-  NGOUser: undefined;
-  NGOAbout: undefined;
-  NGOReview: undefined;
   
   // Common Screens
   CalendarSheet: undefined;
@@ -102,32 +55,6 @@ export type RootStackParamList = {
   AddPet: undefined;
   EditPet: { pet: any };
 
-  // Chat Screens
-  ChatList: undefined;
-  Chat: {
-    user: {
-      id: string;
-      name: string;
-      avatar?: string;
-      isOnline?: boolean;
-      lastMessage?: string;
-      timestamp?: string;
-      unreadCount?: number;
-      role?: string;
-    };
-  };
-
-  // History Screens
-  ViewDetails: { bookingItem: any };
-  SettlementCheckout: {
-    bookingId: number;
-    bookingData: any;
-  };
-  SettlementSuccess: {
-    bookingId: number;
-    amount?: number;
-  };
-
   // Mart Screens
   MartLocalityAddress: undefined;
   PetjioMartStore: undefined;
@@ -144,7 +71,6 @@ export type RootStackParamList = {
   PetWarriorform: undefined;
   DeliveryPartnerform: undefined;
   ServiceProviderform: undefined;
-  Veterinaryform: undefined;
   
   // Other Screens
   VirtualAdoption: undefined;
@@ -156,6 +82,8 @@ export type RootStackParamList = {
   DonatePaymentconfirmmethod: undefined;
   DogAdoptionScreeningForm: undefined;
   PrivacyPolicy: undefined;
+  ContactUs: undefined;
+  DataSafety: undefined;
 
   // Fallback for any missing screens
   [key: string]: any;
@@ -175,9 +103,6 @@ export type TabParamList = {
 // Service Stack Parameter List
 export type ServiceStackParamList = {
   Service: undefined;
-  VeterinariansDetails: undefined;
-  VeterinaryPharmacy: undefined;
-  PharmacyOrderNow: undefined;
 };
 
 // Navigation Props Types

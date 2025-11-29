@@ -30,11 +30,6 @@ declare global {
     navigation?: any;
     [key: string]: any;
   }
-  
-  interface WalkingPackageProps {
-    navigation?: any;
-    [key: string]: any;
-  }
 }
 
 export {};

@@ -1689,6 +1689,78 @@ const Profile: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Contact Us Button */}
+        <View
+          style={[
+            profileStyles.actionButtonsContainer,
+            { marginHorizontal: 16 },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => navigate('ContactUs')}
+            style={[
+              profileStyles.commonButton,
+              {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1.5,
+                borderColor: '#58B9D0',
+              },
+            ]}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons
+              name="contact-support"
+              size={20}
+              color="#58B9D0"
+              style={profileStyles.commonButtonIcon}
+            />
+            <Text
+              style={[
+                profileStyles.commonButtonText,
+                { color: '#58B9D0' },
+              ]}
+            >
+              Contact Us
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Data Safety Button */}
+        <View
+          style={[
+            profileStyles.actionButtonsContainer,
+            { marginHorizontal: 16 },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => navigate('DataSafety')}
+            style={[
+              profileStyles.commonButton,
+              {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1.5,
+                borderColor: '#58B9D0',
+              },
+            ]}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons
+              name="security"
+              size={20}
+              color="#58B9D0"
+              style={profileStyles.commonButtonIcon}
+            />
+            <Text
+              style={[
+                profileStyles.commonButtonText,
+                { color: '#58B9D0' },
+              ]}
+            >
+              Data Safety
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Logout Button - Always visible */}
         <View
           style={[

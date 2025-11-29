@@ -26,7 +26,7 @@ import Icons from '../../../assets/icons';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/api';
 import boardinguserstyles from '../BoardingUser/boardinguser.styles';
 import serviceStyles from '../Service/styles';
-import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
+import boardingQuestionStyles from './boardingquestions.styles';
 import { storageService } from '../../utils/storage';
 import { BoardingDetailsSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 
@@ -671,36 +671,6 @@ const BoardingDetails: React.FC<BoardingDetailsProps> = ({
         </View>
 
         </ScrollView>
-      </View>
-
-      {/* Bottom action area with Coming Soon message */}
-      <View style={{
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: responsiveWidth(4),
-        paddingTop: 16,
-        paddingBottom: 20,
-        borderTopWidth: 1,
-        borderTopColor: '#E5E7EB',
-      }}>
-        {/* Coming Soon Button */}
-        <TouchableOpacity
-          disabled={true}
-          style={{
-            backgroundColor: '#D1D5DB',
-            paddingVertical: 16,
-            borderRadius: 12,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Text style={{
-            fontSize: 16,
-            fontWeight: '700',
-            color: '#6B7280',
-          }}>
-            Coming Soon
-          </Text>
-        </TouchableOpacity>
       </View>
 
     </View>

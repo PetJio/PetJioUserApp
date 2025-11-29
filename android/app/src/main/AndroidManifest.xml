@@ -1,28 +1,34 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Internet permission for API calls and data sync -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Location permissions -->
+
+    <!-- Location permissions - Used to show nearby pet services and veterinarians -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Background location (only if needed for background location access) -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> -->
-    
-    <!-- Location services and hardware features -->
+
+    <!-- Location services and hardware features (not required, graceful degradation) -->
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.location.network" android:required="false" />
-    
-    <!-- Permissions required for image picker -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    
-    <!-- For Android 13+ (API 33+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
-    <!-- Firebase Cloud Messaging permissions -->
+    <!-- Camera permission - Used for uploading pet photos and vaccination certificates -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- Storage permissions for photo uploads (Android 12 and below) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Media permissions for Android 13+ (API 33+) - For accessing pet images -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Firebase Cloud Messaging permissions - For booking notifications and updates -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
@@ -35,10 +41,11 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:supportsRtl="true"
-      android:networkSecurityConfig="@xml/network_security_config">
+      android:usesCleartextTraffic="false"
+      android:networkSecurityConfig="@xml/network_security_config"
+      tools:replace="android:usesCleartextTraffic">
 
-      <!-- Google Maps API key. Replace the value in res/values/google_maps_api.xml -->
-      <!-- If you use a different meta-data key or provider (e.g., Mapbox), adjust accordingly. -->
+      <!-- Google Maps API key -->
       <meta-data
         android:name="com.google.android.geo.API_KEY"
         android:value="@string/google_maps_key" />
@@ -48,7 +55,7 @@
         android:name="com.google.firebase.messaging.default_notification_channel_id"
         android:value="default_notification_channel_id"
         tools:replace="android:value" />
-      
+
       <meta-data
         android:name="com.google.firebase.messaging.default_notification_icon"
         android:resource="@mipmap/ic_launcher" />

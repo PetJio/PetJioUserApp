@@ -34,7 +34,7 @@ import {
 } from '../../services/vaccinationService';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
-import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
+import boardingQuestionStyles from '../BoardingDetails/boardingquestions.styles';
 import serviceStyles from '../Service/styles';
 
 interface VaccinationUploadProps extends RootStackNavigationProp<'VaccinationUpload'> {}
@@ -327,8 +327,8 @@ const VaccinationUpload: React.FC<VaccinationUploadProps> = ({ route }) => {
         {
           text: 'Skip',
           onPress: () => {
-            // Navigate back to the previous screen
-            goBack();
+            // Navigate to Profile screen (same as after saving)
+            navigate('Main', { screen: 'Profile' });
           },
         },
       ]
@@ -616,7 +616,7 @@ const VaccinationUpload: React.FC<VaccinationUploadProps> = ({ route }) => {
           </TouchableOpacity>
 
           {/* Action Buttons */}
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: 8 }}>
             <TouchableOpacity
               onPress={handleSaveAll}
               style={[

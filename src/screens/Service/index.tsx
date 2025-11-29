@@ -34,12 +34,6 @@ const Mart: React.FC = () => {
 
   const services = [
     { id: '4', name: 'Boarding', image: images.Boarding },
-    { id: '1', name: 'Veterinary', image: images.serviceveterinaryImage },
-    { id: '2', name: 'Grooming', image: images.GroomingService },
-    { id: '3', name: 'Walking', image: images.Walking },
-    { id: '5', name: 'ParaVet', image: images.ParaVet },
-    { id: '6', name: 'Training', image: images.Training },
-    { id: '7', name: 'NGO', image: images.NGOs },
   ];
 
   const funcName = (type: { name: string }) => {

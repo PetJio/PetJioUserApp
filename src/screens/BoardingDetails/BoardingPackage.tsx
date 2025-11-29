@@ -7,7 +7,6 @@ import boardingpackagestyles from './boardingpackage.styles';
 import { responsiveWidth, responsiveHeight } from 'react-native-responsive-dimensions';
 import { StackNavigationProp } from '@react-navigation/stack';
 import ModalComponent from '../Modal/Modal';
-import TrainingModal from '../TrainingModal/TrainingModal';
 
 
 // type ModalComponentProps = {
@@ -239,8 +238,7 @@ const BoardingPackage: React.FC<WalkingPackageProps> = ({navigation}) => {
             </View>
             </View>
             </ScrollView>
-            <TrainingModal modalVisible = {modalVisible} setModalVisible={setModalVisible}/>
-            {/* <ModalComponent modalVisible = {modalVisible} setModalVisible={setModalVisible}/> */}
+            <ModalComponent modalVisible = {modalVisible} setModalVisible={setModalVisible}/>
               <View style={boardingpackagestyles.fixedButtonContainer}>
                       <TouchableOpacity
                         onPress={() => setModalVisible(true)}

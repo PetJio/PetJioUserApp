@@ -1,13 +1,6 @@
 
 const images = {
-    Walking: require('./Walking.png'),
-    serviceveterinaryImage: require('./ServiceImage.webp'),
     Boarding: require('./Boarding.png'),
-    Training: require('./Training.png'),
-    ParaVet: require('./paraVetImage.webp'),
-    NGOs: require('./NGOs.png'),
-    FirstGrooming:require('./FirstGrooming.jpg'),
-    SecondGrooming:require('./SecondGrooming.jpg'),
     UserImage:require('./userImage.png'),
     DogServiceImage:require('./dogServiceImage.jpg'),
     HairCutDog:require('./HairCutDog.png'),
@@ -43,7 +36,6 @@ const images = {
     deliverypartner:require('./deliverypartner.webp'),
     veterinary:require('./veterinary.webp'),
     grooming:require('./grooming.webp'),
-    GroomingService:require('./GroomingService.webp'),
     trainer:require('./trainer.webp'),
     dogwalking:require('./dogwalking.webp'),
     petsitter:require('./petsitter.webp'),

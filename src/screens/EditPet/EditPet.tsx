@@ -29,7 +29,7 @@ import VaccinationDisplay from '../../components/VaccinationDisplay/VaccinationD
 import { PetFormSkeleton } from '../../components/SkeletonLoader/SkeletonLoader';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
-import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
+import boardingQuestionStyles from '../BoardingDetails/boardingquestions.styles';
 import serviceStyles from '../Service/styles';
 
 interface PetCategory {

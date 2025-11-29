@@ -36,7 +36,7 @@ export interface ServiceBooking {
 export interface ServiceType {
   id: string;
   name: string;
-  category: 'grooming' | 'walking' | 'training' | 'boarding' | 'veterinary' | 'para_vet' | 'ngo';
+  category: 'boarding';
   description: string;
   basePrice: number;
   duration: number;

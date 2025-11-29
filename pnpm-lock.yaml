@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@eva-design/eva':
-        specifier: ^2.2.0
-        version: 2.2.0
       '@expo/metro-config':
         specifier: ^0.20.17
         version: 0.20.17
@@ -86,9 +83,6 @@ importers:
       react-native-check-box:
         specifier: ^2.1.7
         version: 2.1.7(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0))
-      react-native-date-picker:
-        specifier: ^5.0.13
-        version: 5.0.13(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0))(react@19.1.0)
       react-native-element-dropdown:
         specifier: ^2.12.4
         version: 2.12.4(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0))(react@19.1.0)
@@ -137,9 +131,6 @@ importers:
       react-redux:
         specifier: ^9.2.0
         version: 9.2.0(@types/react@18.3.24)(react@19.1.0)(redux@5.0.1)
-      toggle-switch-react-native:
-        specifier: ^3.3.0
-        version: 3.3.0(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0))
     devDependencies:
       '@babel/core':
         specifier: ^7.25.2
@@ -940,9 +931,6 @@ packages:
   '@eslint/js@8.57.1':
     resolution: {integrity: sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-
-  '@eva-design/eva@2.2.0':
-    resolution: {integrity: sha512-Wh98ex5cCK+YYSQNpthX1bT4CA3zDRR1WnJv0YlyvULAkmjaEvqtoGMCXzu5DH8v1fGIggu/OpAokLS7UVPe+A==}
 
   '@expo/cli@0.24.20':
     resolution: {integrity: sha512-uF1pOVcd+xizNtVTuZqNGzy7I6IJon5YMmQidsURds1Ww96AFDxrR/NEACqeATNAmY60m8wy1VZZpSg5zLNkpw==}
@@ -4108,12 +4096,6 @@ packages:
     peerDependencies:
       react-native: '>=0.20.0'
 
-  react-native-date-picker@5.0.13:
-    resolution: {integrity: sha512-qCLUODZVsJetO5zuoXjw1D39K527XWqBG8sOfhWdHyPzf13h8RXR1/RSKd1N0fdRDi5GdyizYmB0lPAK12/hbw==}
-    peerDependencies:
-      react: '>= 17.0.1'
-      react-native: '>= 0.64.3'
-
   react-native-edge-to-edge@1.6.0:
     resolution: {integrity: sha512-2WCNdE3Qd6Fwg9+4BpbATUxCLcouF6YRY7K+J36KJ4l3y+tWN6XCqAC4DuoGblAAbb2sLkhEDp4FOlbOIot2Og==}
     peerDependencies:
@@ -4715,11 +4697,6 @@ packages:
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
-
-  toggle-switch-react-native@3.3.0:
-    resolution: {integrity: sha512-DE0UjTOvUpUXjrRjF5r06dqzp/XrbDvJ6hYAwTp6ZgNrxn5Z7bDqe9Rs7axaRbWr7MXe5FdSGkCmfmK6tL7esw==}
-    peerDependencies:
-      react-native: '>=0.47.1'
 
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
@@ -5984,8 +5961,6 @@ snapshots:
       - supports-color
 
   '@eslint/js@8.57.1': {}
-
-  '@eva-design/eva@2.2.0': {}
 
   '@expo/cli@0.24.20':
     dependencies:
@@ -10324,11 +10299,6 @@ snapshots:
       prop-types: 15.8.1
       react-native: 0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0)
 
-  react-native-date-picker@5.0.13(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0))(react@19.1.0):
-    dependencies:
-      react: 19.1.0
-      react-native: 0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0)
-
   react-native-edge-to-edge@1.6.0(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -11016,11 +10986,6 @@ snapshots:
   to-regex-range@5.0.1:
     dependencies:
       is-number: 7.0.0
-
-  toggle-switch-react-native@3.3.0(react-native@0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0)):
-    dependencies:
-      prop-types: 15.8.1
-      react-native: 0.81.0(@babel/core@7.28.3)(@react-native-community/cli@20.0.0(typescript@5.9.2))(@react-native/metro-config@0.81.0(@babel/core@7.28.3))(@types/react@18.3.24)(react@19.1.0)
 
   toidentifier@1.0.1: {}
 

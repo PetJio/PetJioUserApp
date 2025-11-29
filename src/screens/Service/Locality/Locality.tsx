@@ -7,15 +7,13 @@ import Icon from "react-native-vector-icons/Feather";
 import localitystyles from './locality.styles';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useRoute, RouteProp } from '@react-navigation/native'
+import { goBack } from '../../../utils/navigationService';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
-    CalendarSheet: undefined; // Example route;
+    CalendarSheet: undefined;
     HomeService:undefined;
     Locality: { section: string };
-    Grooming:undefined;
-    Walking:undefined;
-  // Add other routes here as needed
 };
 
 // Define the navigation prop type
@@ -32,9 +30,7 @@ interface LocalityProps {
 const Locality: React.FC<LocalityProps> = ({navigation,route }) => {
       const { section } = route?.params;
       const handleTabWithNavigation = () => {
-            if (section === 'walking') {
-                navigation.navigate("Grooming");
-            }
+            goBack();
         };
 
 

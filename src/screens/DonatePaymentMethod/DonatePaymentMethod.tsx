@@ -6,7 +6,6 @@ import donatepaymentmethodstyles from './donatepaymentmethod.styles';
 import {responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import NGOPetcoinModal from '../NGODetails/NGOPetcoinModal';
 
 // Define your navigation stack's param list
 type RootStackParamList = {
@@ -175,8 +174,6 @@ type RootStackParamList = {
                         <View style={{paddingHorizontal:responsiveWidth(6.5)}}>
                             <Text style={{fontSize:16,fontWeight:'700',lineHeight:17,color:"#000000"}}>Wallets</Text>
                        </View>
-                       
-                       <NGOPetcoinModal modalVisible={modalVisible} setModalVisible={setModalVisible}   />
 
                         <TouchableOpacity
                          onPress={()=>setModalVisible(true)}

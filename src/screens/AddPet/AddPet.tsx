@@ -34,7 +34,7 @@ import { goBack, navigate } from '../../utils/navigationService';
 import signupstyles from '../SignUp/signup.styles';
 import Icons from '../../../assets/icons';
 import boardingstyles from '../Boarding/boarding.styles';
-import boardingQuestionStyles from '../BoardingQuestions/boardingquestions.styles';
+import boardingQuestionStyles from '../BoardingDetails/boardingquestions.styles';
 import serviceStyles from '../Service/styles';
 
 interface PetCategory {
