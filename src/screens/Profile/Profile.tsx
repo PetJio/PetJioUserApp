@@ -8,13 +8,10 @@ import {
   TouchableOpacity,
   PermissionsAndroid,
   Platform,
-  KeyboardAvoidingView,
   StatusBar,
-  Animated,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomTextInput from '../../components/CustomTextInput';
 import {
   launchImageLibrary,
@@ -22,7 +19,6 @@ import {
   ImagePickerResponse,
 } from 'react-native-image-picker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { API_CONFIG } from '../../config/api';
 import signupstyles from '../SignUp/signup.styles';
@@ -31,13 +27,9 @@ import serviceStyles from '../Service/styles';
 import { storageService } from '../../utils/storage';
 import { reset, navigate } from '../../utils/navigationService';
 import googleSignInService from '../../services/googleSignInService';
-import FirebaseMessagingService from '../../services/firebaseMessagingService';
-import images from '../../../assets/images';
-import Icons from '../../../assets/icons';
 import {
   responsiveHeight,
   responsiveWidth,
-  responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 import {
   ProfileHeaderSkeleton,
@@ -574,7 +566,9 @@ const Profile: React.FC = () => {
           if (!saveResponse.ok) {
             const errorText = await saveResponse.text();
             console.error('❌ Failed to save profile image:', errorText);
-            throw new Error(`Failed to save profile image to database: ${saveResponse.status}`);
+            throw new Error(
+              `Failed to save profile image to database: ${saveResponse.status}`,
+            );
           }
 
           const saveResult = await saveResponse.json();
@@ -731,17 +725,6 @@ const Profile: React.FC = () => {
 
             // Unregister FCM token before logout
             console.log('🔔 Unregistering FCM token before logout...');
-            try {
-              const unregistered =
-                await FirebaseMessagingService.unregisterDeviceToken();
-              if (unregistered) {
-                console.log('✅ FCM token unregistered successfully');
-              } else {
-                console.log('⚠️ Failed to unregister FCM token');
-              }
-            } catch (error) {
-              console.error('❌ Error unregistering FCM token:', error);
-            }
 
             // Clear local storage and sign out
             await storageService.logout();

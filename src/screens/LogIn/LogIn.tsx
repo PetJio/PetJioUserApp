@@ -16,7 +16,6 @@ import { loginUser, LoginRequest } from '../../services/authService';
 import { RootStackParamList } from '../../types/navigation';
 import { storageService } from '../../utils/storage';
 import { STORAGE_KEYS } from '../../constants';
-import FirebaseMessagingService from '../../services/firebaseMessagingService';
 import CustomTextInput from '../../components/CustomTextInput';
 
 type LogInScreenNavigationProp = NativeStackNavigationProp<
@@ -139,27 +138,6 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
           // Register FCM token after successful login with a small delay
           // to ensure auth token is fully persisted to storage
           console.log('🔔 Scheduling FCM token registration after login...');
-          setTimeout(async () => {
-            try {
-              // Get FCM token from local storage
-              const fcmToken = await storageService.getFCMToken();
-
-              if (fcmToken) {
-                console.log('📱 FCM token found, registering with backend...');
-                const registered = await FirebaseMessagingService.registerDeviceToken(fcmToken);
-
-                if (registered) {
-                  console.log('✅ FCM token registered successfully after login');
-                } else {
-                  console.log('⚠️ Failed to register FCM token after login');
-                }
-              } else {
-                console.log('⚠️ No FCM token found to register after login');
-              }
-            } catch (error) {
-              console.error('❌ Error registering FCM token after login:', error);
-            }
-          }, 500); // 500ms delay to ensure token persistence
 
           setMessage({type: 'success', text: response.message});
 
@@ -187,65 +165,7 @@ const LogIn: React.FC<LogInProps> = ({ navigation }) => {
       }
     };
 
-    const handleGoogleSignIn = async () => {
-      setIsGoogleLoading(true);
-      setMessage(null);
-
-      try {
-        console.log('🚀 Starting Google Sign-In...');
-        const response: GoogleSignInResponse = await googleSignInService.signIn();
-
-        if (response.success && response.user && response.token) {
-          console.log('✅ Google Sign-In successful:', response.user.name);
-
-          // Register FCM token after successful Google Sign-In
-          console.log('🔔 Registering FCM token after Google Sign-In...');
-          try {
-            // Get FCM token from local storage
-            const fcmToken = await storageService.getFCMToken();
-
-            if (fcmToken) {
-              console.log('📱 FCM token found, registering with backend...');
-              const registered = await FirebaseMessagingService.registerDeviceToken(fcmToken);
-
-              if (registered) {
-                console.log('✅ FCM token registered successfully after Google Sign-In');
-              } else {
-                console.log('⚠️ Failed to register FCM token after Google Sign-In');
-              }
-            } else {
-              console.log('⚠️ No FCM token found to register after Google Sign-In');
-            }
-          } catch (error) {
-            console.error('❌ Error registering FCM token after Google Sign-In:', error);
-          }
-
-          setMessage({
-            type: 'success',
-            text: `Welcome ${response.user.name}! Signed in successfully.`
-          });
-
-          // Navigate to main screen after successful Google sign-in
-          setTimeout(() => {
-            navigation.navigate('Main');
-          }, 1500);
-        } else {
-          console.log('❌ Google Sign-In failed:', response.error);
-          setMessage({
-            type: 'error',
-            text: response.error || 'Google Sign-In failed'
-          });
-        }
-      } catch (error) {
-        console.error('🔥 Google Sign-In error:', error);
-        setMessage({
-          type: 'error',
-          text: 'Failed to sign in with Google. Please try again.'
-        });
-      } finally {
-        setIsGoogleLoading(false);
-      }
-    };
+  
 
     // Dev mode: Triple tap on logo to activate
     const handleLogoPress = () => {

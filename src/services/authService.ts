@@ -1,6 +1,5 @@
 // Authentication Service
 import { fetchWithErrorHandling, StandardApiResponse } from '../utils/apiErrorHandler';
-import FirebaseMessagingService from './firebaseMessagingService';
 import { API_CONFIG } from '../config/api';
 
 export interface LoginRequest {
@@ -69,12 +68,12 @@ export const loginUser = async (loginData: LoginRequest): Promise<AuthResponse> 
       
       if (userData && userToken) {
         // Initialize Firebase messaging after successful login
-        try {
-          FirebaseMessagingService.initializeMessaging();
-        } catch (error) {
-          console.error('⚠️ Failed to initialize Firebase messaging after login:', error);
-          // Don't fail the login if Firebase messaging fails
-        }
+        // try {
+        //   FirebaseMessagingService.initializeMessaging();
+        // } catch (error) {
+        //   console.error('⚠️ Failed to initialize Firebase messaging after login:', error);
+        //   // Don't fail the login if Firebase messaging fails
+        // }
 
         return {
           success: true,
